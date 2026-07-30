@@ -109,7 +109,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
     // 권한 매트릭스 pl-2: 게스트는 글 작성 불가 — 실행 대신 로그인으로 유도한다
     if (role === "guest") {
       setError(
-        "지금은 게스트로 보고 있어요 — 글은 로그인해야 등록할 수 있어요.",
+        "지금은 게스트로 보고 있어요. 글은 로그인해야 등록할 수 있어요.",
       );
       setGateOpen(true);
       return;
@@ -174,7 +174,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
       at(3350, () => {
         setQuarantine(null);
         setPhase("idle");
-        toast(`안전하지 않은 코드 ${found.length}곳을 걸러냈어요 — 서식은 그대로예요`, {
+        toast(`안전하지 않은 코드 ${found.length}곳을 걸러냈어요. 서식은 그대로예요`, {
           tone: "success",
           pos: "top",
         });
@@ -275,7 +275,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
               marginBottom: 20,
             }}
           >
-            살균을 거친 본문만 저장됐어요 — 이 브라우저에만 남아요.
+            살균을 거친 본문만 저장됐어요. 이 브라우저에만 남아요.
             <br />
             마이페이지 <b>내 글</b>에서 확인할 수 있어요.
           </p>
@@ -460,7 +460,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
 
           <div style={{ marginTop: 10 }}>
             <Coach id="write-sanitize">
-              <b>위험한 코드가 섞인 글 붙여넣기</b>를 눌러보세요 — 무엇이
+              <b>위험한 코드가 섞인 글 붙여넣기</b>를 눌러보세요. 무엇이
               걸러지는지 보여드려요
             </Coach>
             <button type="button" className="demobtn" onClick={pasteRisky}>
@@ -548,7 +548,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
               files={files}
               onChange={setFiles}
               compact
-              note="증빙이 검토·승인되면 글에 인증 배지가 붙어요 · JPG · PNG · WebP · PDF · 10MB까지"
+              note="증빙이 검토·승인되면 글에 인증 배지가 붙어요. JPG · PNG · WebP · PDF · 10MB까지"
             />
           </div>
         ) : null}

@@ -141,7 +141,7 @@ export default async function CompanyDetailPage({
           </div>
 
           <Coach id="company-anon">
-            리뷰는 <b>익명</b>이에요 — 운영자도 작성자를 못 봐요. 직접 써보면{" "}
+            리뷰는 <b>익명</b>이에요. 운영자도 작성자를 못 봐요. 직접 써보면{" "}
             <b>평점이 바로 재계산</b>돼요
           </Coach>
 
@@ -328,7 +328,7 @@ function SalaryPanel({
 
       {/* 카드 4 — 보상 만족도(인센티브 축 평점, 등록사 평균 대비) */}
       <div className="salcard">
-        <div className="salcap">보상 만족도 — 인센티브 축</div>
+        <div className="salcap">보상 만족도: 인센티브 축</div>
         <div className="salrate">
           <b>{company.axes.incentive.toFixed(1)}</b>
           <span className="of">/ 5.0</span>

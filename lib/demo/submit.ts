@@ -71,7 +71,7 @@ export function submitReport(input: ReportInput) {
           author: input.author,
           at,
           body: input.body,
-          note: "체험 중 접수된 신고예요 — 이 브라우저에만 남아요",
+          note: "체험 중 접수된 신고예요. 이 브라우저에만 남아요",
           filings: [{ at, by: input.by, reason: input.reason }],
         },
         ...state.reports,

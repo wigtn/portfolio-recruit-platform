@@ -20,7 +20,7 @@ export const POLICY_ROLES = [
     name: "게스트",
     sub: "비로그인",
     icon: "user",
-    note: "게스트는 열람만 할 수 있어요 — 나머지 권한은 잠겨 있어요",
+    note: "게스트는 열람만 할 수 있어요. 나머지 권한은 잠겨 있어요",
   },
   {
     name: "회원",
@@ -38,7 +38,7 @@ export const POLICY_ROLES = [
     name: "최고 운영자",
     sub: "super admin",
     icon: "key",
-    note: "최고 운영자는 모든 권한을 가져요 — 여기서 뺄 수 없어요",
+    note: "최고 운영자는 모든 권한을 가져요. 여기서 뺄 수 없어요",
   },
 ] as const;
 
@@ -77,7 +77,7 @@ export const policyPermIconOf = (row: PolicyRow) =>
 
 /** 하단 각주 — 실물·스켈레톤이 같은 문장을 그린다(자리 예약 = 실물 그대로) */
 export const POLICY_FOOT_NOTE =
-  "익명 리뷰 작성자 조회는 화면에서 열 수 없어요 · 권한 변경은 저장할 때 본인 확인을 한 번 더 해요";
+  "익명 리뷰 작성자 조회는 화면에서 열 수 없어요. 권한 변경은 저장할 때 본인 확인을 한 번 더 해요";
 
 /** 토글 실측 크기 — .ptog(32×18)와 스켈레톤 자리가 같아야 행 높이가 안 튄다 */
 const TOGGLE_W = 32;
@@ -175,7 +175,7 @@ export function PolicyRiskSection() {
     <div className="dashgrid" style={{ marginBottom: "0" }}>
       <div className="tablecard" style={{ gridColumn: "1 / -1" }}>
         <div className="tabletop">
-          <h4>민감 작업 보호 — 재인증</h4>
+          <h4>민감 작업 보호: 재인증</h4>
           <span
             style={{
               marginLeft: "auto",
@@ -183,7 +183,7 @@ export function PolicyRiskSection() {
               color: "var(--ink-3)",
             }}
           >
-            위험도는 시스템이 자동 판정해요 — 화면에서 바꿀 수 없어요
+            위험도는 시스템이 자동 판정해요. 화면에서 바꿀 수 없어요
           </span>
         </div>
         {/* 이 표의 의미 — 되돌리기 어려운 조치는 버튼을 눌러도 바로 실행되지
@@ -191,7 +191,7 @@ export function PolicyRiskSection() {
             자리 비움 오조작을 막는 백오피스 표준 장치다. */}
         <p className="riskintro">
           되돌리기 어려운 작업은 실행 직전에 <b>본인 확인을 한 번 더</b> 거쳐요.
-          자리를 비운 사이 남이 조작하거나, 실수로 누르는 사고를 막는 장치예요 —
+          자리를 비운 사이 남이 조작하거나, 실수로 누르는 사고를 막는 장치예요 -
           아래 표가 그 대상과 기록 방식이에요.
         </p>
         <table className="dtable">

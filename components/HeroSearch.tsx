@@ -193,7 +193,7 @@ export function HeroSearch() {
 
         {nudge ? (
           <span className="hs-nudge" role="status">
-            검색어를 입력해주세요 — 회사명이나 직무로 찾아드려요
+            검색어를 입력해주세요. 회사명이나 직무로 찾아드려요
           </span>
         ) : null}
       </form>
@@ -210,7 +210,7 @@ export function HeroSearch() {
               {/* 회사명이 마스킹이라 자연스러운 질의 대부분이 0건이다 —
                   무반응 대신 인기 검색어로 되돌려 보낸다 */}
               <div className="hs-empty">
-                “{query.trim()}” 결과가 없어요 — 인기 검색어로 둘러보세요
+                “{query.trim()}” 결과가 없어요. 인기 검색어로 둘러보세요
               </div>
               {HOT_KEYWORDS.slice(0, 4).map((keyword) => (
                 <Link

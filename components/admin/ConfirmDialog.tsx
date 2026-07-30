@@ -80,7 +80,7 @@ function ConfirmForm({
       onSubmit={(event) => {
         event.preventDefault();
         if (needReason && !reason.trim()) {
-          setError("사유를 적어주세요 — 처리 기록에 그대로 남아요.");
+          setError("사유를 적어주세요. 처리 기록에 그대로 남아요.");
           setShake(true);
           return;
         }

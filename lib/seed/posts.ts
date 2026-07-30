@@ -231,7 +231,7 @@ export const POSTS: Post[] = [
     id: "p-4816",
     board: "노하우",
     badges: ["노하우"],
-    title: "콜드콜 리스트 만드는 법 — 3년치 정리",
+    title: "콜드콜 리스트 만드는 법: 3년치 정리",
     author: "한부장",
     authorYears: 11,
     postedAt: "07.23",

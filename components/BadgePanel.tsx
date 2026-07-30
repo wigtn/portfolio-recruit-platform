@@ -113,7 +113,7 @@ export function BadgePanel() {
         {!loading && status === "반려" && evidence?.reason ? (
           <p className="badgestate-why">
             <Icon name="alert" />
-            반려 사유 — {evidence.reason}
+            반려 사유: {evidence.reason}
           </p>
         ) : null}
       </div>
@@ -208,14 +208,14 @@ export function BadgePanel() {
                   <span className="evstep-no">1</span>
                   <div>
                     <b>증빙 올리기</b>
-                    <span>실적표·수상 내역·계약 요약 — 회사명·금액은 가려도 돼요</span>
+                    <span>실적표·수상 내역·계약 요약: 회사명·금액은 가려도 돼요</span>
                   </div>
                 </div>
                 <div className="evstep">
                   <span className="evstep-no">2</span>
                   <div>
                     <b>운영자 검토</b>
-                    <span>운영자가 직접 확인해요 — 판단에 필요한 만큼만 봐요</span>
+                    <span>운영자가 직접 확인해요. 판단에 필요한 만큼만 봐요</span>
                   </div>
                 </div>
                 <div className="evstep">

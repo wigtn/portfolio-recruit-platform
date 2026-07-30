@@ -1,6 +1,6 @@
 import { QuestionsQueue } from "@/components/admin/QuestionsQueue";
 
-export const metadata = { title: "질문 관리 — 백오피스" };
+export const metadata = { title: "질문 관리 | 백오피스" };
 
 /**
  * 답변 없는 질문 큐 — 대시보드 운영 큐의 "답변 없는 질문"이 이 화면으로 온다.

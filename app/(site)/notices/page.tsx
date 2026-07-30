@@ -2,7 +2,7 @@ import { NoticeList } from "@/components/NoticeList";
 import { Crumb } from "@/components/Crumb";
 import type { Notice } from "@/lib/admin/seed";
 
-export const metadata = { title: "공지 · 정책 — W 세일즈" };
+export const metadata = { title: "공지 · 정책 | W 세일즈" };
 
 /**
  * 서비스 쪽 공지·약관 — 백오피스 `공지 · 정책`이 올리고 내리는 대상이다.

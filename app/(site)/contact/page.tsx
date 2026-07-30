@@ -4,7 +4,7 @@ import { ContactSteps } from "@/components/ContactSteps";
 import { ModuleShowcase } from "@/components/ModuleShowcase";
 import { SeenCard } from "./SeenCard";
 
-export const metadata = { title: "상담 요청 — W 세일즈" };
+export const metadata = { title: "상담 요청 | W 세일즈" };
 
 /**
  * 시안 정본 09번(상담 요청) 구조 그대로 — .formgrid(신뢰 요약 카드 / .formcard)

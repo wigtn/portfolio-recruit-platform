@@ -79,8 +79,8 @@ export async function POST(request: Request) {
         rateLimited: true,
         error:
           gate.why === "ip"
-            ? "실호출 한도(시간당)에 도달했어요 — 예시 재생으로 이어가요."
-            : "오늘의 데모 생성 총량을 다 썼어요 — 예시 재생으로 이어가요.",
+            ? "실호출 한도(시간당)에 도달했어요. 예시 재생으로 이어가요."
+            : "오늘의 데모 생성 총량을 다 썼어요. 예시 재생으로 이어가요.",
       },
       { status: 429 },
     );

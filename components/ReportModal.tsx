@@ -87,7 +87,7 @@ export function ReportModal({
             <h3>신고가 접수됐어요</h3>
             <div className="msub">
               이 콘텐츠는 누적 <b>{done}회</b> 신고됐어요
-              {done >= 3 ? " — 자동으로 임시 블라인드됐어요" : ""}.
+              {done >= 3 ? ", 자동으로 임시 블라인드됐어요" : ""}.
               <br />
               운영자 화면 <b>신고 관리</b>에서 처리 과정을 볼 수 있어요.
             </div>
@@ -112,7 +112,7 @@ export function ReportModal({
           <>
             <h3>이 콘텐츠를 신고할게요</h3>
             <div className="msub">
-              사유를 골라주세요 — 운영자가 원문과 함께 확인해요
+              사유를 골라주세요. 운영자가 원문과 함께 확인해요
             </div>
 
             <div className="field">

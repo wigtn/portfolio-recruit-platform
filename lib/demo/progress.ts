@@ -1,6 +1,8 @@
 "use client";
 
 export const DEMO_PROGRESS_EVENT = "wigtn-demo-progress";
+/** 가이드에서 챗봇 항목을 누르면 이 이벤트로 패널을 연다(챗봇은 라우트가 없다). */
+export const DEMO_OPEN_CHAT_EVENT = "wigtn-demo-open-chat";
 const KEY = "wigtn-demo-progress-v1";
 const THEME_KEY = "wigtn-demo-theme-v1";
 
@@ -17,6 +19,7 @@ export type DemoFeature =
   | "company-import" // (구) 동일
   | "curation"
   | "question"
+  | "chatbot"
   | "role";
 
 /**
@@ -31,6 +34,8 @@ export const DEMO_FEATURES: Array<{
   title: string;
   description: string;
   href: string;
+  /** 라우트가 아니라 화면 위 장치를 여는 항목. href 대신 이 값으로 분기한다 */
+  action?: "chat";
 }> = [
   /* 진짜 핵심만 — "실제로 실행하고, 반대편 화면까지 갔다 오는" 것들.
      열람 전용(대시보드·처리 기록), 니치 도구(엑셀 일괄), 데모 장치(역할
@@ -69,6 +74,14 @@ export const DEMO_FEATURES: Array<{
     title: "실적 인증 신청",
     description: "제출 → 운영자 승인 → 등급 승급까지",
     href: "/badges",
+  },
+  {
+    id: "chatbot",
+    group: "서비스",
+    title: "상담 챗봇",
+    description: "누르면 대화가 재생돼요. 직접 물어봐도 답해요",
+    href: "",
+    action: "chat",
   },
   {
     id: "question",

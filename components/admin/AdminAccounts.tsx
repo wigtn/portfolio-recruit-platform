@@ -79,7 +79,7 @@ export function AdminAccounts() {
       activeSupers.length <= 1 &&
       activeSupers.some((item) => item.id === row.id)
     ) {
-      return "마지막 최고 운영자예요 — 여기서 바꾸면 되돌릴 사람이 없어져요.";
+      return "마지막 최고 운영자예요. 여기서 바꾸면 되돌릴 사람이 없어져요.";
     }
     return null;
   };
@@ -163,7 +163,7 @@ export function AdminAccounts() {
                               return;
                             }
                             void admin.act("admin.role", row.id, {
-                              reason: `역할 변경 — ${row.handle}`,
+                              reason: `역할 변경: ${row.handle}`,
                               payload: { role: next },
                             });
                           }}
@@ -195,7 +195,7 @@ export function AdminAccounts() {
                             disabled={admin.busy}
                             onClick={() =>
                               void admin.act("admin.activate", row.id, {
-                                reason: `계정 활성화 — ${row.handle}`,
+                                reason: `계정 활성화: ${row.handle}`,
                               })
                             }
                           >
@@ -218,7 +218,7 @@ export function AdminAccounts() {
                                 return;
                               }
                               void admin.act("admin.suspend", row.id, {
-                                reason: `계정 정지 — ${row.handle}`,
+                                reason: `계정 정지: ${row.handle}`,
                               });
                             }}
                           >
@@ -234,7 +234,7 @@ export function AdminAccounts() {
           </table>
           <p className="polfoot" style={{ margin: "10px 14px 12px" }}>
             <Icon name="lock" /> 역할 변경·정지는 실행 직전에 본인 확인을 한 번
-            더 해요 · 마지막 최고 운영자 계정은 바꿀 수 없어요
+            더 해요. 마지막 최고 운영자 계정은 바꿀 수 없어요
           </p>
         </div>
       </div>
@@ -264,7 +264,7 @@ export function AdminAccounts() {
           onSubmit={(values) => {
             setInvite(false);
             void admin.act("admin.invite", `adm-${Date.now()}`, {
-              reason: `운영자 초대 — ${values.handle}`,
+              reason: `운영자 초대: ${values.handle}`,
               payload: {
                 handle: values.handle,
                 name: values.name,
@@ -341,7 +341,7 @@ export function AdminAccountsSk() {
         </table>
         <p className="polfoot" style={{ margin: "10px 14px 12px" }}>
           <Icon name="lock" /> 역할 변경·정지는 실행 직전에 본인 확인을 한 번 더
-          해요 · 마지막 최고 운영자 계정은 바꿀 수 없어요
+          해요. 마지막 최고 운영자 계정은 바꿀 수 없어요
         </p>
       </div>
     </div>

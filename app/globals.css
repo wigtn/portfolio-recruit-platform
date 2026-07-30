@@ -11819,6 +11819,15 @@ select.in {
   width: 26px;
   height: 26px;
 }
+/* 플로팅 진입점. 화면마다 떠 있는 유일한 AI 접점이라 가장 크다 */
+.aiav.lg {
+  width: 44px;
+  height: 44px;
+}
+.aiav.lg .ic {
+  width: 20px;
+  height: 20px;
+}
 .aiav.sm .ic {
   width: 12px;
   height: 12px;
@@ -13830,4 +13839,423 @@ select.in {
   .modcard-go .ic {
     transition: none;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   상담 챗봇 — 시안에 없는 화면이라 여기 둔다(정본은 시안 대조가 가능해야 한다).
+   체험 가이드(.demowidget)가 우측 하단을 이미 쓰고 있어 그 왼쪽에 나란히 선다.
+   가이드 위치는 사용자 지시로 정해진 자리라 옮기지 않는다.
+   ═══════════════════════════════════════════════════════════════════════ */
+.chatwidget {
+  position: fixed;
+  /* 가이드 fab(44px) + 여백 12px 만큼 왼쪽으로 */
+  right: calc(max(18px, env(safe-area-inset-right)) + 56px);
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* 아바타 자체가 버튼이다. 배경·그림자는 .aiav가 이미 갖고 있다 */
+.chatfab {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+/* 열린 상태에서는 닫기 아이콘만 — 이때만 원형 배경을 준다 */
+.chatfab[aria-expanded="true"] {
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(27, 30, 40, 0.34);
+}
+.chatfab > .ic {
+  width: 20px;
+  height: 20px;
+}
+/* 한 번도 안 열어본 방문자에게만 — 크기 변화 없이 글로우만(가이드 fab과 같은 문법) */
+.chatfab.is-beckon {
+  animation: chat-beckon 2.4s ease-in-out infinite;
+  border-radius: 50%;
+}
+@keyframes chat-beckon {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(139, 92, 246, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chatfab.is-beckon {
+    animation: none;
+  }
+}
+
+.chatpanel {
+  width: min(360px, calc(100vw - 32px));
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  box-shadow: 0 18px 44px rgba(16, 24, 40, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chathead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.chathead .ci {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.chathead .ci .ic {
+  width: 16px;
+  height: 16px;
+}
+.chathead .ct {
+  min-width: 0;
+  line-height: 1.35;
+}
+.chathead .ct b {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+.chathead .ct span {
+  font-size: 12px;
+  color: var(--ink-4);
+}
+.chathead .cx {
+  margin-left: auto;
+  color: var(--ink-4);
+  cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.chatbody {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* 대화가 길어지면 패널만 스크롤 — 화면 전체가 밀리지 않는다 */
+  max-height: min(52vh, 420px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+.chatbody::-webkit-scrollbar {
+  width: 6px;
+}
+.chatbody::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border-radius: 99px;
+}
+.chatbody::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 위로 올려 읽는 중에 뜬다. 자동 스크롤을 멈춘 대신 복귀 수단을 준다 */
+.chatdown {
+  position: sticky;
+  bottom: 0;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.12);
+}
+.chatdown .ic {
+  width: 12px;
+  height: 12px;
+}
+
+.chatbody .bubrow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.chatbody .bubrow.user {
+  justify-content: flex-end;
+}
+.chatbody .bubrow .aiav {
+  margin-top: 2px;
+}
+.chatbody .bub {
+  max-width: 88%;
+  padding: 10px 13px;
+  border-radius: 13px;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.chatbody .bub p {
+  white-space: pre-wrap;
+  margin: 0;
+}
+.chatbody .bub.bot {
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  border-bottom-left-radius: 5px;
+}
+.chatbody .bub.user {
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 5px;
+}
+
+/* 실호출인지 준비된 답변인지 — 스크립트인데 AI인 척하면 속이는 것이다 */
+.chatbody .bub .src {
+  display: inline-block;
+  margin-top: 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-4);
+  background: var(--bg);
+  border-radius: 5px;
+  padding: 2px 7px;
+}
+.chatbody .bub .src.live {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.chatbody .blinks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+.chatbody .blink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 7px 11px;
+}
+.chatbody .blink:hover {
+  border-color: var(--accent);
+}
+.chatbody .blink .ic {
+  width: 13px;
+  height: 13px;
+  margin-left: auto;
+}
+
+/* 답변 작성 중 — 세 점 */
+.chatbody .dots {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px 0;
+}
+.chatbody .dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-4);
+  animation: chat-dot 1.2s ease-in-out infinite;
+}
+.chatbody .dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.chatbody .dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes chat-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chatbody .dots i {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+.chatchips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 14px 12px;
+}
+.chatchips button {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--ink-2);
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.chatchips button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.chatchips button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.chatchips:empty {
+  display: none;
+}
+
+.chatform {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px;
+  border-top: 1px solid var(--line);
+}
+.chatform input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  background: var(--card);
+  color: var(--ink);
+  outline: 0;
+}
+.chatform input:focus {
+  border-color: var(--accent);
+}
+.chatform input::placeholder {
+  color: var(--ink-4);
+}
+.chatform button {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.chatform button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.chatform button .ic {
+  width: 16px;
+  height: 16px;
+}
+
+.chatnote {
+  padding: 0 14px 13px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink-4);
+}
+
+/* 좁은 화면에서는 두 fab이 나란히 서기 어렵다 — 챗봇을 가이드 위로 올린다 */
+@media (max-width: 560px) {
+  .chatwidget {
+    right: max(18px, env(safe-area-inset-right));
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 56px);
+  }
+}
+
+/* 자동 재생 — 건너뛰기 / 다시 재생 */
+.chathead .cskip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.chathead .cskip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.chathead .cskip .ic {
+  width: 11px;
+  height: 11px;
+}
+/* .cskip이 margin-left:auto를 가져가므로 닫기는 간격만 둔다 */
+.chathead .cx {
+  margin-left: 8px;
+}
+/* 흐르는 중 커서 — 정본 .cur(AI 답변 스트리밍)과 같은 문법 */
+.chatbody .bub .cur {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  vertical-align: -2px;
+  margin-left: 1px;
+  background: currentColor;
+  animation: chat-cur 1s steps(2) infinite;
+}
+@keyframes chat-cur {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chatbody .bub .cur {
+    animation: none;
+  }
+}
+
+/* 라우트가 없는 체험 항목(상담 챗봇)은 링크 대신 버튼이다.
+   .titem은 링크 기준으로 짜여 있어 폭·정렬만 맞춰준다. */
+button.titem {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
 }

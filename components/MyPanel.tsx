@@ -310,7 +310,7 @@ export function MyPanel() {
                 {tab === "reviews" ? (
                   <Empty
                     title="내 리뷰는 익명이라 목록으로 보여주지 않아요"
-                    sub="작성자와 리뷰를 이어붙이면 익명이 깨져요 — 수정은 회사 화면에서 해요"
+                    sub="작성자와 리뷰를 이어붙이면 익명이 깨져요. 수정은 회사 화면에서 해요"
                   />
                 ) : null}
               </div>
@@ -342,7 +342,7 @@ export function MyPanel() {
                   ) : approved ? (
                     "최고 등급이에요"
                   ) : (
-                    `${DEMO_PROFILE.nextLevel} — 실적 증빙 승인 시`
+                    `${DEMO_PROFILE.nextLevel}: 실적 증빙 승인 시`
                   )}
                 </span>
               </div>

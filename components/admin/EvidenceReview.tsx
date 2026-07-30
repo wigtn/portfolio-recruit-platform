@@ -89,7 +89,7 @@ export function EvidenceReview() {
       admin.setResult({
         ok: false,
         code: "REASON_REQUIRED",
-        message: "반려 사유를 적어주세요 — 신청 회원에게 그대로 보여요.",
+        message: "반려 사유를 적어주세요. 신청 회원에게 그대로 보여요.",
       });
       return;
     }
@@ -301,7 +301,7 @@ export function EvidenceReview() {
             </div>
           ) : current ? (
             <>
-              <h4>증빙 검토 — {current.nick}</h4>
+              <h4>증빙 검토: {current.nick}</h4>
               <div
                 style={{
                   height: 168,

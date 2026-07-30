@@ -12,6 +12,7 @@ import { loadState } from "@/lib/admin/overlay";
 import { bumpAiRuns, loadAiRuns } from "@/lib/demo/user";
 import { markProgress } from "@/lib/demo/progress";
 import { Icon } from "./Icon";
+import { AiAvatar } from "./AiFace";
 import { toast } from "./ds/Toaster";
 import { SmoothHeight } from "./ds/SmoothHeight";
 import { splitByGuarded } from "@/lib/demo/ai-parts";
@@ -32,7 +33,7 @@ type Stage = "idle" | "checking" | "streaming" | "rescan" | "fixing" | "posted";
 const SUBTASKS: Partial<Record<Stage, string[]>> = {
   checking: [
     "글 본문과 댓글 맥락을 읽고 있어요",
-    "질문 의도를 분류하고 있어요 — 신규 개척 · 프로세스 문의",
+    "질문 의도를 분류하고 있어요. 신규 개척 · 프로세스 문의",
     "참고할 현직자 리뷰 범위를 대조하고 있어요",
   ],
   rescan: [
@@ -171,7 +172,7 @@ export function AiAnswerCard({
 
       if (res.status === 429) {
         const data = (await res.json()) as { error?: string };
-        toast(data.error ?? "실호출 한도에 도달했어요 — 예시로 재생해요.", {
+        toast(data.error ?? "실호출 한도에 도달했어요. 예시로 재생해요.", {
           tone: "info",
         });
         playSeeded(countsAgainstQuota);
@@ -273,15 +274,8 @@ export function AiAnswerCard({
           이 줄이 실제 게시물이다). 사람이 답을 달아도 접지 않는다(사용자 지시). */}
       {stage === "posted" ? (
         <div className="comment is-in ai-comment ai-land">
-          <span className="aiav">
-            <Icon name="bot" />
-            {/* 착지 스파클 — 게시 순간 한 번 떠올랐다 사라진다 */}
-            <span className="aispark" aria-hidden>
-              <i style={{ "--a": "-40deg" } as React.CSSProperties} />
-              <i style={{ "--a": "18deg" } as React.CSSProperties} />
-              <i style={{ "--a": "72deg" } as React.CSSProperties} />
-            </span>
-          </span>
+          {/* 착지 스파클 — 게시 순간 한 번 떠올랐다 사라진다 */}
+          <AiAvatar spark />
           <div className="cbody">
             <div className="cwho">
               <span className="ainick">AI 참고 답변</span>
@@ -362,9 +356,7 @@ export function AiAnswerCard({
           쓰고 재검사하는 과정이 보인다. 재생 중엔 보더 빔 + 오로라. */}
       {panelOpen ? (
         <div className="comment is-in aiwrap">
-          <span className={playing ? "aiav is-think" : "aiav"}>
-            <Icon name="bot" />
-          </span>
+          <AiAvatar thinking={playing} />
           <div
             className={
               playing ? "aibubble aifloat is-playing" : "aibubble aifloat"
@@ -407,7 +399,7 @@ export function AiAnswerCard({
               /* 소진 오버레이 — 아래 내용은 블러로 눕고, 중앙이 말한다 */
               <div className="afblock" role="status">
                 <b>오늘 체험 완료</b>
-                <span>AI 생성 한도를 모두 사용했어요 — 내일 다시 열려요</span>
+                <span>AI 생성 한도를 모두 사용했어요. 내일 다시 열려요</span>
               </div>
             ) : null}
 
@@ -584,7 +576,7 @@ export function AiAnswerCard({
               /* 한도 소진 — 하단은 상담 요청 버튼 하나만(사용자 지시) */
               <div className="afctl is-blocked">
                 <a className="afcta" href="/contact">
-                  이런 AI 기능이 필요하시면 — 상담 요청
+                  이런 AI 기능이 필요하시면 상담 요청
                   <Icon name="arrow" />
                 </a>
               </div>

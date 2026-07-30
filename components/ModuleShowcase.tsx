@@ -51,7 +51,7 @@ const MODULES: Array<{
     hue: 217,
     name: "콘텐츠 엔진",
     what: "게시판 · 글 · 답글 · 신고",
-    demo: "글쓰기부터 신고 왕복까지 — 게시판 종류는 설정으로 늘려요.",
+    demo: "글쓰기부터 신고 왕복까지: 게시판 종류는 설정으로 늘려요.",
     stat: `글 ${ALL_POSTS.length} · 답글 ${COMMENT_COUNT}`,
     href: "/community",
     cta: "커뮤니티 보기",
@@ -62,7 +62,7 @@ const MODULES: Array<{
     hue: 38,
     name: "리뷰·평점",
     what: "축별 평점 · 연봉 · 회사 비교",
-    demo: "영업 5축 평점과 회사 비교표 — 축 구성은 업종에 맞게 바꿔 꽂아요.",
+    demo: "영업 5축 평점과 회사 비교표: 축 구성은 업종에 맞게 바꿔 꽂아요.",
     stat: `회사 ${COMPANIES.length} · 리뷰 ${REVIEWS.length}`,
     href: "/companies",
     cta: "리뷰 보기",
@@ -84,7 +84,7 @@ const MODULES: Array<{
     hue: 276,
     name: "AI 파이프라인",
     what: "생성 → 안전 재검사 → 게시",
-    demo: "AI 답변이 위험 표현을 스스로 고치는 과정 — 강도·한도는 운영자가 정해요.",
+    demo: "AI 답변이 위험 표현을 스스로 고치는 과정: 강도·한도는 운영자가 정해요.",
     stat: `안전 강도 ${Object.keys(SAFETY_LABEL).length}단계`,
     href: "/community/p-4821",
     cta: "생성 지켜보기",
@@ -106,7 +106,7 @@ const MODULES: Array<{
     hue: 200,
     name: "백오피스 프레임",
     what: "권한 · 위험도 승인 · 감사 로그",
-    demo: "모든 운영 동작이 권한 검사와 감사 기록을 지나요 — 위험 작업은 재확인.",
+    demo: "모든 운영 동작이 권한 검사와 감사 기록을 지나요. 위험 작업은 재확인.",
     stat: `운영 도구 ${ADMIN_TOOL_COUNT}종`,
     href: "/admin",
     cta: "백오피스 열기",
@@ -117,7 +117,7 @@ const MODULES: Array<{
     hue: 12,
     name: "디자인 시스템",
     what: "스켈레톤 · 토스트 · 공통 UI",
-    demo: "모든 로딩이 스켈레톤 — 데이터가 와도 화면이 밀리지 않아요.",
+    demo: "모든 로딩이 스켈레톤이라 데이터가 와도 화면이 밀리지 않아요.",
     stat: "레이아웃 시프트 0",
     href: "/",
     cta: "홈에서 새로고침",
@@ -166,7 +166,7 @@ export function ModuleShowcase() {
         </span>
         <h2>방금 쓰신 기능, 전부 모듈입니다</h2>
         <p>
-          이 데모는 검증된 모듈 {MODULES.length}개를 조립해 만들었어요 — 카드를
+          이 데모는 검증된 모듈 {MODULES.length}개를 조립해 만들었어요. 카드를
           누르면 그 모듈이 실제로 돌아가는 화면으로 갑니다. 프로젝트에는 필요한
           조합만 골라 일정과 함께 제안드려요.
         </p>

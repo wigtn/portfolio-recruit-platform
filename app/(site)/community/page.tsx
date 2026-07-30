@@ -14,7 +14,7 @@ import { LiveKeywords } from "@/components/LiveKeywords";
 import { Icon } from "@/components/Icon";
 import { Coach } from "@/components/Coach";
 
-export const metadata = { title: "커뮤니티 — W 세일즈" };
+export const metadata = { title: "커뮤니티 | W 세일즈" };
 
 /** 시안 정본 02번(커뮤니티 게시판) 구조 그대로 — .pagehead → .tabs → .split(.filterbar+.feed+.paging / 사이드) */
 const SORTS = [
@@ -110,7 +110,7 @@ export default async function CommunityPage({
           <div>
             <h1>커뮤니티</h1>
             <div className="desc">
-              현장에서 막 올라온 질문과 노하우 — 영업직끼리 진짜 이야기
+              현장에서 막 올라온 질문과 노하우: 영업직끼리 진짜 이야기
             </div>
           </div>
           <Link
@@ -200,7 +200,7 @@ export default async function CommunityPage({
               id="community-ai"
               cta={{ label: "인기 글 열기", href: "/community/p-4821" }}
             >
-              아무 글이나 열어보세요 — <b>AI 참고 답변이 실제로 생성</b>돼요
+              아무 글이나 열어보세요. <b>AI 참고 답변이 실제로 생성</b>돼요
             </Coach>
 
             {items.length === 0 ? (

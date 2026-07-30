@@ -1,7 +1,7 @@
 import { MyPanel } from "@/components/MyPanel";
 import { Crumb } from "@/components/Crumb";
 
-export const metadata = { title: "마이 — W 세일즈" };
+export const metadata = { title: "마이 | W 세일즈" };
 
 /**
  * 시안 정본 08번(마이페이지) 구조 — .profilecard → .split(.tabs+.feed / 사이드 카드).

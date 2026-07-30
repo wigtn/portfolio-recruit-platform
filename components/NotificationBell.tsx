@@ -80,7 +80,7 @@ export function NotificationBell() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={
-          unread.length ? `알림 — 안 읽음 ${unread.length}개` : "알림"
+          unread.length ? `알림: 안 읽음 ${unread.length}개` : "알림"
         }
         onClick={() => {
           const next = !open;

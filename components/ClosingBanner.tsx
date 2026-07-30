@@ -68,7 +68,7 @@ export function ClosingBanner() {
           ))}
         </h2>
         <p className="closing-sub">
-          커머스 · 숙박 예약 · 헬프데스크 — 같은 모듈을 다시 조합합니다.
+          커머스 · 숙박 예약 · 헬프데스크: 같은 모듈을 다시 조합합니다.
         </p>
 
         <div className="closing-act">

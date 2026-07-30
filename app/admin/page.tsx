@@ -3,7 +3,7 @@ import { OpsQueue } from "@/components/admin/OpsQueue";
 import { SystemGauges } from "@/components/admin/SystemGauges";
 import { DonutChart } from "@/components/ds/DonutChart";
 
-export const metadata = { title: "대시보드 — 백오피스" };
+export const metadata = { title: "대시보드 | 백오피스" };
 
 /**
  * 콘텐츠 구성 — 시안 정본 11번의 비율 그대로(합성). 색은 전부 토큰이다:

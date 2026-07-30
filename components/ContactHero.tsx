@@ -80,7 +80,7 @@ export function ContactHero() {
             ))}
           </h1>
           <div className="desc">
-            방금 체험한 것들을 우리 사업의 서비스로 — 구성과 일정을 제안드려요
+            방금 체험한 것들을 우리 사업의 서비스로, 구성과 일정을 제안드려요
           </div>
           <div className="contact-facts">
             {FACTS.map((fact, index) => (

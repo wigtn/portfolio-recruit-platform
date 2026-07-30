@@ -84,7 +84,7 @@ export default function SiteLayout({
                 maxWidth: "26ch",
               }}
             >
-              영업직을 위한 커뮤니티와 회사 리뷰 — 현장의 답을 현장 사람들에게.
+              영업직을 위한 커뮤니티와 회사 리뷰: 현장의 답을 현장 사람들에게.
             </p>
           </div>
           <div>
@@ -124,7 +124,7 @@ export default function SiteLayout({
             서울특별시 ◇◇구 ◇◇로 00, 0층 · contact@demo.wigtn.dev
           </div>
           <div style={{ textAlign: "right" }}>
-            © 2026 ◇◇컴퍼니 — WIGTN 데모
+            © 2026 ◇◇컴퍼니 · WIGTN 데모
             <br />
             모든 회사·회원·수치는 가상 데이터예요
           </div>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { splitByGuarded } from "./ai-parts";
 
-describe("splitByGuarded — 실생성 텍스트의 위험 표현 토큰화", () => {
+describe("splitByGuarded: 실생성 텍스트의 위험 표현 토큰화", () => {
   const guarded = [
     { raw: "◇◇테크", loose: "◇◇테크", basic: "국내 대기업 A", strict: "한 기업" },
     { raw: "평균 32% 상승", loose: "평균 32% 상승", basic: "공개된 리뷰 범위", strict: "공개된 리뷰 범위" },

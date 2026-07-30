@@ -43,12 +43,12 @@ export function sanitizePaste(raw: string): {
       return "";
     });
   }
-  // 지운 자리의 어색한 공백 정리 — 문장은 건드리지 않는다
+  // 지운 자리의 어색한 공백 정리: 문장은 건드리지 않는다
   if (hits.length > 0) clean = clean.replace(/[ \t]+\n/g, "\n");
   return { clean, hits };
 }
 
-/** 연출용 세그먼트 — 원문을 [안전, 위험, 안전…]으로 쪼갠다.
+/** 연출용 세그먼트: 원문을 [안전, 위험, 안전…]으로 쪼갠다.
     검역 카드가 위험 조각만 골라 스캔→취소선→소멸을 재생할 수 있게. */
 export type RiskySegment = { text: string; risky: boolean; label?: string };
 

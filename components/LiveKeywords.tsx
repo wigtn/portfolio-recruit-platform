@@ -105,7 +105,7 @@ export function LiveKeywords({ keywords: source }: { keywords: Keyword[] }) {
                 {movement === "new"
                   ? "NEW"
                   : movement === "same"
-                    ? "—"
+                    ? "-"
                     : distance || item.value}
               </span>
             </Link>

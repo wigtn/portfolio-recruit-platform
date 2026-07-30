@@ -6,6 +6,7 @@ import { Icon } from "@/components/Icon";
 import { Sk, SkRegion, useMockLoading } from "@/components/Skeleton";
 import {
   DEMO_FEATURES,
+  DEMO_OPEN_CHAT_EVENT,
   DEMO_PROGRESS_EVENT,
   loadProgress,
   type DemoFeature,
@@ -107,14 +108,11 @@ export function SeenCard() {
       ) : (
         DEMO_FEATURES.map((feature) => {
           const seen = done.has(feature.id);
-          return (
-            <Link
-              className={
-                seen ? "titem sk-arrive-soft" : "titem dim sk-arrive-soft"
-              }
-              key={feature.id}
-              href={feature.href}
-            >
+          const cls = seen
+            ? "titem sk-arrive-soft"
+            : "titem dim sk-arrive-soft";
+          const inner = (
+            <>
               <span className="tic">
                 <Icon name={seen ? "check" : "lock"} />
               </span>
@@ -122,6 +120,22 @@ export function SeenCard() {
                 <b>{feature.title}</b>
                 <span>{feature.description}</span>
               </div>
+            </>
+          );
+          /* 라우트가 없는 항목(챗봇)은 이 화면에서 바로 열어준다 */
+          return feature.action === "chat" ? (
+            <button
+              className={cls}
+              key={feature.id}
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent(DEMO_OPEN_CHAT_EVENT))
+              }
+            >
+              {inner}
+            </button>
+          ) : (
+            <Link className={cls} key={feature.id} href={feature.href}>
+              {inner}
             </Link>
           );
         })

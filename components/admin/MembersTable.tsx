@@ -53,7 +53,7 @@ const GRADES = [
 
 /** 정지 사유 기본값 — 신고 누적이면 그 횟수가 사유에 남는다 */
 const suspendReason = (row: Member) =>
-  row.reported ? `신고 ${row.reported}회 누적 — 정지` : "정책 위반 — 정지";
+  row.reported ? `신고 ${row.reported}회 누적: 정지` : "정책 위반: 정지";
 
 type Filter = "all" | "verified" | "suspended";
 
@@ -256,8 +256,8 @@ export function MembersTable() {
                         .map((row) => row.nick)
                         .join(
                           ", ",
-                        )} — 정지하면 글·리뷰 작성이 막히고 처리 기록에 남아요.`,
-                      reason: "정책 위반 — 일괄 정지",
+                        )}: 정지하면 글·리뷰 작성이 막히고 처리 기록에 남아요.`,
+                      reason: "정책 위반: 일괄 정지",
                       tool: "member.suspend",
                       label: "정지",
                     })
@@ -444,7 +444,7 @@ export function MembersTable() {
               ids: [target.id],
               title: `${target.nick}님을 강제 탈퇴시킬까요?`,
               desc: "탈퇴는 되돌릴 수 없어요. 작성한 글·리뷰는 익명 처리된 채 남아요.",
-              reason: "중대한 정책 위반 — 강제 탈퇴",
+              reason: "중대한 정책 위반: 강제 탈퇴",
               tool: "member.expel",
               label: "강제 탈퇴",
             })
@@ -509,7 +509,7 @@ function SuspendButton({
       disabled={busy}
       onClick={() =>
         onAct("member.restore", row.id, {
-          reason: "이의 제기 수용 — 정지 해제",
+          reason: "이의 제기 수용: 정지 해제",
         })
       }
     >
@@ -597,7 +597,7 @@ function MemberDetail({
                   onChange={(next) => {
                     if (next === member.grade || expelled) return;
                     void onAct("member.grade", member.id, {
-                      reason: `수동 등급 조정 — ${member.nick}`,
+                      reason: `수동 등급 조정: ${member.nick}`,
                       payload: { grade: next },
                     });
                   }}
@@ -622,7 +622,7 @@ function MemberDetail({
             </span>
             <div>
               <b>실명·연락처는 조회할 수 없어요</b>
-              <span>계정도 일부 가려서 보여줘요 — 제재 판단에 필요한 활동 기록만 제공돼요</span>
+              <span>계정도 일부 가려서 보여줘요. 제재 판단에 필요한 활동 기록만 제공돼요</span>
             </div>
           </div>
         </div>
@@ -639,7 +639,7 @@ function MemberDetail({
                 disabled={busy}
                 onClick={() =>
                   onAct("member.warn", member.id, {
-                    reason: "커뮤니티 가이드 위반 — 경고",
+                    reason: "커뮤니티 가이드 위반: 경고",
                   })
                 }
               >
@@ -651,7 +651,7 @@ function MemberDetail({
                 onClick={() =>
                   suspended
                     ? onAct("member.restore", member.id, {
-                        reason: "이의 제기 수용 — 정지 해제",
+                        reason: "이의 제기 수용: 정지 해제",
                       })
                     : onSuspend(member)
                 }

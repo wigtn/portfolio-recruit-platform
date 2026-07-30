@@ -89,7 +89,7 @@ export function ReviewCard({
         <ReportModal
           subject={{
             id: review.id,
-            target: `${company} — “${review.headline}”`,
+            target: `${company}: “${review.headline}”`,
             kind: "회사 리뷰",
             body: `[장점] ${review.pros}\n\n[단점] ${review.cons}`,
             author: "익명",

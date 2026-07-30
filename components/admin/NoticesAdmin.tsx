@@ -213,7 +213,7 @@ export function NoticesAdmin() {
                                 {
                                   reason: row.pinned
                                     ? "상단 고정 해제"
-                                    : "안내 우선 노출 — 상단 고정",
+                                    : "안내 우선 노출: 상단 고정",
                                 },
                               )
                             }
@@ -229,7 +229,7 @@ export function NoticesAdmin() {
                             disabled={admin.busy}
                             onClick={() =>
                               admin.act("notice.unpublish", row.id, {
-                                reason: "운영자 판단 — 노출 중단",
+                                reason: "운영자 판단: 노출 중단",
                               })
                             }
                           >

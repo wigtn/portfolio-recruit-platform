@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { sanitizePaste } from "./sanitize";
 
-describe("sanitizePaste — 붙여넣기 실살균", () => {
+describe("sanitizePaste: 붙여넣기 실살균", () => {
   it("스크립트·이벤트 핸들러를 지우고 내역을 돌려준다", () => {
     const { clean, hits } = sanitizePaste(
       '안내문\n<script>alert(1)</script><img src="x" onerror="steal()">끝',

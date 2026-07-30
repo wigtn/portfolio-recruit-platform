@@ -73,7 +73,7 @@ export function CurationBoard() {
       toast(res.message, { tone: "info" });
       return;
     }
-    toast("홈 화면 배치를 저장했어요 — 변경 내역은 처리 기록에 남았어요.", {
+    toast("홈 화면 배치를 저장했어요. 변경 내역은 처리 기록에 남았어요.", {
       tone: "success",
     });
   }, [admin.result]);
@@ -86,7 +86,7 @@ export function CurationBoard() {
     const dirty =
       JSON.stringify(draft) !== JSON.stringify(admin.state.curation);
     if (dirty && !wasDirty.current) {
-      toast("저장하지 않은 변경이 있어요 — 저장을 눌러야 홈에 반영돼요.", {
+      toast("저장하지 않은 변경이 있어요. 저장을 눌러야 홈에 반영돼요.", {
         tone: "info",
       });
     }
@@ -217,7 +217,7 @@ export function CurationBoard() {
         <div className="curcard">
           <h4>
             인기 키워드 제외
-            <span className="mini">집계는 자동 · 여기는 차단만</span>
+            <span className="mini">집계는 자동, 여기는 차단만</span>
           </h4>
           <div
             style={{
@@ -226,7 +226,7 @@ export function CurationBoard() {
               lineHeight: "1.65",
             }}
           >
-            인기 키워드는 검색·조회로 자동 집계돼요 — 운영자가 손댈 건 없어요.
+            인기 키워드는 검색·조회로 자동 집계돼요. 운영자가 손댈 건 없어요.
             여기는 부적절한 키워드를 집계에서 제외합니다.
           </div>
           <div style={{ marginTop: 10 }}>
@@ -408,7 +408,7 @@ function SlotCard({
             className="ds-draghandle"
             {...drag.handleProps(index)}
             // 훅의 범용 라벨 대신 어느 항목인지까지 읽어 준다(스프레드 뒤라 이긴다)
-            aria-label={`${slot.name} 순서 변경 — 드래그 또는 키보드 ↑/↓`}
+            aria-label={`${slot.name} 순서 변경: 드래그 또는 키보드 ↑/↓`}
           >
             <Icon name="grip" />
           </button>
@@ -434,7 +434,7 @@ function SlotCard({
             className="nm"
             style={{ fontWeight: 600, color: "var(--ink-3)" }}
           >
-            비어 있어요 — 홈에서 이 영역이 보이지 않아요
+            비어 있어요. 홈에서 이 영역이 보이지 않아요
           </span>
         </div>
       ) : null}

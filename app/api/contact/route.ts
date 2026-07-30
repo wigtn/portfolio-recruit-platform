@@ -141,8 +141,8 @@ export async function POST(request: Request) {
       const rows = [
         ["이름", body.name],
         ["연락처", body.contact],
-        ["회사", body.company || "—"],
-        ["관심 모듈", body.modules.join(", ") || "—"],
+        ["회사", body.company || "-"],
+        ["관심 모듈", body.modules.join(", ") || "-"],
       ]
         .map(
           ([label, value]) =>

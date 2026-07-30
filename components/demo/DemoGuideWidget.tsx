@@ -8,6 +8,7 @@ import { useRole } from "@/lib/demo/role";
 import { resetDemoExperience } from "@/lib/demo/progress";
 import {
   DEMO_FEATURES,
+  DEMO_OPEN_CHAT_EVENT,
   DEMO_PROGRESS_EVENT,
   loadDemoTheme,
   loadProgress,
@@ -150,7 +151,7 @@ export function DemoGuideWidget() {
         <div className="coach up guide-coach uk-pop-in">
           <span className="cb">데모</span>
           <span className="ct">
-            여기 있는 <b>{FEATURES.length}가지, 전부 실제로 동작해요</b> — 눌러서 확인해보세요
+            여기 있는 <b>{FEATURES.length}가지, 전부 실제로 동작해요</b>: 눌러서 확인해보세요
           </span>
           <button
             className="cx"
@@ -188,7 +189,7 @@ export function DemoGuideWidget() {
             </Link>
           ) : (
             <div className="dwsub">
-              누르면 그 화면으로 가요 — 실행까지 마치면 체크가 켜져요
+              누르면 그 화면으로 가요. 실행까지 마치면 체크가 켜져요
             </div>
           )}
           <div className="dwlist">
@@ -200,14 +201,13 @@ export function DemoGuideWidget() {
                     const done = progress.has(feature.id);
                     // 화면까지 가 봤지만 실동작은 아직 — 반쯤 밟은 상태
                     const seen = !done && visited.has(feature.id);
-                    return (
-                      <Link
-                        className={
-                          done ? "titem done" : seen ? "titem seen" : "titem"
-                        }
-                        href={feature.href}
-                        key={feature.id}
-                      >
+                    const cls = done
+                      ? "titem done"
+                      : seen
+                        ? "titem seen"
+                        : "titem";
+                    const inner = (
+                      <>
                         <span className="tic">
                           <Icon
                             name={done ? "check" : seen ? "view" : "arrow"}
@@ -218,6 +218,25 @@ export function DemoGuideWidget() {
                           {/* 설명은 항상 차분한 톤 — 상태는 아이콘이 말한다 */}
                           <span className="tdesc">{feature.description}</span>
                         </span>
+                      </>
+                    );
+                    /* 라우트가 없는 항목(챗봇)은 이동 대신 화면 위 장치를 연다 */
+                    return feature.action === "chat" ? (
+                      <button
+                        className={cls}
+                        key={feature.id}
+                        onClick={() => {
+                          setOpen(false);
+                          window.dispatchEvent(
+                            new CustomEvent(DEMO_OPEN_CHAT_EVENT),
+                          );
+                        }}
+                      >
+                        {inner}
+                      </button>
+                    ) : (
+                      <Link className={cls} href={feature.href} key={feature.id}>
+                        {inner}
                       </Link>
                     );
                   })}

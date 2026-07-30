@@ -60,8 +60,8 @@ export function actionsOf(report: Report): Action[] {
 /** 조치별 감사 사유 — 왜 했는지가 남아야 추적이 된다 */
 export const REASON: Record<string, string> = {
   "report.blind": "신고 누적·정책 위반",
-  "report.reject": "정책 위반 아님 — 신고 반려",
-  "report.delete": "스팸·광고 확인 — 콘텐츠 삭제",
-  "report.restore": "정책 위반 아님 — 콘텐츠 복원",
-  "report.revoke": "증빙 불일치 — 실적 인증 취소",
+  "report.reject": "정책 위반 아님: 신고 반려",
+  "report.delete": "스팸·광고 확인: 콘텐츠 삭제",
+  "report.restore": "정책 위반 아님: 콘텐츠 복원",
+  "report.revoke": "증빙 불일치: 실적 인증 취소",
 };

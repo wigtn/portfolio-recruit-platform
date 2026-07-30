@@ -94,7 +94,7 @@ export function JobDetail({ jobId }: { jobId: string }) {
       saveUser({ ...user, applied: [...user.applied, row.id] });
     }
     setApplied(true);
-    toast("지원이 접수됐어요 — 이 브라우저에만 남는 체험 기록이에요", {
+    toast("지원이 접수됐어요. 이 브라우저에만 남는 체험 기록이에요", {
       tone: "success",
     });
   };
@@ -199,7 +199,7 @@ export function JobDetail({ jobId }: { jobId: string }) {
 
         {seedJob && seedJob.conditions.length > 0 ? (
           <section className="jobdoc-sec is-cond">
-            <h4>영업 조건 — 공고에서 실제로 궁금한 것</h4>
+            <h4>영업 조건: 공고에서 실제로 궁금한 것</h4>
             <div className="jobdoc-chips">
               {seedJob.conditions.map((condition) => (
                 <span key={condition}>
@@ -230,7 +230,7 @@ export function JobDetail({ jobId }: { jobId: string }) {
 
         {!seedJob ? (
           <p className="jobdoc-note">
-            운영자가 등록한 공고예요 — 상세 내용은 회사에 문의해 주세요.
+            운영자가 등록한 공고예요. 상세 내용은 회사에 문의해 주세요.
           </p>
         ) : null}
       </article>
@@ -273,7 +273,7 @@ export function JobDetail({ jobId }: { jobId: string }) {
               </Link>
             </div>
             <p className="jobdoc-hint">
-              공고만 보고 지원하지 마세요 — 인센티브·목표현실성 같은 영업 축
+              공고만 보고 지원하지 마세요. 인센티브·목표현실성 같은 영업 축
               평점을 먼저 확인할 수 있어요.
             </p>
           </div>

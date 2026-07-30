@@ -72,7 +72,7 @@ export const FEED: FeedItem[] = [
     views: 341,
     board: "knowhow",
     excerpt:
-      "면접 본 5개 회사의 인센티브 구조를 정리했습니다. 선형 지급과 구간 배율 — 실수령은 목표 산정 방식이 갈랐어요.",
+      "면접 본 5개 회사의 인센티브 구조를 정리했습니다. 선형 지급과 구간 배율: 실수령은 목표 산정 방식이 갈랐어요.",
     image: "/images/community/pipeline-review.png",
   },
   {
@@ -126,7 +126,7 @@ export const FEED: FeedItem[] = [
     id: "f-6",
     postId: "p-4816",
     badges: ["노하우"],
-    title: "콜드콜 리스트 만드는 법 — 3년치 정리",
+    title: "콜드콜 리스트 만드는 법: 3년치 정리",
     author: "한부장",
     at: "6일 전",
     ageMinutes: 8700,
@@ -725,7 +725,7 @@ export const FEED: FeedItem[] = [
 export const HOT_KEYWORDS = [
   { rank: 1, word: "인센티브", delta: "up" as const, value: "2" },
   { rank: 2, word: "계정 배분", delta: "up" as const, value: "5" },
-  { rank: 3, word: "△△전자", delta: "same" as const, value: "—" },
+  { rank: 3, word: "△△전자", delta: "same" as const, value: "-" },
   { rank: 4, word: "콜드콜", delta: "down" as const, value: "1" },
   { rank: 5, word: "이직", delta: "new" as const, value: "NEW" },
 ];

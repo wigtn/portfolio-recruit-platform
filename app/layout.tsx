@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { IconSprite } from "@/components/IconSprite";
 import { Toaster } from "@/components/ds/Toaster";
 import { DemoGuideWidget } from "@/components/demo/DemoGuideWidget";
+import { ChatWidget } from "@/components/demo/ChatWidget";
 import { RoleProvider } from "@/lib/demo/role";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "W 세일즈 — 영업 커리어 인텔리전스",
+  title: "W 세일즈 | 영업 커리어 인텔리전스",
   description:
     "영업직이 직접 남긴 익명 리뷰와 현장 질문답변. 모든 회사·회원·수치는 가상 데이터입니다.",
 };
@@ -35,6 +36,7 @@ export default function RootLayout({
         <RoleProvider>
           {children}
           <DemoGuideWidget />
+          <ChatWidget />
         </RoleProvider>
       </body>
     </html>

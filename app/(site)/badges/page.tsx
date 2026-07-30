@@ -1,7 +1,7 @@
 import { BadgePanel } from "@/components/BadgePanel";
 import { Crumb } from "@/components/Crumb";
 
-export const metadata = { title: "실적 인증 — W 세일즈" };
+export const metadata = { title: "실적 인증 | W 세일즈" };
 
 /**
  * 실적 인증 — 푸터가 이름을 부르면서도 화면이 없어 `/my`로 보내던 자리.
@@ -19,7 +19,7 @@ export default function BadgesPage() {
           <div>
             <h1>실적 인증</h1>
             <div className="desc">
-              증빙을 올리면 운영자가 확인하고 등급을 올려줘요 — 인증 회원의
+              증빙을 올리면 운영자가 확인하고 등급을 올려줘요. 인증 회원의
               리뷰가 먼저 노출됩니다
             </div>
           </div>

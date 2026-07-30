@@ -92,7 +92,7 @@ export function ReviewComposer({ company }: { company: Company }) {
     // 권한 매트릭스 pl-3: 게스트는 리뷰 작성 불가 — 실행 대신 로그인으로 유도한다
     if (role === "guest") {
       setError(
-        "지금은 게스트로 보고 있어요 — 리뷰는 로그인해야 남길 수 있어요.",
+        "지금은 게스트로 보고 있어요. 리뷰는 로그인해야 남길 수 있어요.",
       );
       setGateOpen(true);
       return;
@@ -157,7 +157,7 @@ export function ReviewComposer({ company }: { company: Company }) {
           }}
         >
           매긴 별점 <b>{submitted.score.toFixed(1)}</b>이 반영돼 {company.name}{" "}
-          평균이 <b>{average.toFixed(1)}</b>이 됐어요 — 회사 상세 리뷰 맨 위에서
+          평균이 <b>{average.toFixed(1)}</b>이 됐어요. 회사 상세 리뷰 맨 위에서
           내 리뷰를 볼 수 있어요.
           <br />
           체험용이라 이 브라우저에만 남아요.
@@ -186,7 +186,7 @@ export function ReviewComposer({ company }: { company: Company }) {
           </label>
 
           <Coach id="review-average">
-            별점 5개만 매기면 끝 — 제출하면{" "}
+            별점 5개만 매기면 끝이에요. 제출하면{" "}
             <b>회사 평균이 그 자리에서 재계산</b>돼요
           </Coach>
 

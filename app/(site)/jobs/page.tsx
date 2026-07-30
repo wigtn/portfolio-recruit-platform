@@ -1,7 +1,7 @@
 import { Crumb } from "@/components/Crumb";
 import { JobsBoard } from "@/components/JobsBoard";
 
-export const metadata = { title: "채용공고 — W 세일즈" };
+export const metadata = { title: "채용공고 | W 세일즈" };
 
 /**
  * 채용공고 — 공고 옆에 현직자 평점이 같이 붙는 것이 이 서비스의 차별점.
@@ -16,7 +16,7 @@ export default function JobsPage() {
           <div>
             <h1>채용공고</h1>
             <div className="desc">
-              영업 직무만 골라서 — 공고 옆에 현직자 평점과 리뷰가 같이 붙어요
+              영업 직무만 골라서, 공고 옆에 현직자 평점과 리뷰가 같이 붙어요
             </div>
           </div>
         </div>

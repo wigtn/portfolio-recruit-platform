@@ -5,7 +5,7 @@ import { CompanyCompare } from "@/components/CompanyCompare";
 import { COMPANIES, SALES_AXES } from "@/lib/seed/companies";
 import { Icon } from "@/components/Icon";
 
-export const metadata = { title: "회사 비교 — W 세일즈" };
+export const metadata = { title: "회사 비교 | W 세일즈" };
 
 /**
  * 회사 비교 — 두 회사를 직접 골라 같은 항목으로 맞대는 화면.
@@ -59,7 +59,7 @@ export default function ComparePage() {
           </li>
           <li>
             <b>3</b>
-            <span>공통 지표 — 평점 · 연봉 · 리뷰 수</span>
+            <span>공통 지표: 평점 · 연봉 · 리뷰 수</span>
           </li>
         </ul>
 
@@ -108,7 +108,7 @@ export default function ComparePage() {
           </Link>
         </div>
         <p className="cmp-rosternote">
-          검증 리뷰가 쌓여 영업 직무 축으로 비교할 수 있는 회사들이에요 —
+          검증 리뷰가 쌓여 영업 직무 축으로 비교할 수 있는 회사들이에요 -
           누르면 상세 리뷰로 가요.
         </p>
         <div className="cmp-roster">
@@ -153,5 +153,5 @@ const AXIS_DESC: Record<string, string> = {
   goalRealism: "할당 목표가 시장·계정 규모에 비해 달성 가능한가",
   managerCoaching: "매니저가 동행·피드백으로 실제 도움을 주는가",
   accountAllocation: "계정이 연차가 아니라 역량·형평 기준으로 배분되는가",
-  pressure: "미달 시 압박의 강도 — 낮을수록 지속 가능한 환경",
+  pressure: "미달 시 압박의 강도: 낮을수록 지속 가능한 환경",
 };

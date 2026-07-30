@@ -163,7 +163,7 @@ const TOOLS: Record<string, ToolSpec> = {
           ? {
               ...row,
               history: [
-                { at: "오늘", what: `경고 — ${reason ?? "정책 위반"}` },
+                { at: "오늘", what: `경고: ${reason ?? "정책 위반"}` },
                 ...row.history,
               ],
             }
@@ -188,7 +188,7 @@ const TOOLS: Record<string, ToolSpec> = {
               history: [
                 {
                   at: "오늘",
-                  what: `등급 조정 — ${row.grade} → ${String(payload?.grade ?? row.grade)}`,
+                  what: `등급 조정: ${row.grade} → ${String(payload?.grade ?? row.grade)}`,
                 },
                 ...row.history,
               ],
@@ -693,7 +693,7 @@ Object.assign(TOOLS, {
           name: String(payload?.name ?? "새 운영자"),
           role: (payload?.role as AdminAccount["role"]) ?? "viewer",
           twoFA: false,
-          lastActive: "—",
+          lastActive: "-",
           status: "초대됨" as const,
         },
       ],

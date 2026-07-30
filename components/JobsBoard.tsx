@@ -117,7 +117,7 @@ export function JobsBoard() {
           />
         </form>
         <span className="jobsopen" style={{ marginLeft: "auto" }}>
-          채용 중 <b>{loading ? "—" : openCount}</b>건
+          채용 중 <b>{loading ? "-" : openCount}</b>건
         </span>
       </div>
 

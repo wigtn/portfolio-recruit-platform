@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("글쓰기 — 태그 뱃지·커스텀 드롭다운·붙여넣기 실차단", async ({ page }) => {
+test("글쓰기: 태그 뱃지·커스텀 드롭다운·붙여넣기 실차단", async ({ page }) => {
   await page.goto("http://localhost:4310/community/write");
   // 회원으로 (게스트 게이트 우회)
   await page.evaluate(() => localStorage.setItem("wigtn-demo-role-v1", "member"));
@@ -13,7 +13,7 @@ test("글쓰기 — 태그 뱃지·커스텀 드롭다운·붙여넣기 실차�
   await page.click('.ds-opt:has-text("노하우")');
   await expect(page.locator(".ds-select-v")).toHaveText("노하우");
 
-  // 2) 태그 — 추천 클릭 + 직접 입력 + 제거
+  // 2) 태그. 추천 클릭 + 직접 입력 + 제거
   await page.click('.tagsug-pill:has-text("B2B")');
   await expect(page.locator(".tagpill")).toHaveCount(1);
   await page.click(".tagfield");
@@ -23,7 +23,7 @@ test("글쓰기 — 태그 뱃지·커스텀 드롭다운·붙여넣기 실차�
   await page.click('.tagpill:has-text("B2B") button');
   await expect(page.locator(".tagpill")).toHaveCount(1);
 
-  // 3) 데모 버튼 — 에디터 안에서 검역 연출, 본문은 걸러진 채 편집 가능
+  // 3) 데모 버튼. 에디터 안에서 검역 연출, 본문은 걸러진 채 편집 가능
   await page.click(".demobtn");
   await expect(page.locator(".qoverlay.is-scanning")).toBeVisible();
   const editor = page.locator(".weditor textarea.editor");
@@ -41,7 +41,7 @@ test("글쓰기 — 태그 뱃지·커스텀 드롭다운·붙여넣기 실차�
   await page.keyboard.type("편집됨");
   expect(await editor.inputValue()).toContain("편집됨"); // 렌더 후에도 편집된다
 
-  // 4) 실붙여넣기 — 위험 코드 직접 붙여넣어도 실제 차단
+  // 4) 실붙여넣기. 위험 코드 직접 붙여넣어도 실제 차단
   await editor.focus();
   await page.evaluate(() => {
     const ta = document.querySelector<HTMLTextAreaElement>(".weditor textarea")!;
