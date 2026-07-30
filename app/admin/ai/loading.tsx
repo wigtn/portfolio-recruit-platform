@@ -9,7 +9,7 @@ import { RouteSk, TableCardSk } from "@/components/admin/RouteSkeleton";
 export default function AiLoading() {
   return (
     <RouteSk label="AI 운영">
-      <div className="dashgrid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+      <div className="dashgrid ai-config-grid">
         <div className="tablecard" aria-hidden>
           <div className="tabletop">
             <h4>AI 안전 강도</h4>
@@ -64,7 +64,7 @@ export default function AiLoading() {
         </div>
       </div>
 
-      <div className="mrow" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
+      <div className="mrow admin-three-stats">
         {Array.from({ length: 3 }).map((_, index) => (
           <SkMcard key={index} />
         ))}

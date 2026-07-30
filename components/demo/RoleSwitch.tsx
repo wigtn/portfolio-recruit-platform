@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ROLE_LABEL, useRole } from "@/lib/demo/role";
+import { Icon } from "@/components/Icon";
 import { RoleModal } from "./RoleModal";
 
 /**
@@ -15,10 +16,21 @@ export function RoleSwitch() {
   return (
     <>
       <button
-        className={role === "admin" ? "pill" : "pill ghost"}
+        className="acct-btn role-switch-btn"
+        aria-label={`역할 전환: 현재 ${ROLE_LABEL[role]}`}
+        title="역할 전환"
         onClick={() => setOpen(true)}
       >
-        {ROLE_LABEL[role]} ▾
+        <span
+          className={role === "admin" ? "acct-av is-admin" : "acct-av"}
+          aria-hidden
+        >
+          <Icon name={role === "admin" ? "shield" : "user"} />
+        </span>
+        <span className="role-switch-label">{ROLE_LABEL[role]}</span>
+        <span className="role-switch-caret" aria-hidden>
+          ▾
+        </span>
       </button>
       {open || firstVisit ? <RoleModal onClose={() => setOpen(false)} /> : null}
     </>

@@ -113,7 +113,7 @@ export function MyPanel() {
 
       <div className="split">
         <div>
-          <div className="tabs" style={{ marginBottom: 14 }}>
+          <div className="tabs my-tabs">
             {TABS.map((item) => (
               <button
                 key={item.key}
@@ -121,12 +121,9 @@ export function MyPanel() {
                 onClick={() => setTab(item.key)}
               >
                 {item.label}{" "}
-                {/* .ct는 `.tabs span` 규칙에 걸려 패딩 든 칩(실측 41.2px)이다 —
-                    Sk는 block이라 strut이 없으니 로딩 동안 칩 높이를 못 박는다 */}
-                <span
-                  className="ct"
-                  style={loading ? { height: 41.2 } : undefined}
-                >
+                {/* 마이 탭의 카운트는 일반 탭의 절대 배치 뱃지를 쓰지 않는다.
+                    인라인 흐름에 두어 세로 스크롤과 잘림을 막는다. */}
+                <span className="ct">
                   {loading ? <Sk w={8} h={10} /> : item.count}
                 </span>
               </button>

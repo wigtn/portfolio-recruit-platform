@@ -100,7 +100,7 @@ export function AiOps() {
     <>
       <ResultNote result={admin.result} />
 
-      <div className="dashgrid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+      <div className="dashgrid ai-config-grid">
         <div className="tablecard">
           <div className="tabletop">
             <h4>AI 안전 강도</h4>
@@ -211,7 +211,7 @@ export function AiOps() {
 
       {/* 누적 지표 — 오버레이는 AI 설정만 저장하고 호출 횟수는 기록하지 않아
           실측 파생이 불가하다. 시드 근거는 lib/admin/ai-log.ts AI_METRICS 주석. */}
-      <div className="mrow" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
+      <div className="mrow admin-three-stats">
         <div className="mcard">
           <div className="mk">생성한 참고 답변</div>
           <div className="mv">{AI_METRICS.generated}</div>

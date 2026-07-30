@@ -50,6 +50,13 @@ export function EventPopup() {
   const onPointerDown = (event: React.PointerEvent) => {
     // 버튼·링크를 누른 건 드래그가 아니다
     if ((event.target as HTMLElement).closest("a,button")) return;
+    // 손가락으로 읽는 모바일에서는 카드 드래그가 페이지 스크롤을 가로챈다.
+    // 위치 이동은 마우스처럼 정밀 포인터가 있는 넓은 화면에서만 제공한다.
+    if (
+      window.matchMedia("(max-width: 620px), (pointer: coarse)").matches
+    ) {
+      return;
+    }
     const rect = cardRef.current?.getBoundingClientRect();
     if (!rect) return;
     dragRef.current = {

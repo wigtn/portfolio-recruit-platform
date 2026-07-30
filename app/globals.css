@@ -1099,11 +1099,6 @@ small,
   color: var(--ink-2);
   gap: 7px;
 }
-.phd-c .ic {
-  width: 15px;
-  height: 15px;
-  color: var(--ink-4);
-}
 .phd-r {
   justify-self: end;
 }
@@ -1170,10 +1165,6 @@ small,
   background: var(--bg);
   color: var(--ink);
 }
-.phd-brand {
-  display: none;
-}
-
 /* 모바일 드로어 — 2단 마운트(.pdrawer → .is-open) + 280ms 퇴장 */
 .pdrawer {
   position: fixed;
@@ -1219,9 +1210,6 @@ small,
   }
   .phd-menu {
     display: grid;
-  }
-  .phd-brand {
-    display: inline-flex;
   }
   .phd {
     padding: 0 10px;
@@ -12612,6 +12600,22 @@ select.in {
   color: var(--accent-ink);
   font-variant-numeric: tabular-nums;
 }
+.jobs-filter-tools {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.jobs-filter-tools .jobs-search {
+  flex: 0 1 260px;
+  max-width: 260px;
+}
+.jobs-filterbar .jobsopen {
+  margin-left: auto;
+  flex-shrink: 0;
+}
 .job.is-closed {
   opacity: 0.55;
   filter: grayscale(0.35);
@@ -14258,4 +14262,750 @@ button.titem {
   width: 100%;
   text-align: left;
   cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   모바일 반응형 안정화
+   기존 데스크톱 문법은 유지하고, 좁은 화면에서만 헤더·레이어·표·비교 UI의
+   우선순위를 다시 정한다. vendor 정본은 수정하지 않는다.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.promo-mobile,
+.promo-cta-mobile {
+  display: none;
+}
+
+.my-tabs {
+  margin-bottom: 14px;
+}
+.my-tabs .ct {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ft-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.ft-mark {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 7px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.ft-desc {
+  max-width: 26ch;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.fbot-note {
+  text-align: right;
+}
+
+.role-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 2px 9px 2px 2px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  color: var(--ink-2);
+  background: var(--card);
+}
+.role-switch-btn .acct-av.is-admin {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.role-switch-label {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.role-switch-caret {
+  color: var(--ink-4);
+  font-size: 10px;
+}
+
+.tabletop-actions {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+/* 관리자 표는 고정 열 너비 안에서 셀 콘텐츠가 다음 열을 밀지 않는다. */
+.amain .dtable td {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.amain .dtable td > :where(div, span, a, button) {
+  min-width: 0;
+  max-width: 100%;
+}
+.amain .dtable td > b,
+.amain .dtable .u .un,
+.amain .dtable .macct {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.amain .dtable .tact {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.amain .dtable .tact::-webkit-scrollbar {
+  display: none;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+.modal-actions > * {
+  flex: 1;
+  justify-content: center;
+}
+
+/* 중첩 모달을 포함해 화면을 덮는 UI가 열렸을 때 배경이 따로 움직이지 않는다. */
+body:has(.modalwrap),
+body:has(.stepup-ov),
+body:has(.pdrawer) {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* 레이어는 드로어(60)보다 아래, 모달(85)보다 아래에 둔다. */
+.demowidget,
+.chatwidget {
+  z-index: 55;
+}
+
+/* 관리자 카드의 인라인 고정 열을 제거하고 실제 가용 폭에 반응시킨다. */
+.ai-config-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.admin-three-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .ai-config-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  /* 사용자 헤더: 1행은 브랜드/도구, 2행은 네 개의 주 메뉴를 고정 배치한다.
+     메뉴 위치가 라우트마다 자동 스크롤로 움직이던 구조를 없앤다. */
+  .nav .inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 52px 44px;
+    height: auto;
+    gap: 0 10px;
+    padding: 0 var(--gutter, 20px);
+  }
+  .nav .brand {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+  }
+  .nav .right {
+    grid-column: 2;
+    grid-row: 1;
+    gap: 6px;
+    margin-left: 0;
+  }
+  .nav .links {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    height: 44px;
+    gap: 0;
+    overflow: visible;
+  }
+  .nav .links a {
+    justify-content: center;
+    min-width: 0;
+    padding: 0 3px;
+    font-size: 12.5px;
+    text-align: center;
+  }
+  .nav .gsearch,
+  .nav .acct-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .nav .acct-av {
+    width: 34px;
+    height: 34px;
+  }
+  .nav .right .pill {
+    min-height: 44px;
+    padding-inline: 10px;
+  }
+
+  /* 탭은 스크롤 가능한 상태를 숨기지 않는다. 끝의 페이드와 스냅으로 다음
+     항목이 있다는 사실을 보여주고, 손가락 한 번에 탭 하나씩 멈춘다. */
+  .tabs,
+  .dtabs,
+  .wtabs,
+  .cotabs,
+  .poltabs {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 12px;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 10px,
+      #000 calc(100% - 22px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 10px,
+      #000 calc(100% - 22px),
+      transparent 100%
+    );
+  }
+  .tabs > *,
+  .dtabs > *,
+  .wtabs > *,
+  .cotabs > *,
+  .poltabs > * {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+  .my-tabs {
+    min-height: 44px;
+    align-items: center;
+  }
+  .tabs::-webkit-scrollbar,
+  .dtabs::-webkit-scrollbar,
+  .wtabs::-webkit-scrollbar,
+  .cotabs::-webkit-scrollbar,
+  .poltabs::-webkit-scrollbar {
+    display: block;
+    height: 3px;
+  }
+
+  /* iOS Safari는 16px 미만 입력에 포커스하면 화면을 확대한다. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select,
+  .in,
+  .chatform input {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* 프로모션은 한 줄 높이를 지키고 좁은 폭에서는 핵심 문구만 남긴다. */
+  .promobar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 48px;
+    padding: 6px 12px;
+    gap: 8px;
+  }
+  .promobar > span[aria-hidden] {
+    display: none;
+  }
+  .promo-line {
+    grid-column: 1;
+    justify-self: start;
+    min-width: 0;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  .promobar .rbtn {
+    grid-column: 2;
+    min-height: 40px;
+    padding: 0 10px;
+  }
+  .promo-wide,
+  .promo-cta-wide {
+    display: none;
+  }
+  .promo-mobile,
+  .promo-cta-mobile {
+    display: inline;
+  }
+
+  .community-category-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    overflow: hidden;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .community-category-tabs a {
+    width: 100%;
+  }
+
+  .jobs-filterbar {
+    align-items: flex-end;
+  }
+  .jobs-filter-tools {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    flex-basis: 100%;
+    gap: 8px;
+  }
+  .jobs-filter-tools .industry-select,
+  .jobs-filter-tools .jobs-search {
+    width: 100%;
+    max-width: none;
+  }
+  .jobs-filter-tools .jobs-employment {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+  .jobs-filter-tools .jobs-employment button {
+    justify-content: center;
+    min-height: 40px;
+  }
+  .jobs-filterbar .jobsopen {
+    margin-left: auto;
+  }
+
+  /* 모달은 뷰포트 중앙을 고집하지 않고 안전 영역 안에서 자체 스크롤한다. */
+  .modalwrap,
+  .stepup-ov {
+    align-items: flex-start;
+    justify-content: center;
+    padding:
+      max(12px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .modalwrap > .modal,
+  .stepup-ov > .stepup {
+    max-height: calc(
+      100dvh - max(12px, env(safe-area-inset-top)) -
+        max(12px, env(safe-area-inset-bottom))
+    );
+    margin-block: auto;
+    overflow-y: auto;
+  }
+  .modalwrap > .modal:not(.detail) {
+    padding: 22px 18px;
+  }
+  .role-modal .msub {
+    margin-bottom: 14px;
+  }
+  .role-modal .roles {
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .role-modal .role {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 11px;
+    padding: 10px 12px;
+    min-height: 64px;
+    text-align: left;
+  }
+  .role-modal .role .ri {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    width: 38px;
+    height: 38px;
+    margin: 0;
+  }
+  .role-modal .role .rn,
+  .role-modal .role .rd {
+    grid-column: 2;
+  }
+  .role-modal .role .rd {
+    margin-top: 1px;
+  }
+  .modal-actions .btn {
+    min-height: 44px;
+    height: auto;
+    padding-inline: 10px;
+    white-space: normal;
+  }
+
+  /* 백오피스 헤더: 실제 콘텐츠 폭으로 3존을 계산하고 좌우가 중앙을 침범하지
+     않게 한다. 햄버거는 항상 44px 터치 영역을 가진다. */
+  .phd {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    height: 56px;
+    padding: 0 8px;
+    gap: 6px;
+  }
+  .phd-l,
+  .phd-r {
+    flex-shrink: 0;
+  }
+  .phd-menu {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+  }
+  .phd-c {
+    position: absolute;
+    left: 50%;
+    max-width: calc(100% - 220px);
+    transform: translateX(-50%);
+    justify-self: stretch;
+    justify-content: center;
+    min-width: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .phd-c span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .phd-r {
+    gap: 4px;
+  }
+  .phd .phd-site,
+  .phd .acct-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .phd .role-switch-btn {
+    width: 44px;
+    height: 44px;
+    padding: 2px;
+    justify-content: center;
+    border-color: transparent;
+  }
+  .phd .role-switch-label,
+  .phd .role-switch-caret {
+    display: none;
+  }
+
+  /* 표 제목/검색/필터는 억지로 한 줄에 넣지 않는다. 제목은 먼저 한 행을
+     온전히 쓰고 검색은 다음 행 전체를 사용한다. */
+  .tabletop {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 9px;
+    padding: 12px;
+  }
+  .tabletop h4 {
+    flex: 1 0 100%;
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+  }
+  .tabletop .search {
+    order: 3;
+    flex: 1 0 100% !important;
+    width: 100%;
+    max-width: none !important;
+    margin-left: 0 !important;
+  }
+  .tabletop .seg {
+    max-width: 100%;
+    margin-left: 0;
+    overflow-x: auto;
+  }
+  .tabletop-side {
+    margin-left: 0;
+  }
+  .tabletop > .btn {
+    order: 4;
+    min-height: 44px;
+    flex: 1 0 auto;
+    justify-content: center;
+  }
+  .tabletop-actions {
+    order: 4;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+  .tabletop-actions .btn {
+    min-height: 44px;
+    justify-content: center;
+  }
+  .tablecard {
+    position: relative;
+    scrollbar-width: thin;
+  }
+  .dtable {
+    min-width: 640px;
+  }
+
+  .amain .mrow,
+  .admin-three-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .admin-three-stats > :last-child {
+    grid-column: 1 / -1;
+  }
+  .amain .mcard {
+    padding: 11px 12px;
+  }
+  .amain .mcard .mk {
+    font-size: 11.5px;
+  }
+  .amain .mcard .mv {
+    margin-top: 2px;
+    font-size: 21px;
+    line-height: 1.2;
+  }
+  .amain .mcard .mv small {
+    display: inline-block;
+    margin-left: 3px;
+    font-size: 11px;
+  }
+  .badgestate-now > div {
+    flex: 1;
+    min-width: 0;
+  }
+  .badgestate-now .sk {
+    max-width: 100%;
+  }
+
+  /* 글 반응 바는 데스크톱 가로형 알약을 억지로 줄이지 않는다. 네 동작을
+     같은 폭의 터치 타일로 두고 아이콘/라벨을 세로로 쌓아 한글 분절을 막는다. */
+  .reactbar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    gap: 6px;
+  }
+  .reactbar .sharewrap {
+    display: block;
+    min-width: 0;
+  }
+  .reactbar .rb {
+    width: 100%;
+    min-width: 0;
+    min-height: 68px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    padding: 8px 3px;
+    border-radius: 18px;
+    font-size: 12px;
+  }
+  .reactbar .rb-label {
+    display: block;
+    max-width: 100%;
+    line-height: 1.15;
+    white-space: nowrap;
+    word-break: keep-all;
+    overflow-wrap: normal;
+  }
+  .reactbar .rb-count {
+    font-weight: 800;
+  }
+  .reactbar .rbic .ri {
+    width: 17px;
+    height: 17px;
+  }
+
+  /* 모바일 비교: 항목명을 위에 두고 두 값을 아래 좌우에 둔다. 84px짜리
+     중앙 열 때문에 회사명이 세로로 찢어지던 문제를 없앤다. */
+  .cmp {
+    padding: 16px 12px;
+  }
+  .cmp-head {
+    grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+    gap: 6px;
+  }
+  .cmp-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 7px 12px;
+    padding: 12px 2px;
+  }
+  .cmp-row > .cmp-k {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: center;
+  }
+  .cmp-row > .cmp-v:first-child {
+    grid-column: 1;
+    grid-row: 2;
+    text-align: right;
+  }
+  .cmp-row > .cmp-v:last-child {
+    grid-column: 2;
+    grid-row: 2;
+    text-align: left;
+  }
+  .cmp-picktop {
+    gap: 6px;
+  }
+  .cmp-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .ds-select.cmp-select2 {
+    min-width: 0;
+    max-width: 100%;
+    font-size: 13px;
+  }
+  .ds-select.cmp-select2 .ds-select-v {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cmp-pick small {
+    max-width: 100%;
+  }
+  .cmp-roster {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cmp-roster-item {
+    min-width: 0;
+  }
+
+  /* 손가락 환경에서는 이벤트 팝업을 고정 카드로 취급한다. */
+  .evpop {
+    bottom: max(12px, env(safe-area-inset-bottom));
+    cursor: default;
+    touch-action: pan-y;
+  }
+  .evpop:active {
+    cursor: default;
+  }
+  .evpop-foot button {
+    min-height: 40px;
+  }
+
+  /* 이벤트가 열리면 팝업만, 패널이 열리면 그 패널만 보여준다. */
+  body:has(.evpop) .demowidget,
+  body:has(.evpop) .chatwidget,
+  body:has(.modalwrap) .demowidget,
+  body:has(.modalwrap) .chatwidget,
+  body:has(.stepup-ov) .demowidget,
+  body:has(.stepup-ov) .chatwidget,
+  body:has(.pdrawer) .demowidget,
+  body:has(.pdrawer) .chatwidget {
+    display: none;
+  }
+  body:has(.chatpanel) .demowidget,
+  body:has(.dwpanel) .chatwidget,
+  body:has(.guide-coach) .chatwidget {
+    display: none;
+  }
+  .demowidget {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .chatwidget {
+    right: calc(max(12px, env(safe-area-inset-right)) + 56px);
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  /* 패널이 열리면 FAB 두 개를 나란히 두기 위한 56px 오프셋을 해제한다.
+     패널 폭은 뷰포트 기준이라 오프셋이 남으면 그만큼 왼쪽이 잘린다. */
+  .chatwidget:has(.chatpanel) {
+    right: max(12px, env(safe-area-inset-right));
+  }
+  .chatpanel {
+    width: min(
+      360px,
+      calc(
+        100vw -
+          max(24px, env(safe-area-inset-left) + env(safe-area-inset-right))
+      )
+    );
+    max-height: min(
+      640px,
+      calc(
+        100dvh -
+          max(24px, env(safe-area-inset-top) + env(safe-area-inset-bottom)) -
+          56px
+      )
+    );
+  }
+  .chatbody {
+    min-height: 0;
+    max-height: none;
+  }
+  .chathead .cx,
+  .demowidget .guide-coach .cx {
+    width: 44px;
+    height: 44px;
+    margin: -8px -10px -8px 0;
+    display: grid;
+    place-items: center;
+  }
+  .chatform button {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 420px) {
+  .cmp-pickhint {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .phd .phd-site {
+    display: none;
+  }
+  .phd {
+    padding-inline: 6px;
+    gap: 3px;
+  }
+  .phd-c {
+    max-width: calc(100% - 170px);
+  }
+  .phd-r {
+    gap: 2px;
+  }
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+  .promo-line {
+    font-size: 11.5px;
+  }
+  .promobar .rbtn {
+    padding-inline: 9px;
+  }
 }

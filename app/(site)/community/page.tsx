@@ -29,6 +29,13 @@ const SORTS = [
 const ageOf = (item: FeedItem) =>
   (item as FeedItem & { ageMinutes?: number }).ageMinutes ?? 0;
 
+/** 모바일에서도 페이지 버튼이 무한히 늘지 않게 현재 페이지가 속한 5개 블록만 보인다. */
+function pageWindow(current: number, total: number, size = 5) {
+  const start = Math.floor((current - 1) / size) * size + 1;
+  const end = Math.min(total, start + size - 1);
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+}
+
 export default async function CommunityPage({
   searchParams,
 }: {
@@ -67,6 +74,7 @@ export default async function CommunityPage({
   const pages = Math.max(1, Math.ceil(items.length / PER_PAGE));
   const current = Math.min(Math.max(1, Number(page) || 1), pages);
   const shown = items.slice((current - 1) * PER_PAGE, current * PER_PAGE);
+  const visiblePages = pageWindow(current, pages);
   const categoryTabs = [
     { key: "all", label: "전체", icon: "layout", count: FEED.length },
     ...BOARDS.map((item) => {
@@ -227,25 +235,38 @@ export default async function CommunityPage({
                 {pages > 1 ? (
                   <div className="paging">
                     {current > 1 ? (
-                      <Link href={qs({ page: String(current - 1) })}>‹</Link>
+                      <Link
+                        href={qs({ page: String(current - 1) })}
+                        aria-label="이전 페이지"
+                      >
+                        ‹
+                      </Link>
                     ) : (
-                      <button disabled>‹</button>
+                      <button disabled aria-label="이전 페이지">
+                        ‹
+                      </button>
                     )}
-                    {Array.from({ length: pages }, (_, index) => index + 1).map(
-                      (number) => (
-                        <Link
-                          key={number}
-                          className={number === current ? "on" : undefined}
-                          href={qs({ page: String(number) })}
-                        >
-                          {number}
-                        </Link>
-                      ),
-                    )}
+                    {visiblePages.map((number) => (
+                      <Link
+                        key={number}
+                        className={number === current ? "on" : undefined}
+                        href={qs({ page: String(number) })}
+                        aria-current={number === current ? "page" : undefined}
+                      >
+                        {number}
+                      </Link>
+                    ))}
                     {current < pages ? (
-                      <Link href={qs({ page: String(current + 1) })}>›</Link>
+                      <Link
+                        href={qs({ page: String(current + 1) })}
+                        aria-label="다음 페이지"
+                      >
+                        ›
+                      </Link>
                     ) : (
-                      <button disabled>›</button>
+                      <button disabled aria-label="다음 페이지">
+                        ›
+                      </button>
                     )}
                   </div>
                 ) : null}

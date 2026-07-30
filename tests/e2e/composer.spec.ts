@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("글쓰기: 태그 뱃지·커스텀 드롭다운·붙여넣기 실차단", async ({ page }) => {
-  await page.goto("http://localhost:4310/community/write");
+  await page.goto("/community/write");
   // 회원으로 (게스트 게이트 우회)
   await page.evaluate(() => localStorage.setItem("wigtn-demo-role-v1", "member"));
   await page.reload();

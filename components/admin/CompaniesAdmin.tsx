@@ -123,7 +123,7 @@ export function CompaniesAdmin() {
     <>
       <ResultNote result={admin.result} />
 
-      <div className="mrow" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
+      <div className="mrow admin-three-stats">
         {admin.state ? (
           <>
             <div className="mcard">
@@ -269,7 +269,7 @@ export function CompaniesAdmin() {
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>
-          <div style={{ display: "flex", gap: 8, flex: "none" }}>
+          <div className="tabletop-actions">
             <button
               className="btn line sm"
               onClick={() => fileRef.current?.click()}

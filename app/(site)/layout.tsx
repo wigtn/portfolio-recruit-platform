@@ -23,7 +23,8 @@ export default function SiteLayout({
         <span aria-hidden />
         <CuratedPromo />
         <Link className="rbtn" href="/contact">
-          상담 요청
+          <span className="promo-cta-wide">상담 요청</span>
+          <span className="promo-cta-mobile">상담</span>
           <Icon name="arrow" />
         </Link>
       </div>
@@ -47,43 +48,12 @@ export default function SiteLayout({
 
       <footer className="footer">
         <div className="ftop">
-          <div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 9,
-                fontWeight: 800,
-                fontSize: 17,
-                letterSpacing: "-.03em",
-                marginBottom: 10,
-              }}
-            >
-              <span
-                style={{
-                  width: 27,
-                  height: 27,
-                  borderRadius: 7,
-                  background: "var(--accent)",
-                  color: "#fff",
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: 14,
-                  fontWeight: 800,
-                }}
-              >
-                W
-              </span>{" "}
+          <div className="ft-brand-block">
+            <div className="ft-brand">
+              <span className="ft-mark">W</span>
               세일즈
             </div>
-            <p
-              style={{
-                fontSize: "12.5px",
-                color: "var(--ink-3)",
-                lineHeight: 1.6,
-                maxWidth: "26ch",
-              }}
-            >
+            <p className="ft-desc">
               영업직을 위한 커뮤니티와 회사 리뷰: 현장의 답을 현장 사람들에게.
             </p>
           </div>
@@ -123,7 +93,7 @@ export default function SiteLayout({
             <br />
             서울특별시 ◇◇구 ◇◇로 00, 0층 · contact@demo.wigtn.dev
           </div>
-          <div style={{ textAlign: "right" }}>
+          <div className="fbot-note">
             © 2026 ◇◇컴퍼니 · WIGTN 데모
             <br />
             모든 회사·회원·수치는 가상 데이터예요

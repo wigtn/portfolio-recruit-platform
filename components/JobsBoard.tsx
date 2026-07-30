@@ -80,43 +80,44 @@ export function JobsBoard() {
 
   return (
     <>
-      <div className="filterbar">
+      <div className="filterbar jobs-filterbar">
         {/* 필터와 검색은 한 묶음 — 떨어뜨리면 같은 일(거르기)이 흩어져 보인다 */}
-        <Select
-          className="industry-select"
-          value={industry}
-          ariaLabel="업종 선택"
-          searchable
-          searchPlaceholder="업종 검색"
-          options={INDUSTRIES.map((name) => ({ value: name, label: name }))}
-          onChange={setIndustry}
-        />
-        <div className="seg">
-          {["전체", "정규직", "계약직"].map((option) => (
-            <button
-              key={option}
-              type="button"
-              className={employment === option ? "on" : undefined}
-              onClick={() => setEmployment(option)}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-        <form
-          className="search"
-          onSubmit={(event) => event.preventDefault()}
-          style={{ maxWidth: 260, flex: "none" }}
-        >
-          <Icon name="search" />
-          <input
-            value={query}
-            placeholder="직무 · 회사로 검색"
-            aria-label="채용공고 검색"
-            onChange={(event) => setQuery(event.target.value)}
+        <div className="jobs-filter-tools">
+          <Select
+            className="industry-select"
+            value={industry}
+            ariaLabel="업종 선택"
+            searchable
+            searchPlaceholder="업종 검색"
+            options={INDUSTRIES.map((name) => ({ value: name, label: name }))}
+            onChange={setIndustry}
           />
-        </form>
-        <span className="jobsopen" style={{ marginLeft: "auto" }}>
+          <div className="seg jobs-employment">
+            {["전체", "정규직", "계약직"].map((option) => (
+              <button
+                key={option}
+                type="button"
+                className={employment === option ? "on" : undefined}
+                onClick={() => setEmployment(option)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+          <form
+            className="search jobs-search"
+            onSubmit={(event) => event.preventDefault()}
+          >
+            <Icon name="search" />
+            <input
+              value={query}
+              placeholder="직무 · 회사로 검색"
+              aria-label="채용공고 검색"
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </form>
+        </div>
+        <span className="jobsopen">
           채용 중 <b>{loading ? "-" : openCount}</b>건
         </span>
       </div>

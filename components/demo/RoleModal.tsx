@@ -37,8 +37,13 @@ export function RoleModal({
 
   return createPortal(
     <div className="modalwrap">
-      <div className="modal">
-        <h3>어떤 역할로 체험해볼까요?</h3>
+      <div
+        className="modal role-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="role-modal-title"
+      >
+        <h3 id="role-modal-title">어떤 역할로 체험해볼까요?</h3>
         <div className="msub">
           이 데모는 로그인 없이 역할만 바꿔서 화면을 둘러볼 수 있어요
         </div>
@@ -59,7 +64,7 @@ export function RoleModal({
           ))}
         </div>
 
-        <div style={{ display: "flex", gap: 10 }}>
+        <div className="modal-actions">
           <button
             className="btn line"
             style={{ flex: 1, justifyContent: "center" }}
@@ -87,7 +92,9 @@ export function RoleModal({
               }
             }}
           >
-            {ROLE_LABEL[picked]}으로 시작
+            {picked === "admin"
+              ? "운영자로 시작"
+              : `${ROLE_LABEL[picked]}으로 시작`}
           </button>
         </div>
       </div>

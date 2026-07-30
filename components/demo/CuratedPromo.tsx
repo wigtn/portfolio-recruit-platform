@@ -8,7 +8,12 @@
 export function CuratedPromo() {
   return (
     <span className="promo-line">
-      이 화면 그대로, <b>업종만 바꿔</b> 만들어 드려요
+      <span className="promo-wide">
+        이 화면 그대로, <b>업종만 바꿔</b> 만들어 드려요
+      </span>
+      <span className="promo-mobile">
+        <b>업종만 바꿔</b> 제작해요
+      </span>
     </span>
   );
 }

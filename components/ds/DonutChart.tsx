@@ -60,7 +60,7 @@ export function DonutChart({
               fill="none"
               stroke={segment.color}
               strokeWidth={thickness}
-              strokeLinecap="round"
+              strokeLinecap="butt"
               strokeDasharray={circumference}
               strokeDashoffset={
                 on ? circumference * (1 - segment.fraction) : circumference

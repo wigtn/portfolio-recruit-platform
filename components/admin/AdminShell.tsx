@@ -281,17 +281,9 @@ export function AdminShell({
             >
               <BurgerIcon />
             </button>
-            <span className="phd-brand">
-              <Brand />
-            </span>
           </div>
           <div className="phd-zone phd-c" aria-live="polite">
-            {active ? (
-              <>
-                <Icon name={active.icon} />
-                <span>{active.label}</span>
-              </>
-            ) : null}
+            {active ? <span>{active.label}</span> : null}
           </div>
           <div className="phd-zone phd-r">
             <SiteLink />

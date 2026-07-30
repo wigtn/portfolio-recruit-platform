@@ -6,7 +6,7 @@ import { RouteSk, TableCardSk } from "@/components/admin/RouteSkeleton";
 export default function CompaniesLoading() {
   return (
     <RouteSk label="회사 관리">
-      <div className="mrow" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
+      <div className="mrow admin-three-stats">
         {Array.from({ length: 3 }).map((_, index) => (
           <SkMcard key={index} />
         ))}

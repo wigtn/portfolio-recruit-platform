@@ -105,7 +105,9 @@ export function ReactBar({ post, likes }: { post: Post; likes: number }) {
               </span>
             ) : null}
           </span>
-          도움돼요 {likes + (liked ? 1 : 0)}
+          <span className="rb-label">
+            도움돼요 <span className="rb-count">{likes + (liked ? 1 : 0)}</span>
+          </span>
         </button>
         <button
           className={scrapped ? "rb rb-scrap on" : "rb rb-scrap"}
@@ -117,7 +119,7 @@ export function ReactBar({ post, likes }: { post: Post; likes: number }) {
           >
             <BookmarkIcon />
           </span>
-          스크랩
+          <span className="rb-label">스크랩</span>
         </button>
 
         <span className="sharewrap" ref={shareRef}>
@@ -130,7 +132,7 @@ export function ReactBar({ post, likes }: { post: Post; likes: number }) {
             <span className="rbic" key={shareOpen ? "on" : "off"}>
               <ShareIcon />
             </span>
-            공유
+            <span className="rb-label">공유</span>
           </button>
           {shareOpen ? (
             <span className="sharepop" role="menu">
@@ -161,7 +163,7 @@ export function ReactBar({ post, likes }: { post: Post; likes: number }) {
           <span className="rbic" key={reported ? "on" : "off"}>
             <FlagIcon />
           </span>
-          신고
+          <span className="rb-label">신고</span>
         </button>
       </div>
 
