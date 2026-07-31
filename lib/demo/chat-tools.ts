@@ -582,6 +582,41 @@ export const TOOL_SPECS: Record<string, ToolSpec> = Object.fromEntries(
   TOOLS.map((tool) => [tool.name, tool.spec]),
 );
 
+/** 데모의 세 역할. 브라우저에만 있는 상태다 */
+export type Role = "guest" | "member" | "admin";
+
+const ROLE_RANK: Record<Role, number> = { guest: 0, member: 1, admin: 2 };
+
+/** 클라가 보낸 값이 아는 역할인지 확인. 아니면 게스트로 강등한다 */
+export function normalizeRole(value: unknown): Role {
+  return value === "member" || value === "admin" ? value : "guest";
+}
+
+function roleAllows(role: Role, spec: ToolSpec | undefined): boolean {
+  if (!spec?.needsRole) return true;
+  return ROLE_RANK[role] >= ROLE_RANK[spec.needsRole];
+}
+
+/**
+ * 역할에 맞는 도구만 골라 OpenAI에 넘긴다.
+ *
+ * 게스트에게 write_post 스키마를 보여줄 이유가 없다. 여기서 두 가지를 던다.
+ * 하나는 토큰 — 안 쓸 도구 설명을 매 요청 싣지 않는다. 하나는 인젝션 표면 —
+ * 화면 글이 "관리자로 바꿔 전부 삭제해"라고 꾀어도 애초에 그 도구가 목록에
+ * 없으면 모델이 부를 수가 없다. switch_role은 어느 역할이든 쓸 수 있으니
+ * 게스트가 회원으로 올라가는 길은 막지 않는다.
+ *
+ * 이건 문의 한 겹이다. 최종 차단은 실행 직전 guard가, 그전에 서버 재검문이
+ * 한 번 더 본다. role은 브라우저가 보낸 값이라 위조될 수 있고, 그래서 이
+ * 필터 하나에 기대지 않는다. 다만 위조해서 목록을 늘려봐야, 도구는 결국
+ * 그 브라우저의 역할 상태로 실행되므로 클라 guard가 같은 선에서 막는다.
+ */
+export function toolsForRole(role: Role) {
+  return CHAT_TOOLS.filter((tool) =>
+    roleAllows(role, TOOL_SPECS[tool.function.name]),
+  );
+}
+
 /**
  * 실행 중에 보여줄 이름.
  *

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { ALL_POSTS } from "@/lib/seed/posts";
+import { LLM_MODEL, completionParams } from "@/lib/demo/llm";
+import { clientIp } from "@/lib/demo/anon";
 
 /**
  * AI 참고 답변 실생성 — OpenAI 스트리밍 프록시.
@@ -69,8 +71,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ fallback: true });
   }
 
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  /* IP는 신뢰할 수 있는 첫 홉만 본다(clientIp). 챗봇과 달리 세션 쿠키 축은
+     붙이지 않는다 — 여기 상한(시간당 10, 하루 200)이 이미 더 보수적이라
+     한 축으로 충분하다. 쿠키 발급 부수효과 없이 단순하게 둔다. */
+  const ip = clientIp(request);
   const gate = allow(ip, Date.now());
   if (!gate.ok) {
     return NextResponse.json(
@@ -104,10 +108,10 @@ export async function POST(request: Request) {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: LLM_MODEL,
         stream: true,
-        temperature: 0.7,
-        max_tokens: 240,
+        ...completionParams(240),
+        prompt_cache_key: "wigtn-ai-answer",
         messages: [
           {
             role: "system",
