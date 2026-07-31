@@ -10,7 +10,7 @@ import { Crumb } from "./Crumb";
  */
 const TITLE_WORDS = ["이", "데모,", "우리", "서비스로", "만들어보세요."];
 
-const FACTS = ["화면 20종 인도", "검증 모듈 재조합", "운영 도구 포함"];
+const FACTS = ["화면 20종 인도", "업종 맞춤 재구성", "운영 도구 포함"];
 
 export function ContactHero() {
   const rootRef = useRef<HTMLDivElement>(null);

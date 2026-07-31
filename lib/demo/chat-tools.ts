@@ -42,16 +42,6 @@ export const COMPANY_SLUGS = [
   "nabla-bio",
 ] as const;
 
-export const MODULE_IDS = [
-  "ui-kit",
-  "api-contracts",
-  "auth-membership",
-  "content-engine",
-  "ai-pipeline-sdk",
-  "notification-file",
-  "backoffice-frame",
-] as const;
-
 export const THEMES = ["indigo", "red", "amber", "ink"] as const;
 export const ROLES = ["guest", "member", "admin"] as const;
 
@@ -147,16 +137,6 @@ export function withRo(word: string): string {
     ? `${word}로`
     : `${word}으로`;
 }
-
-export const MODULE_LABEL: Record<string, string> = {
-  "ui-kit": "디자인 시스템",
-  "api-contracts": "연동 규격",
-  "auth-membership": "인증과 등급",
-  "content-engine": "게시판 엔진",
-  "ai-pipeline-sdk": "AI 파이프라인",
-  "notification-file": "알림과 파일",
-  "backoffice-frame": "백오피스",
-};
 
 /* ── 도구 정의 ──
    OpenAI에 넘기는 스키마와, 실행 전 검문에 쓰는 명세를 나란히 둔다.
@@ -324,25 +304,6 @@ const TOOLS: Tool[] = [
     },
     running: "화면에서 위치를 찾는 중",
     orb: "searching",
-  },
-  {
-    name: "show_module",
-    description:
-      "상담 페이지의 모듈 소개 중 특정 모듈로 스크롤한다. 방문자가 어떤 " +
-      "모듈이 무엇인지 물으면 설명과 함께 그 자리를 열어 보여준다.",
-    params: {
-      module: {
-        type: "string",
-        enum: MODULE_IDS,
-        description: Object.entries(MODULE_LABEL)
-          .map(([id, label]) => `${id}=${label}`)
-          .join(", "),
-      },
-    },
-    required: ["module"],
-    spec: { fields: { module: enumField(MODULE_IDS) } },
-    running: "모듈 설명으로 이동하는 중",
-    orb: "shaping",
   },
   {
     name: "switch_role",

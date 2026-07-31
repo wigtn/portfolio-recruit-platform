@@ -10,7 +10,7 @@ import { Icon } from "./Icon";
  */
 const STEPS = [
   { label: "상담 요청 접수", sub: "1영업일 안에 회신드려요", icon: "mail" },
-  { label: "모듈 구성 제안", sub: "업종에 맞는 조합과 견적", icon: "layout" },
+  { label: "구성 제안", sub: "업종에 맞는 범위와 견적", icon: "layout" },
   { label: "데모 배포", sub: "지금 이 화면처럼 만져보는 검증", icon: "play" },
   { label: "런칭, 운영", sub: "운영 백오피스까지 함께 인도", icon: "trending" },
 ];

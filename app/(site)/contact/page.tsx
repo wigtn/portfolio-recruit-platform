@@ -1,7 +1,6 @@
 import { ContactForm } from "@/components/ContactForm";
 import { ContactHero } from "@/components/ContactHero";
 import { ContactSteps } from "@/components/ContactSteps";
-import { ModuleShowcase } from "@/components/ModuleShowcase";
 import { SeenCard } from "./SeenCard";
 
 export const metadata = { title: "상담 요청 | W 세일즈" };
@@ -18,11 +17,9 @@ export default function ContactPage() {
       {/* 히어로 — 영상 무대 + 워드 리빌 + 포인터 패럴럭스(클라이언트) */}
       <ContactHero />
 
-      {/* 두 칸 구조를 페이지 전체로 끌어올린다.
-          "방금 보신 것들"은 폼 옆에서만 따라다니는 카드가 아니라, 스크롤
-          처음부터 끝까지 붙어 있는 레일이다. 모듈을 훑는 내내 자기가 무엇을
-          체험했는지 옆에 떠 있어야 마지막 폼에서 쓸 말이 생긴다.
-          오른쪽 칸이 롱스크롤 본문이고, 폼은 그 끝에 앉는다. */}
+      {/* 두 칸 구조. "방금 보신 것들"은 폼 옆에서만 따라다니는 카드가 아니라
+          스크롤 내내 붙어 있는 레일이다 — 무엇을 체험했는지 옆에 떠 있어야
+          마지막 폼에서 쓸 말이 생긴다. 오른쪽이 본문, 폼은 그 끝에 앉는다. */}
       <div className="sec contact-shell">
         <aside className="contact-rail">
           {/* compact가 아니면 9개 항목이 화면 높이를 넘어 레일 안에 스크롤바가
@@ -31,17 +28,13 @@ export default function ContactPage() {
         </aside>
 
         <div className="contact-main">
-          {/* 세일즈 포인트 — 이 데모를 이룬 코어 모듈이 곧 제안서다 */}
-          <ModuleShowcase />
-
           {/* 진행 과정 — 레일이 차오르는 플로우. 자동 순환·호버 정지는 그대로다 */}
           <div className="card ctimeline-row">
             <h4>진행 과정</h4>
             <ContactSteps />
           </div>
 
-          {/* 스크롤 맨 아래가 상담 폼이다. 위에서 모듈을 전부 보고 내려온
-              사람이 그대로 이어서 쓸 수 있게 마지막 자리를 폼에 준다 */}
+          {/* 스크롤 맨 아래가 상담 폼이다 */}
           <div id="contact-form">
             <ContactForm />
           </div>

@@ -33,7 +33,6 @@ import {
 import {
   ADMIN_SCREENS,
   COMPANY_LABEL,
-  MODULE_LABEL,
   ROLE_LABEL_KO,
   withRo,
   SCREEN_LABEL,
@@ -837,28 +836,6 @@ export function ChatWidget() {
         applyTheme(`custom:${hex}`);
         saveDemoTheme(`custom:${hex}`);
         note = `${hex}로 입혀봤어요. 버튼, 배지, 강조색이 전부 이 색을 따라갑니다.`;
-        break;
-      }
-
-      case "show_module": {
-        const id = str("module");
-        note = `${MODULE_LABEL[id]} 자리로 이동했어요.`;
-        const go = () => {
-          const rows = document.querySelectorAll(".modrow");
-          const target = [...rows].find((row) =>
-            row.querySelector(`[data-module="${id}"]`),
-          );
-          (target ?? rows[0])?.scrollIntoView({
-            block: "center",
-            behavior: "smooth",
-          });
-        };
-        if (window.location.pathname === "/contact") go();
-        else {
-          router.push("/contact");
-          window.setTimeout(go, 900);
-        }
-        close = true;
         break;
       }
 

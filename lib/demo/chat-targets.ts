@@ -83,12 +83,6 @@ export const TARGETS: Target[] = [
     selector: ".review",
   },
   {
-    id: "contact_modules",
-    what: "상담 페이지의 모듈 소개 전체",
-    where: "/contact",
-    selector: ".modrows",
-  },
-  {
     id: "contact_rail",
     what: "왼쪽 체험 기록 레일. 무엇을 해봤는지 따라다닌다",
     where: "/contact",
