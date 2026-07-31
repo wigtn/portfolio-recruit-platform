@@ -51,13 +51,14 @@ export function ContactHero() {
       className={live ? "pagehead contact-hero is-live" : "pagehead contact-hero"}
       ref={rootRef}
     >
+      {/* 히어로는 페이지 최상단 — 로드가 곧 뷰포트 진입이라 autoplay가 곧
+          "들어왔을 때 1회"다. 반복은 하지 않고 마지막 프레임에 멈춘다 */}
       <video
         ref={videoRef}
         className="closing-video"
         src="/media/wigtn-dynamic.mp4"
         autoPlay
         muted
-        loop
         playsInline
         aria-hidden
       />

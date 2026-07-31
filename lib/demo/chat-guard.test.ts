@@ -10,7 +10,8 @@
 
 import { describe, expect, it } from "vitest";
 import { guard, MAX_CALLS_PER_TURN, REFUSED } from "./chat-guard";
-import { TOOL_SPECS } from "./chat-tools";
+import { SCREEN_ENUM, TOOL_SPECS, repairArgs } from "./chat-tools";
+import { TARGET_ENUM } from "./chat-targets";
 
 const ctx = (over: Partial<Parameters<typeof guard>[3]> = {}) => ({
   question: "커뮤니티 보여줘",
@@ -164,5 +165,60 @@ describe("챗봇 도구 관문", () => {
     );
     expect(verdict.ok).toBe(true);
     if (verdict.ok) expect(Object.keys(verdict.args)).toEqual(["screen"]);
+  });
+});
+
+/**
+ * 화면 이름과 지점 이름을 가르는 계약.
+ *
+ * 둘은 형태가 같아서 모델이 섞어 썼다. "백오피스 화면 열어줘"에 지점
+ * 이름인 demo_guide를 화면 자리에 넣는 일이 세 번 다 재현됐다. 표식(@)으로
+ * 갈랐고, 그래도 새어 들어오면 제자리로 접는다. 둘 다 고정해 둔다.
+ */
+describe("화면 이름과 지점 이름", () => {
+  it("지점 이름은 모두 표식으로 시작한다", () => {
+    expect(TARGET_ENUM.every((id) => id.startsWith("@"))).toBe(true);
+  });
+
+  it("화면 이름과 지점 이름은 겹치지 않는다", () => {
+    const screens = new Set<string>(SCREEN_ENUM);
+    expect(TARGET_ENUM.filter((id) => screens.has(id))).toEqual([]);
+  });
+
+  it("화면 자리에 온 지점 이름은 그 지점이 사는 화면으로 접힌다", () => {
+    // 표식이 붙은 것과 안 붙은 것 둘 다 알아듣는다
+    expect(repairArgs("open_screen", { screen: "@admin_sidebar" })).toEqual({
+      screen: "admin",
+    });
+    expect(repairArgs("open_screen", { screen: "community_list" })).toEqual({
+      screen: "community",
+    });
+  });
+
+  it("접은 값은 검문을 통과한다", () => {
+    const fixed = repairArgs("open_screen", { screen: "@admin_table" });
+    const verdict = guard("open_screen", fixed, TOOL_SPECS.open_screen, ctx());
+    expect(verdict.ok).toBe(true);
+    if (verdict.ok) expect(verdict.args.screen).toBe("admin");
+  });
+
+  it("어느 화면에나 있는 지점은 접지 않는다", () => {
+    /* @header_search는 모든 화면에 있다. 어디로 보낼지 정할 수 없으므로
+       추측하지 않는다. 엉뚱한 화면을 여는 쪽이 더 나쁘다 */
+    expect(repairArgs("open_screen", { screen: "@header_search" })).toEqual({
+      screen: "@header_search",
+    });
+  });
+
+  it("반대 방향은 접지 않는다", () => {
+    /* 지점 자리에 화면 이름이 오면 그 화면의 어디를 짚으라는 뜻인지 알 수
+       없다. 아무 데나 고르면 엉뚱한 곳을 강조한다 */
+    const verdict = guard(
+      "point_at",
+      { target: "admin", note: "여기" },
+      TOOL_SPECS.point_at,
+      ctx(),
+    );
+    expect(verdict.ok).toBe(false);
   });
 });

@@ -126,15 +126,43 @@ export const TARGETS: Target[] = [
   },
 ];
 
+/**
+ * 지점 이름 앞에 붙는 표식.
+ *
+ * 화면 이름(open_screen)과 지점 이름(point_at)이 형태가 같아서 모델이
+ * 섞어 썼다. `admin`과 `admin_sidebar`, `community`와 `community_list`는
+ * 생김새로 구분할 방법이 없고, 접두어까지 겹친다. 어느 목록 소속인지는
+ * "지금 어느 도구를 부르는가"로만 알 수 있는데, 도구가 스물이 넘으면 그
+ * 기억이 흐려진다. 실제로 "백오피스 화면 열어줘"에 지점 이름인
+ * `demo_guide`를 화면 자리에 넣는 일이 세 번 다 재현됐다.
+ *
+ * 그래서 이름이 스스로 소속을 말하게 한다. `@`로 시작하면 지점이고, 화면일
+ * 수 없다. 외워야 할 것을 형태로 옮긴 것이다.
+ *
+ * 표식은 모델에게 보이는 쪽에만 붙인다. selector와 화면 코드가 쓰는 내부
+ * 이름은 그대로다. 바깥 규약 때문에 안쪽을 흔들 이유가 없다.
+ */
+export const SPOT = "@";
+
+/** 표식이 붙은 이름과 안 붙은 이름 둘 다 받는다.
+    모델이 표식을 빠뜨려도 가리키는 곳은 하나뿐이라 헷갈릴 여지가 없다 */
 export const TARGET_BY_ID: Record<string, Target> = Object.fromEntries(
-  TARGETS.map((target) => [target.id, target]),
+  TARGETS.flatMap((target) => [
+    [`${SPOT}${target.id}`, target],
+    [target.id, target],
+  ]),
 );
 
 /** 모델 프롬프트에 넣을 목록. 이름과 설명만 준다 */
-export const TARGET_ENUM = TARGETS.map((target) => target.id);
+export const TARGET_ENUM = TARGETS.map((target) => `${SPOT}${target.id}`);
 export const TARGET_GUIDE = TARGETS.map(
-  (target) => `${target.id} (${target.where}): ${target.what}`,
+  (target) => `${SPOT}${target.id} (${target.where}): ${target.what}`,
 ).join("\n");
+
+/** 이 값이 화면 이름이 아니라 지점 이름인가 */
+export function isSpot(value: string): boolean {
+  return value.startsWith(SPOT) || value in TARGET_BY_ID;
+}
 
 /** 에이전트 커서에게 한 걸음을 시키는 신호 */
 export const AGENT_EVENT = "wigtn-demo-agent";

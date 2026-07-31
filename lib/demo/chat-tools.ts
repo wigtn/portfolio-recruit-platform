@@ -28,7 +28,7 @@
 
 import type { Field, ToolSpec } from "./chat-guard";
 import { MAX_BODY, MAX_TITLE } from "./chat-guard";
-import { TARGET_ENUM, TARGET_GUIDE } from "./chat-targets";
+import { TARGET_BY_ID, TARGET_ENUM, TARGET_GUIDE } from "./chat-targets";
 
 /** 게시판. 글쓰기 화면이 가진 그대로 */
 export const BOARDS = ["질문답변", "노하우", "실적인증", "자유"] as const;
@@ -197,14 +197,20 @@ const TOOLS: Tool[] = [
     description:
       "데모의 특정 화면으로 이동한다. 방문자가 어떤 기능을 '보여달라'고 하거나 " +
       "'어디서 볼 수 있냐'고 물으면 설명만 하지 말고 이 도구로 직접 열어준다. " +
-      "admin으로 시작하는 화면은 운영자만 볼 수 있으므로 switch_role을 먼저 부른다.",
+      "admin으로 시작하는 화면은 운영자만 볼 수 있으므로 switch_role을 먼저 부른다.\n" +
+      "여기에는 **화면 이름**만 온다. @로 시작하는 이름은 point_at이 짚는 " +
+      "지점이지 화면이 아니다. 백오피스는 admin이다.",
     params: {
       screen: {
         type: "string",
         enum: SCREEN_ENUM,
-        description: Object.entries(SCREEN_LABEL)
-          .map(([id, label]) => `${id}=${label}`)
-          .join(", "),
+        /* 한 줄에 하나씩 적는다. 쉼표로 이어 붙인 한 덩이로 주면 모델이
+           대응을 못 읽는다. "백오피스 화면 열어줘"에 home을, "회원 관리"에
+           contact를 고르는 일이 매번 재현됐다. 값은 열거로 강제되니 형태는
+           틀리지 않는데, 어느 것인지를 못 고르면 소용이 없다. */
+        description: `화면 이름과 그 뜻:\n${Object.entries(SCREEN_LABEL)
+          .map(([id, label]) => `- ${id}: ${label}`)
+          .join("\n")}`,
       },
     },
     required: ["screen"],
@@ -288,7 +294,9 @@ const TOOLS: Tool[] = [
       "화면의 특정 지점으로 커서를 옮겨 짚거나 실제로 누른다. 말로 위치를 " +
       "설명하는 대신 이 도구로 직접 가리킨다. 다른 화면의 지점을 짚으려면 " +
       "open_screen으로 먼저 이동한 뒤 부른다. 여러 곳을 차례로 안내할 때는 " +
-      "한 번에 하나씩, 순서대로 부른다.",
+      "한 번에 하나씩, 순서대로 부른다.\n" +
+      "지점 이름은 모두 @로 시작한다. 이 이름들은 화면 이름이 아니므로 " +
+      "open_screen에 넣지 않는다.",
     params: {
       target: {
         type: "string",
@@ -563,18 +571,50 @@ const TOOLS: Tool[] = [
 ];
 
 /** OpenAI에 넘기는 정의. 이름과 설명이 곧 모델이 읽는 사용법이다 */
-export const CHAT_TOOLS = TOOLS.map((tool) => ({
-  type: "function" as const,
-  function: {
-    name: tool.name,
-    description: tool.description,
-    parameters: {
-      type: "object",
-      properties: tool.params,
-      ...(tool.required?.length ? { required: tool.required } : {}),
+/**
+ * OpenAI에 넘기는 정의.
+ *
+ * `strict: true`로 넘긴다. 그러면 모델이 스키마를 **지킬 수밖에 없다.**
+ * 설명에 "이 값들 중에서 고르세요"라고 적는 건 부탁이고, 실제로 안 지켰다.
+ * "백오피스 화면 열어줘"에 목록에 없는 `demo`를 넣는 일이 매번 재현됐다.
+ * 열거값 밖은 아예 만들어질 수 없게 하는 편이 확실하다.
+ *
+ * 대신 규격이 까다롭다. 모든 인자가 required에 들어가야 하고
+ * additionalProperties를 닫아야 한다. 선택 인자는 빼는 대신 null을 받을 수
+ * 있게 해서 "안 씀"을 표현한다.
+ */
+export const CHAT_TOOLS = TOOLS.map((tool) => {
+  const keys = Object.keys(tool.params);
+  const need = new Set(tool.required ?? keys);
+  const properties = Object.fromEntries(
+    keys.map((key) => {
+      const field = tool.params[key] as { type?: string } & Record<
+        string,
+        unknown
+      >;
+      // 선택 인자는 null을 함께 받는다. strict에서 required를 뺄 수 없다
+      return [
+        key,
+        need.has(key) ? field : { ...field, type: [field.type, "null"] },
+      ];
+    }),
+  );
+
+  return {
+    type: "function" as const,
+    function: {
+      name: tool.name,
+      description: tool.description,
+      strict: true,
+      parameters: {
+        type: "object",
+        properties,
+        required: keys,
+        additionalProperties: false,
+      },
     },
-  },
-}));
+  };
+});
 
 /** 실행 전 검문에 쓰는 명세 */
 export const TOOL_SPECS: Record<string, ToolSpec> = Object.fromEntries(
@@ -609,3 +649,39 @@ export const TOOL_ORB: Record<string, OrbMood> = Object.fromEntries(
    오는 것도 있고, 아예 빠지기도 한다. 검문(chat-guard)이 모양을 맞춰 준다 */
 export type ToolArgs = Record<string, unknown>;
 export type ToolCall = { name: string; args: ToolArgs };
+
+/**
+ * 자리를 잘못 찾아온 값을 제자리로 접는다.
+ *
+ * 이름에 표식(@)을 붙여 화면과 지점을 갈랐지만, 그것으로 다 막았다고 보지
+ * 않는다. 지점이 늘어나면 같은 혼동이 다른 모양으로 또 온다. 표식이 본
+ * 수단이고 이건 그물이다.
+ *
+ * 화면 자리에 지점 이름이 오면 그 지점이 사는 화면으로 바꾼다. "백오피스
+ * 열어줘"에 `admin_sidebar`가 왔다면 방문자가 원한 건 백오피스 화면이
+ * 맞다. 거절하고 한 걸음을 버리는 것보다 알아듣는 편이 정확하다.
+ *
+ * 반대 방향은 접지 않는다. 지점 자리에 화면 이름이 오면 그 화면 어디를
+ * 짚으라는 뜻인지 알 수 없고, 아무 데나 고르면 엉뚱한 곳을 강조한다.
+ * 모르면 모른다고 하는 편이 낫다.
+ */
+export function repairArgs(name: string, args: ToolArgs): ToolArgs {
+  if (name !== "open_screen") return args;
+  const screen = args.screen;
+  if (typeof screen !== "string") return args;
+  if (screen in SCREEN_PATH) return args;
+
+  const spot = TARGET_BY_ID[screen];
+  // 어느 화면에나 있는 지점은 어디로 보낼지 정할 수 없다
+  if (!spot || spot.where === "any") return args;
+
+  const to = SCREEN_BY_PATH[spot.where.replace(/\/$/, "")];
+  return to ? { ...args, screen: to } : args;
+}
+
+/* 지점이 사는 곳은 경로로 적혀 있고 화면 이름은 id다. 둘을 잇는 표.
+   여기서 접두 경로가 겹치는 것들(/admin, /admin/reports)은 정확히 일치할
+   때만 잡는다. 어림잡아 고르면 엉뚱한 화면을 여는 쪽이 더 나쁘다 */
+const SCREEN_BY_PATH: Record<string, string> = Object.fromEntries(
+  Object.entries(SCREEN_PATH).map(([id, path]) => [path, id]),
+);

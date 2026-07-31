@@ -104,7 +104,6 @@ test.describe("모바일 하단 탭바", () => {
     { name: "모달", cls: "modalwrap" },
     { name: "드로어", cls: "pdrawer is-open" },
     { name: "이벤트 팝업", cls: "evpop" },
-    { name: "챗 패널", cls: "chatpanel" },
   ]) {
     test(`${layer.name}이 열리면 물러난다`, async ({ page }) => {
       await page.setViewportSize(MOBILE);
@@ -125,4 +124,59 @@ test.describe("모바일 하단 탭바", () => {
       );
     });
   }
+
+  /* 챗 패널은 예외다(사용자 지시). 챗봇이 화면을 오가며 안내하는 동안에도
+     탭바가 남는다 — 챗 위젯이 탭바 위에 떠 있어 자리도 겹치지 않는다 */
+  test("챗 패널이 열려도 탭바는 남는다", async ({ page }) => {
+    await page.setViewportSize(MOBILE);
+    /* 이벤트 팝업(900ms 뒤 등장)과 첫 방문 역할 모달이 탭바를 물리면
+       이 검증과 겹친다 — 각자 제 테스트가 있으니 여기선 치워 둔다 */
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        "wigtn-demo-event-popup-v1",
+        String(Date.now() + 60 * 60 * 1000),
+      );
+      window.localStorage.setItem("wigtn-demo-role-v1", "member");
+    });
+    await page.goto("/community");
+    await expect(page.locator(".tabbar")).toBeVisible();
+
+    await page.evaluate(() => {
+      const node = document.createElement("div");
+      node.className = "chatpanel";
+      node.id = "layer-probe";
+      document.body.appendChild(node);
+    });
+
+    await expect(page.locator(".tabbar")).toHaveCSS("opacity", "1");
+  });
+
+  /* 활성 표시는 유리알 하나가 미끄러진다 — 탭을 바꾸면 같은 필이
+     transform으로 이동해야 한다(칸마다 새로 그리면 순간이동으로 보인다) */
+  test("활성 유리알이 탭을 따라 이동한다", async ({ page }) => {
+    await page.setViewportSize(MOBILE);
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        "wigtn-demo-event-popup-v1",
+        String(Date.now() + 60 * 60 * 1000),
+      );
+      window.localStorage.setItem("wigtn-demo-role-v1", "member");
+    });
+    await page.goto("/");
+    const pill = page.locator(".tabbar-pill");
+    await expect(pill).toBeVisible();
+    const before = await pill.evaluate(
+      (node) => getComputedStyle(node).transform,
+    );
+
+    await page.locator(".tabbar a", { hasText: "내 정보" }).click();
+    await expect(page.locator('.tabbar a[aria-current="page"]')).toHaveText(
+      "내 정보",
+    );
+    await page.waitForTimeout(600); // 스프링 트랜지션(0.45s) 종료 대기
+    const after = await pill.evaluate(
+      (node) => getComputedStyle(node).transform,
+    );
+    expect(after).not.toBe(before);
+  });
 });

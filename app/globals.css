@@ -757,6 +757,24 @@ small,
     --tabbar-h: 58px;
     --tabbar-gap: 14px;
   }
+
+  /* ── 입력할 때 화면이 확대되지 않게 ──
+     iOS 사파리는 글자가 16px보다 작은 입력에 손을 대면 화면을 확대한다.
+     읽기 쉬우라고 하는 일이지만, 확대된 채로 돌아오지 않아서 방문자가 두
+     손가락으로 다시 줄여야 한다. 상담 폼처럼 칸이 여럿이면 칸을 옮길 때마다
+     그 일이 반복된다.
+
+     뷰포트에 maximum-scale을 박아 확대 자체를 막는 방법도 있지만, 그건 눈이
+     불편한 사람에게서 확대를 빼앗는 것이라 쓰지 않는다. 글자를 16px로
+     올리면 브라우저가 확대할 이유가 없어진다. 손대는 칸만 그렇게 한다.
+
+     체크박스와 라디오는 글자가 아니라 상자라서 뺀다. 크기를 올리면 배치가
+     흔들린다. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -797,8 +815,10 @@ small,
        흐림에 saturate를 같이 걸어야 뒤에 있던 색이 살아난다. 흐리기만 하면
        뒤가 회색으로 죽고, 그러면 유리가 아니라 반투명 플라스틱이다. */
     background: color-mix(in srgb, var(--card) 62%, transparent);
-    backdrop-filter: blur(20px) saturate(1.8);
-    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+    /* 유리알과 같은 굴절 문법 — 대비까지 올려 뒤를 지나는 콘텐츠 색이
+       판 위에 실제로 고인다. 주변이 바뀌면 판 색도 따라 바뀐다 */
+    backdrop-filter: blur(20px) saturate(1.95) contrast(1.06);
+    -webkit-backdrop-filter: blur(20px) saturate(1.95) contrast(1.06);
     box-shadow:
       /* 떠 있다는 것을 말하는 그림자 */
       0 8px 28px -6px rgba(16, 24, 40, 0.18),
@@ -809,6 +829,53 @@ small,
       inset 0 -1px 0 rgba(255, 255, 255, 0.28);
   }
 
+  /* 환경 반사 — 판 표면을 스치는 주변색 띠(보라·시안·핑크). 판은 고정돼
+     있지만 환경(콘텐츠)은 스크롤로 움직인다 — 그만큼 반사도 흘러야 물리가
+     맞는다. 스크롤 진행도가 곧 반사 위치다(지원 밖 브라우저는 정지 반사) */
+  .tabbar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    corner-shape: squircle;
+    background: linear-gradient(
+      104deg,
+      transparent 4%,
+      rgba(255, 255, 255, 0.34) 12%,
+      color-mix(in srgb, var(--accent) 30%, transparent) 20%,
+      transparent 32%,
+      rgba(103, 232, 249, 0.22) 55%,
+      transparent 63%,
+      rgba(240, 171, 252, 0.2) 82%,
+      rgba(255, 255, 255, 0.25) 90%,
+      transparent 96%
+    );
+    background-size: 260% 100%;
+    background-position: 30% 50%;
+    opacity: 0.5;
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+  }
+  @supports (animation-timeline: scroll()) {
+    .tabbar::after {
+      animation: tabbar-sheen linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+  @keyframes tabbar-sheen {
+    from {
+      background-position: 0% 50%;
+    }
+    to {
+      background-position: 100% 50%;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tabbar::after {
+      animation: none;
+    }
+  }
+
   /* 가장자리 굴절. 테두리 자체가 위아래로 밝기가 달라야 두께가 읽힌다 */
   .tabbar::before {
     content: "";
@@ -817,11 +884,15 @@ small,
     border-radius: inherit;
     corner-shape: squircle;
     padding: 1px;
+    /* 흰 빛만 돌던 테에 색분산을 얹는다 — 가장자리에서 파장별 굴절률
+       차이로 갈라지는 프린지(시안 → 보라 → 핑크). 유리알 테와 같은 문법 */
     background: linear-gradient(
       160deg,
       rgba(255, 255, 255, 0.9),
-      rgba(255, 255, 255, 0.12) 42%,
-      rgba(255, 255, 255, 0.06) 62%,
+      rgba(103, 232, 249, 0.32) 24%,
+      rgba(255, 255, 255, 0.12) 44%,
+      color-mix(in srgb, var(--accent) 28%, rgba(255, 255, 255, 0.06)) 64%,
+      rgba(240, 171, 252, 0.3) 82%,
       rgba(255, 255, 255, 0.55)
     );
     -webkit-mask:
@@ -846,21 +917,25 @@ small,
     list-style: none;
   }
 
+  /* 칸 하나. 아이콘 위, 이름 아래로 세운다.
+     grid의 place-items로만 맞추면 절대 배치한 자식(활성 표시)이 기준점을
+     못 찾아 칸 밖으로 밀린다. 여기서 기준점을 잡고 세로로 쌓는다 */
   .tabbar a {
-    display: grid;
-    place-items: center;
-    align-content: center;
-    gap: 3px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
     height: 100%;
     /* 라벨이 두 줄로 접히면 칸 높이가 흔들린다 */
     white-space: nowrap;
     font-size: 10.5px;
     font-weight: 700;
     letter-spacing: -0.02em;
+    line-height: 1;
     color: var(--ink-3);
     text-decoration: none;
-    border-radius: 16px;
-    corner-shape: squircle;
     -webkit-tap-highlight-color: transparent;
     transition:
       color 0.18s ease,
@@ -869,6 +944,7 @@ small,
   .tabbar a .ic {
     width: 20px;
     height: 20px;
+    flex-shrink: 0;
     transition: transform 0.24s var(--ease-spring);
   }
   .tabbar a:active {
@@ -882,19 +958,120 @@ small,
   .tabbar a.on .ic {
     transform: translateY(-1px) scale(1.08);
   }
-  /* 켜진 칸 뒤에 옅게 깔리는 자리. 유리 위에 얹힌 또 한 겹이다 */
-  .tabbar a.on::before {
+  /* 켜진 칸 뒤의 유리알 — 칸마다 그리지 않고 하나가 활성 칸으로 흘러간다
+     (absolute라 그리드 칸을 차지하지 않는다). 이동은 CSS 트랜지션이 아니라
+     TabBar의 LiquidPill이 스프링을 적분해 옮긴다: 속도가 모양에 들어가야
+     (관성 늘어남·부피 보존 스쿼시·전진 쏠림·착지 출렁임) 액체로 읽힌다.
+     여기의 translateX는 JS가 붙기 전 첫 페인트의 초기 위치다 */
+  .tabbar-pill {
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    left: 0;
+    width: calc(100% / var(--tabs, 5));
+    transform: translateX(calc(var(--ti, 0) * 100%));
+    transition: opacity 0.18s ease;
+    pointer-events: none;
+  }
+  /* 알 본체 — 변형(skew·scale)은 이 요소에 걸린다. 굴절 테가 ::before로
+     이 안에 있어서 몸이 늘어나면 테도 같이 휜다. 유리판 위 액체의 조건:
+     투과(렌즈 blur), 상단 하이라이트, 바닥에 가라앉는 액센트 */
+  .tabbar-pill .bead {
+    position: absolute;
+    inset: 0 6px;
+    /* 모양은 squircle(사용자 지시) — 큰 반경의 초타원이라 원에 가깝게
+       둥글면서 알약처럼 늘어지지 않는다. 정지 상태의 애니메이션은 없다 */
+    border-radius: 24px;
+    corner-shape: squircle;
+    background:
+      radial-gradient(
+        70% 46% at 32% 16%,
+        rgba(255, 255, 255, 0.55),
+        transparent 72%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.32),
+        rgba(255, 255, 255, 0.07) 46%,
+        color-mix(in srgb, var(--accent) 15%, transparent)
+      );
+    /* 굴절 렌즈 — 채도·대비를 올려 뒤에 깔린 색(콘텐츠·배너)이 알 안에
+       실제로 고이게 한다. 주변이 바뀌면 알 색도 따라 바뀐다 */
+    backdrop-filter: blur(7px) saturate(1.9) contrast(1.08) brightness(1.05);
+    -webkit-backdrop-filter: blur(7px) saturate(1.9) contrast(1.08)
+      brightness(1.05);
+    box-shadow:
+      0 3px 9px -2px color-mix(in srgb, var(--accent) 30%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+    will-change: transform;
+  }
+  /* 가장자리 굴절 테 — 탭바 테두리와 같은 xor 마스크 문법. 위가 밝고
+     아래로 액센트가 스치면 알의 두께가 읽힌다 */
+  .tabbar-pill .bead::before {
     content: "";
     position: absolute;
-    z-index: -1;
-    width: calc(100% - 10px);
-    height: calc(100% - 10px);
-    border-radius: 16px;
+    inset: 0;
+    border-radius: inherit;
+    /* corner-shape는 border-radius: inherit로 안 따라온다 — 테두리(빛반사
+       프린지)도 몸과 같은 squircle 곡률이어야 한 물체로 읽힌다 */
     corner-shape: squircle;
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    padding: 1px;
+    /* 가장자리 색분산 — 렌즈 가장자리에서 파장별로 굴절률이 달라 생기는
+       무지개 프린지를 옅게 흉내 낸다(시안 → 보라 → 핑크) */
+    background: linear-gradient(
+      170deg,
+      rgba(255, 255, 255, 0.95),
+      rgba(103, 232, 249, 0.4) 28%,
+      color-mix(in srgb, var(--accent) 38%, rgba(255, 255, 255, 0.14)) 52%,
+      rgba(240, 171, 252, 0.42) 76%,
+      rgba(255, 255, 255, 0.6)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
   }
+  /* 환경 반사 — 유리 표면에 비치는 주변색 띠. 알이 오른쪽으로 가면 반사는
+     왼쪽으로 흐른다(--envx를 물리 루프가 매 프레임 갱신). 고정된 환경을
+     움직이는 렌즈가 훑는다는 물리를 배경 위치 하나로 옮긴 것이다 */
+  .tabbar-pill .bead::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    corner-shape: squircle;
+    /* 띠는 가늘어야 한다 — 넓은 밝은 구간은 특정 위치에서 알 전체를 덮어
+       반사가 아니라 얼룩으로 보인다(실제 신고). 얇은 줄기 사이에 투명
+       간격을 두면 어느 위치에서든 1~2줄만 스친다 */
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      color-mix(in srgb, var(--accent) 42%, transparent) 12%,
+      transparent 20%,
+      rgba(103, 232, 249, 0.36) 34%,
+      transparent 42%,
+      rgba(255, 255, 255, 0.38) 57%,
+      transparent 65%,
+      rgba(240, 171, 252, 0.32) 80%,
+      transparent 88%
+    );
+    background-size: 320% 100%;
+    background-position: calc(50% + var(--envx, 0) * -30%) 50%;
+    opacity: 0.32;
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+  }
+  /* 탭에 없는 화면(글 상세 등)에서는 유리알이 갈 곳이 없다 — 소리 없이 사라진다 */
+  .tabbar-pill.is-off {
+    opacity: 0;
+  }
+
   .tabbar li {
-    position: relative;
     display: grid;
   }
 
@@ -908,12 +1085,12 @@ small,
      지금 답해야 하는 것이고, 탭바는 다른 데로 가는 길이다. 둘이 같이 떠
      있으면 손가락이 잘못된 쪽으로 간다.
 
-     챗 패널이 열렸을 때도 숨는다. 입력창과 소프트 키보드와 탭바가 한자리에
-     겹치면 어느 것도 제대로 못 쓴다. */
+     챗 패널은 예외다(사용자 지시). 챗봇이 화면을 오가며 안내하는 물건이라
+     탭바가 같이 있어야 하고, 챗 위젯이 탭바 위(dock-b + 56px)에 떠 있어
+     자리도 겹치지 않는다. */
   body:has(.modalwrap) .tabbar,
   body:has(.pdrawer.is-open) .tabbar,
-  body:has(.evpop) .tabbar,
-  body:has(.chatpanel) .tabbar {
+  body:has(.evpop) .tabbar {
     opacity: 0;
     transform: translateY(12px);
     pointer-events: none;
@@ -5004,6 +5181,15 @@ body {
   word-break: keep-all;
   overflow-wrap: break-word;
   overflow-wrap: anywhere;
+}
+/* ═ 문서 가로 넘침 봉쇄 ═
+   풀블리드 배경(.home-market::before 등)이 100vw를 쓴다. 오버레이 스크롤바
+   환경에서는 티가 안 나지만, 클래식 스크롤바에서는 100vw가 세로 스크롤바
+   폭까지 포함해 그만큼 문서에 가로 스크롤이 생긴다. 어떤 화면도 문서째로
+   가로 스크롤하지 않는다 — 뿌리에서 잘라낸다. clip은 hidden과 달리 스크롤
+   컨테이너를 만들지 않아 sticky가 그대로 동작한다. */
+html {
+  overflow-x: clip;
 }
 /* 제목은 줄 길이를 고르게 — 마지막 줄에 한 단어만 떨어지는 걸 막는다 */
 h1,
@@ -14556,14 +14742,22 @@ select.in {
    ═══════════════════════════════════════════════════════════════════════ */
 .chatwidget {
   position: fixed;
-  /* 가이드 fab(44px) + 여백 12px 만큼 왼쪽으로 */
-  right: calc(max(18px, var(--safe-r)) + 56px);
-  bottom: var(--dock-b);
+  /* 가이드 fab과 한 세로열 — 같은 오른쪽 기준선에 서고, 가이드 fab(44px)
+     + 간격 12px 만큼 위로 올라간다(사용자 지시: 버튼들 세로 정렬) */
+  right: max(18px, var(--safe-r));
+  bottom: calc(var(--dock-b) + 56px);
   z-index: 80;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 10px;
+}
+/* 가이드 코치 말풍선·가이드 패널은 fab 위로 펼쳐진다 — 세로열에선 그 자리가
+   곧 챗봇 fab 자리다. 열려 있는 동안 챗봇이 비켜선다(코치는 한 번 닫으면
+   다시 안 뜬다). 예전 가로배치 시절엔 모바일만 걸던 규칙을 전 폭으로 올렸다 */
+body:has(.dwpanel) .chatwidget,
+body:has(.guide-coach) .chatwidget {
+  display: none;
 }
 
 /* 아바타 자체가 버튼이다. 배경·그림자는 .aiav가 이미 갖고 있다 */
@@ -14626,6 +14820,10 @@ select.in {
       되돌린다. 반투명만 남으면 글자가 배경과 겹쳐 못 읽는다. */
 .chatpanel {
   width: min(360px, calc(100vw - 32px));
+  /* 높이 고정(사용자 지시) — 대화가 쌓여도 패널이 자라지 않는다. 자라면
+     모바일에서 화면 밖으로 잘린다. 남는 세로는 chatbody가 차지하고
+     스크롤은 그 안에서만 돈다 */
+  height: min(560px, calc(100dvh - 150px));
   background: color-mix(in srgb, var(--card) 82%, transparent);
   backdrop-filter: blur(14px) saturate(1.4);
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
@@ -14753,8 +14951,10 @@ select.in {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  /* 대화가 길어지면 패널만 스크롤 — 화면 전체가 밀리지 않는다 */
-  max-height: min(52vh, 420px);
+  /* 패널 높이는 고정이다 — 남는 세로를 이 영역이 전부 차지하고,
+     대화가 길어지면 여기서만 스크롤한다 */
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -14903,8 +15103,7 @@ select.in {
     animation: none;
     background: linear-gradient(90deg, var(--accent), #a855f7);
   }
-  .chatbody .bub.is-thinking::after,
-  .chatpanel.is-thinking::after {
+  .chatbody .bub.is-thinking::after {
     animation: none;
     opacity: 0.5;
   }
@@ -14919,14 +15118,9 @@ select.in {
   .tstep.is-live .tstep-say,
   .chatform .cstop-sq,
   .chatform button[type="submit"] .ic,
-  .chatbody .bub.is-waiting::after,
   .chatbody .bub.is-notice,
   .chatdown {
     animation: none;
-  }
-  /* 기다린다는 사실은 남긴다. 움직임만 세운다 */
-  .chatbody .bub.is-waiting::after {
-    opacity: 0.85;
   }
   .chatdown:hover {
     transform: none;
@@ -14998,6 +15192,32 @@ select.in {
   gap: 6px;
   margin-top: 10px;
 }
+/* 답이 끝나며 말풍선에 붙는 것들(출처 줄, 링크 버튼)이 한 프레임에 확
+   튀어나오면 말풍선이 덜컥 커진다(실제 지적). 접힌 높이에서 흘러나오며
+   말풍선이 이어서 자라는 걸로 읽히게 한다 */
+.chatbody .bub .bfoot,
+.chatbody .bub .blinks {
+  overflow: hidden;
+  animation: bub-attach 0.5s var(--ease-out-soft) backwards;
+}
+@keyframes bub-attach {
+  from {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    max-height: 140px;
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chatbody .bub .bfoot,
+  .chatbody .bub .blinks {
+    animation: none;
+  }
+}
 .chatbody .blink {
   display: inline-flex;
   align-items: center;
@@ -15059,9 +15279,23 @@ select.in {
 
 .chatchips {
   display: flex;
-  flex-wrap: wrap;
+  /* 줄바꿈으로 쌓으면 4개가 두세 줄을 먹어 대화를 가린다(실제 지적).
+     한 줄로 눕히고 넘치는 건 옆으로 민다 — 오른쪽 페이드가 "더 있다"고
+     알리고, 스크롤바는 유리 위에 지저분해서 숨긴다 */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
   gap: 6px;
-  padding: 0 14px 12px;
+  padding: 0 14px 10px;
+  -webkit-mask-image: linear-gradient(90deg, #000 86%, transparent 99%);
+  mask-image: linear-gradient(90deg, #000 86%, transparent 99%);
+}
+.chatchips::-webkit-scrollbar {
+  display: none;
+}
+.chatchips button {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 /* 고르라고 내민 것으로 읽혀야 한다. 평평한 회색 알약이면 그냥 꼬리표로 보인다.
    패널이 유리니까 칩도 유리로 두고, 앞에 점을 하나 세워 "누를 것"이라고 알린다 */
@@ -15098,14 +15332,12 @@ select.in {
     box-shadow 0.18s ease,
     transform 0.18s var(--ease-spring);
 }
+/* hover에 떠오르지 않는다(사용자 지시) — 색과 테두리로만 반응한다 */
 .chatchips button:hover:not(:disabled) {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 42%, transparent);
   background: color-mix(in srgb, var(--accent) 8%, var(--card));
-  transform: translateY(-1px);
-  box-shadow:
-    0 4px 12px color-mix(in srgb, var(--accent) 16%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 .chatchips button:hover:not(:disabled)::before {
   background: var(--accent);
@@ -15165,9 +15397,11 @@ select.in {
   flex: 1;
   min-width: 0;
   border: 1px solid color-mix(in srgb, var(--line-2) 70%, transparent);
-  border-radius: 12px;
+  /* 패널·말풍선과 같은 유리 문법의 캡슐 — 위 안쪽 밝은 선이 두께를 만든다 */
+  border-radius: 17px;
   corner-shape: squircle;
-  padding: 9px 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  padding: 9px 14px;
   font-family: inherit;
   font-size: 13px;
   background: color-mix(in srgb, var(--card) 62%, transparent);
@@ -15189,29 +15423,20 @@ select.in {
 .chatform {
   position: relative;
   z-index: 1;
-  transition: transform 0.24s var(--ease-spring);
 }
-.chatform:focus-within {
-  transform: translateY(-2px);
-}
+/* 포커스 리프트는 뺐다 — 상태는 링과 색으로만 말한다(움찔거림 금지 규율) */
 .chatform textarea:focus,
 .chatform input:focus {
   background: var(--card);
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent),
-    0 8px 20px -12px rgba(16, 24, 40, 0.4);
-  transform: scale(1.015);
-  transform-origin: center bottom;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent);
 }
 .chatform textarea,
 .chatform input {
-  transform-origin: center bottom;
   transition:
     background 0.16s ease,
     border-color 0.16s ease,
-    box-shadow 0.2s ease,
-    transform 0.24s var(--ease-spring);
+    box-shadow 0.2s ease;
 }
 
 /* 입력이 떠오르는 동안 대화는 그대로 둔다.
@@ -15242,18 +15467,24 @@ select.in {
   color: var(--ink-4);
 }
 .chatform button {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  background: var(--accent);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
   color: #fff;
   display: grid;
   place-items: center;
   cursor: pointer;
   flex-shrink: 0;
+  box-shadow:
+    0 6px 14px -6px color-mix(in srgb, var(--accent) 70%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
+/* 입력이 비어 못 누를 땐 유령이다 — 살아나는 순간이 확실히 보인다 */
 .chatform button:disabled {
-  opacity: 0.45;
+  background: color-mix(in srgb, var(--ink-4) 16%, var(--card-2));
+  color: var(--ink-4);
+  box-shadow: none;
   cursor: default;
 }
 .chatform button .ic {
@@ -15640,27 +15871,10 @@ select.in {
       보낸 건 맞는데 답은 나중이라는 걸 알려야 한다. 아무 표시가 없으면
       "왜 답이 없지"가 되고, 안 보이면 "안 보내졌나"가 된다. 살짝 물러선
       채로 자기 차례를 기다린다는 것만 보이면 된다. */
+/* 줄 서 있는 질문 — 문구는 뺐다(사용자 지시). 옅어진 색만으로
+   "보내졌고, 답은 차례대로"를 말한다. 차례가 오면 제 색으로 돌아온다 */
 .chatbody .bub.is-waiting {
   background: color-mix(in srgb, var(--accent) 52%, transparent);
-}
-.chatbody .bub.is-waiting::after {
-  content: "차례를 기다려요";
-  display: block;
-  margin-top: 5px;
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
-  /* 점이 하나씩 차오르듯 옅어졌다 진해진다. 멈춘 게 아니라는 신호 */
-  animation: waiting-breathe 1.8s ease-in-out infinite;
-}
-@keyframes waiting-breathe {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 1;
-  }
 }
 
 /* ── 알림 말풍선 ──
@@ -15789,9 +16003,11 @@ select.in {
   inherits: false;
 }
 
-.chatbody .bub.is-thinking,
-.chatbody .bub.is-answering,
-.chatpanel.is-thinking {
+/* 상시 깔아 두고 opacity로만 켜고 끈다 — 활성 클래스가 빠지는 순간 요소째
+   사라지면 빛이 확 끊긴다(실제 지적). 꺼질 땐 회전을 멈춘 채 잦아든다.
+   숨쉬기(opacity)를 키프레임에서 뺀 것도 같은 이유다: 애니메이션이 opacity를
+   쥐고 있으면 트랜지션이 끼어들 수 없어 페이드아웃이 안 된다 */
+.chatbody .bub.bot {
   position: relative;
   isolation: isolate;
 }
@@ -15801,11 +16017,14 @@ select.in {
 
    패널 바깥 테두리에는 걸지 않는다. 창 전체가 빛나면 어디를 보라는 신호가
    아니라 그냥 창 장식이 된다. 지금 일어나는 자리인 말풍선에만 건다. */
-.chatbody .bub.is-thinking::before {
+.chatbody .bub.bot::before {
   content: "";
   position: absolute;
   inset: -1.5px;
   border-radius: inherit;
+  /* 말풍선이 squircle이다 — corner-shape는 inherit로 안 따라와서, 빼먹으면
+     빛 테두리만 곡률이 달라 모서리가 어긋나 보인다(실제 신고) */
+  corner-shape: squircle;
   padding: 1.5px;
   background: conic-gradient(
     from var(--aur),
@@ -15825,34 +16044,51 @@ select.in {
     linear-gradient(#000 0 0);
   mask-composite: exclude;
   animation: aurora-spin 3.4s linear infinite;
+  animation-play-state: paused;
+  opacity: 0;
+  transition: opacity 0.7s ease;
   pointer-events: none;
   z-index: 1;
 }
+.chatbody .bub.bot.is-thinking::before {
+  opacity: 1;
+  animation-play-state: running;
+}
 /* 오로라. 테두리 안쪽에서 도는 옅은 색 얼룩 */
-.chatbody .bub.is-thinking::after,
-.chatbody .bub.is-answering::after,
-.chatpanel.is-thinking::after {
+/* 오로라는 말풍선에만 건다(사용자 지시) — 패널 전체가 물들면 지금
+   일어나는 자리가 어디인지 흐려진다 */
+.chatbody .bub.bot::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
+  corner-shape: squircle;
   background:
     radial-gradient(
       60% 80% at 20% 30%,
-      color-mix(in srgb, var(--accent) 22%, transparent),
+      color-mix(in srgb, var(--accent) 12%, transparent),
       transparent 70%
     ),
     radial-gradient(
       55% 75% at 80% 70%,
-      color-mix(in srgb, #a855f7 20%, transparent),
+      color-mix(in srgb, #a855f7 10%, transparent),
       transparent 70%
     );
   background-size: 160% 160%;
   /* transform으로 키우면 박스 밖으로 삐져나온다. 실제로 그랬다.
      배경 위치만 움직여서 얼룩이 안쪽에서만 흐르게 한다 */
   animation: aurora-drift 6.2s ease-in-out infinite;
+  animation-play-state: paused;
+  opacity: 0;
+  transition: opacity 0.9s ease;
   pointer-events: none;
   z-index: -1;
+}
+.chatbody .bub.bot.is-thinking::after,
+.chatbody .bub.bot.is-answering::after {
+  /* 살아 있다는 신호면 충분하다 — 눈에 띄자고 진해지면 글을 읽는 데 든다 */
+  opacity: 0.55;
+  animation-play-state: running;
 }
 @keyframes aurora-spin {
   to {
@@ -15862,13 +16098,11 @@ select.in {
 @keyframes aurora-drift {
   0%,
   100% {
-    opacity: 0.5;
     background-position:
       0% 50%,
       100% 50%;
   }
   50% {
-    opacity: 1;
     background-position:
       100% 20%,
       0% 80%;
@@ -15915,8 +16149,7 @@ select.in {
 /* 전송 버튼은 쓸 수 있게 되는 순간을 알린다. 입력이 비면 눌러도 안 되는데
    모양이 같으면 눌러보고 나서야 안다 */
 .chatform button[type="submit"]:not(:disabled):hover {
-  transform: translateY(-1px);
-  filter: brightness(1.06);
+  filter: brightness(1.08);
 }
 /* 복사 성공. 체크로 바뀔 때 한 번 튄다 */
 .chatbody .bact .ic {
@@ -16004,12 +16237,11 @@ select.in {
 }
 
 /* 좁은 화면에서는 두 fab이 나란히 서기 어렵다 — 챗봇을 가이드 위로 올린다 */
-@media (max-width: 560px) {
-  .chatwidget {
-    right: max(18px, var(--safe-r));
-    bottom: calc(var(--dock-b) + 56px);
-  }
-}
+/* 좁은 화면의 fab 배치는 640px 구간(#204)이 정본이다.
+   여기서 한 번 더 정하면 두 규칙이 절반씩 적용된다. 실제로 그랬다. 나중에
+   오는 640px 규칙이 right를 이기고 여기서 준 bottom만 남아서, 챗봇 버튼이
+   왼쪽으로 56px 밀린 채 위로도 56px 올라갔다. 가이드 버튼 옆도 위도 아닌
+   자리에 떠 있었던 것이다. 자리를 정하는 곳은 하나여야 한다. */
 
 /* 자동 재생 — 건너뛰기 / 다시 재생 */
 .chathead .cskip {
@@ -16316,6 +16548,13 @@ body:has(.pdrawer) {
     flex-shrink: 0;
     scroll-snap-align: start;
   }
+
+  /* 커뮤니티 게시판 탭은 스크롤하지 않는다. 아래 .community-category-tabs
+     규칙에서 격자로 고정하므로 여기서 스냅만 뗀다. overflow는 그쪽 한 곳에서
+     정한다. 두 곳에서 정하면 또 어긋난다 */
+  .community-category-tabs {
+    scroll-snap-type: none;
+  }
   .my-tabs {
     min-height: 44px;
     align-items: center;
@@ -16374,7 +16613,13 @@ body:has(.pdrawer) {
   .community-category-tabs {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    overflow: hidden;
+    /* 가로는 가두고 세로는 연다.
+       overflow: hidden이면 두 축이 같이 닫혀서, 칸 모서리에 띄운 개수
+       배지가 위쪽에서 잘렸다. clip은 한 축만 닫아도 다른 축의 visible이
+       살아남는 유일한 값이다(hidden이나 auto를 주면 나머지 축의 visible이
+       auto로 바뀐다). 칸은 minmax(0, 1fr)이라 어차피 가로로 넘칠 수 없다 */
+    overflow-x: clip;
+    overflow-y: visible;
     -webkit-mask-image: none;
     mask-image: none;
   }
@@ -16747,14 +16992,15 @@ body:has(.pdrawer) {
        아래로 내려가 탭이 가려진다 */
   }
   .chatwidget {
-    right: calc(max(12px, var(--safe-r)) + 56px);
-    /* bottom은 기준선(--dock-b)을 그대로 쓴다. 여기서 다시 박으면 탭바
-       아래로 내려가 탭이 가려진다 */
+    /* 세로열 배치 — 가이드 fab과 같은 오른쪽 기준선. 위로 56px 올라가는
+       bottom은 기본 규칙을 그대로 물려받는다 */
+    right: max(12px, var(--safe-r));
   }
-  /* 패널이 열리면 FAB 두 개를 나란히 두기 위한 56px 오프셋을 해제한다.
-     패널 폭은 뷰포트 기준이라 오프셋이 남으면 그만큼 왼쪽이 잘린다. */
+  /* 패널이 열리면 가이드 fab이 숨으므로(아래 has 규칙) 56px 리프트를
+     내려 패널이 세로 공간을 온전히 쓴다 */
   .chatwidget:has(.chatpanel) {
     right: max(12px, var(--safe-r));
+    bottom: var(--dock-b);
   }
   .chatpanel {
     width: min(
@@ -16764,7 +17010,8 @@ body:has(.pdrawer) {
           max(24px, env(safe-area-inset-left) + env(safe-area-inset-right))
       )
     );
-    max-height: min(
+    /* 상한이 아니라 고정 — 내용이 적어도 이 높이를 지킨다 */
+    height: min(
       640px,
       calc(
         100dvh -

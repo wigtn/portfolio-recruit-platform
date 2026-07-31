@@ -38,6 +38,7 @@ import {
   withRo,
   SCREEN_LABEL,
   SCREEN_PATH,
+  repairArgs,
   TOOL_RUNNING,
   TOOL_SPECS,
   type ScreenId,
@@ -426,6 +427,26 @@ export function ChatWidget() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [busy, queued]);
 
+  /* 칩 줄은 가로 스크롤이다 — 틸트 휠·트랙패드가 없는 마우스는 넘길 수단이
+     없다(실제 지적). 세로 휠을 가로 이동으로 돌려준다. React의 onWheel은
+     passive라 preventDefault가 안 먹고, 칩 줄은 재생 상태에 따라 사라졌다
+     다시 생기므로 콜백 ref로 마운트마다 non-passive 리스너를 단다. */
+  const unbindChips = useRef<(() => void) | null>(null);
+  const bindChips = useCallback((node: HTMLDivElement | null) => {
+    unbindChips.current?.();
+    unbindChips.current = null;
+    if (!node) return;
+    const onWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      if (node.scrollWidth <= node.clientWidth) return;
+      node.scrollLeft += event.deltaY;
+      event.preventDefault();
+    };
+    node.addEventListener("wheel", onWheel, { passive: false });
+    unbindChips.current = () =>
+      node.removeEventListener("wheel", onWheel);
+  }, []);
+
   // 한 번도 안 열어본 방문자에게만 시선을 준다. 매번 흔들면 방해다
   useEffect(() => {
     if (!window.localStorage.getItem(OPEN_KEY)) {
@@ -450,6 +471,15 @@ export function ChatWidget() {
     const gap = el.scrollHeight - el.scrollTop - el.clientHeight;
     stick.current = gap <= STICK_SLACK;
     setPinned(!stick.current);
+  }
+
+  /* 부착물(출처 줄·링크 버튼)은 답이 끝난 "뒤"에 자라며 높이를 늘린다 —
+     따라가기 이펙트(msgs 기준)보다 늦어서, 성장 애니메이션이 끝나는 순간
+     한 번 더 붙여야 바닥이 마저 닿는다(실제 신고: 살짝 위에 멈춤) */
+  function onGrowEnd() {
+    const el = body.current;
+    if (!el || !stick.current) return;
+    el.scrollTo({ top: el.scrollHeight });
   }
 
   function toBottom() {
@@ -675,7 +705,10 @@ export function ChatWidget() {
     /* 실패도 자국을 남긴다. 다만 성공과 같은 체크로 표시하면 안 된다.
        안 된 일에 체크가 붙으면 방문자는 됐다고 읽는다 */
     const fail = (why: string): ToolResult => ({ ok: false, note: why });
-    const verdict = guard(tool.name, tool.args, TOOL_SPECS[tool.name], {
+    /* 자리를 잘못 찾아온 값을 먼저 접는다. 화면 자리에 지점 이름이 오면
+       그 지점이 사는 화면으로 바꾼다. 검문은 그다음이다 */
+    const args0 = repairArgs(tool.name, tool.args);
+    const verdict = guard(tool.name, args0, TOOL_SPECS[tool.name], {
       question: ctx.question,
       role: roleNow.current,
       used: ctx.used,
@@ -1205,7 +1238,7 @@ export function ChatWidget() {
       return;
     }
     /* 말풍선은 지금 올린다. 큐에만 넣고 화면에 안 띄우면 보낸 게 맞는지
-       모른 채 기다리게 된다. 대신 차례를 기다린다고 밝힌다 */
+       모른 채 기다리게 된다. 줄 서 있음은 문구 없이 옅어진 색으로만 */
     const id = push({ role: "user", text, waiting: true });
     setQueued((rest) => [...rest, { id, text }]);
   }
@@ -1312,15 +1345,34 @@ export function ChatWidget() {
     /* 준비된 답변도 자동 재생과 같은 속도로 흘린다. 출처에 따라 연출이 갈리면
        "아까는 타이핑하더니 지금은 왜 툭 나오지"로 읽힌다. */
     const scripted = async () => {
-      const intent = resolveScripted(text);
-      const answer = intent ? intent.answer : FALLBACK;
-      const links = intent
-        ? intent.links
-        : [{ label: "상담 요청하기", href: "/contact" }];
-      const id =
-        bubble ?? push({ role: "bot", text: "", streaming: true, reply: true });
-      bubble = id;
-      await stream(id, answer, { links, live: false });
+      /* 큐가 "1. …\n2. …"로 묶여 왔으면 낱개로 되돌린다. 묶음 문자열은
+         인텐트에 절대 안 걸려 통째로 FALLBACK이 되고, 다음 질문까지 또
+         FALLBACK이면 같은 사과문이 연달아 찍힌다 — "중복 메시지가 계속
+         나온다"로 읽힌 실제 신고가 이것이다. 하나씩 제 답을 준다 */
+      const parts = text
+        .split("\n")
+        .map((line) => line.replace(/^\d+\.\s*/, "").trim())
+        .filter(Boolean);
+      const questions = parts.length > 1 ? parts : [text];
+      let missed = 0;
+      for (const question of questions) {
+        const intent = resolveScripted(question);
+        if (!intent) missed += 1;
+        /* 못 알아들은 게 연달아도 같은 전문을 반복하지 않는다 — 두 번째부터는
+           한 줄로 줄인다. 같은 말이 두 번 오면 고장으로 읽힌다 */
+        const answer = intent
+          ? intent.answer
+          : missed > 1
+            ? "이 질문도 상담 요청에 함께 남겨주시면 한 번에 회신드려요."
+            : FALLBACK;
+        const links = intent
+          ? intent.links
+          : [{ label: "상담 요청하기", href: "/contact" }];
+        const id =
+          bubble ?? push({ role: "bot", text: "", streaming: true, reply: true });
+        bubble = null; // 다음 질문은 제 말풍선을 새로 연다
+        await stream(id, answer, { links, live: false });
+      }
     };
 
     const controller = new AbortController();
@@ -1349,7 +1401,16 @@ export function ChatWidget() {
          모델이 더 부를 게 없다고 하면 그때 말로 마무리한다. "커뮤니티 열고
          페이저 짚어줘" 같은 요청이 한 번의 왕복으로는 안 되기 때문이다. */
       if (response.headers.get("content-type")?.includes("application/json")) {
-        const first = (await response.json()) as ChatReply;
+        const first = (await response.json()) as ChatReply & {
+          fallback?: boolean;
+        };
+        /* 키 없음·한도 초과도 JSON({ fallback: true })으로 온다. 이걸
+           에이전트 응답으로 착각하면 도구도 말도 없어서 **아무 답이 없는**
+           화면이 된다(실제 사고). 라우트의 계약대로 스크립트 답변으로 간다 */
+        if (first.fallback) {
+          await scripted();
+          return;
+        }
         await runAgent(first, text, write, controller);
         return;
       }
@@ -1509,6 +1570,7 @@ export function ChatWidget() {
             className="chatbody"
             ref={body}
             onScroll={onScroll}
+            onAnimationEnd={onGrowEnd}
             aria-live="polite"
           >
             {msgs.map((msg) => (
@@ -1692,7 +1754,7 @@ export function ChatWidget() {
 
           {/* 재생 중에는 칩을 숨긴다. 대화가 흐르는 중에 선택지를 주면 둘이 다툰다 */}
           {!playing && chips.length ? (
-            <div className="chatchips">
+            <div className="chatchips" ref={bindChips}>
               {chips.map((intent) => (
                 <button
                   key={intent.id}
@@ -1730,6 +1792,11 @@ export function ChatWidget() {
               onFocus={() => playing && stop()}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
+                  /* 한글 IME 조합 중의 Enter는 조합 확정 키다. 이때 보내면
+                     문장이 나가고 → IME가 마지막 글자를 빈칸에 다시 커밋하고
+                     → 진짜 Enter가 그 낱글자("데", "녕")를 한 번 더 보낸다.
+                     실제 신고된 "끝글자 중복 전송"이 이것이다 */
+                  if (event.nativeEvent.isComposing) return;
                   event.preventDefault();
                   send(input);
                 }
@@ -1737,9 +1804,10 @@ export function ChatWidget() {
             />
             {/* 생성 중에는 같은 자리가 중단 버튼이 된다. 버튼을 따로 두면
                 멈추려고 눈으로 찾아야 하고, 그 사이 답변은 계속 흐른다 */}
-            {/* 생성 중에도 보낼 수 있다. 끊는 게 아니라 줄을 서는 것이다.
-                중단은 옆의 멈춤 버튼을 눌렀을 때만 일어난다 */}
-            {busy ? (
+            {/* 단, 생성 중이라도 글자를 치기 시작하면 그 순간 전송 버튼으로
+                돌아온다(사용자 지시) — 타이핑은 "보내겠다"는 뜻이지 "멈추겠다"는
+                뜻이 아니다. 보내면 줄을 서고, 입력이 비면 다시 중단 버튼이다 */}
+            {busy && !input.trim() ? (
               <button
                 type="button"
                 className="cstop"

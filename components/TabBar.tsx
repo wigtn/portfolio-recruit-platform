@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { Icon } from "./Icon";
 import { TAB_NAV, isActive } from "@/lib/demo/nav";
 
@@ -26,9 +27,24 @@ export function TabBar() {
      목적지가 두 벌이 되고, 탭 다섯 칸으로 담을 수 있는 구조도 아니다 */
   if (pathname.startsWith("/admin")) return null;
 
+  /* 활성 칸 인덱스 — 유리알 하나가 이 값을 따라 흐른다. 칸마다 켜고
+     끄면 자리가 순간이동하는데, 하나가 이동해야 "같은 물건이 옮겨간다"로
+     읽힌다. 탭 밖 화면(-1)에서는 유리알을 숨긴다 */
+  const activeIndex = TAB_NAV.findIndex((item) =>
+    isActive(pathname, item.match),
+  );
+
   return (
     <nav className="tabbar" aria-label="주요 화면">
-      <ul>
+      <ul
+        style={
+          {
+            "--ti": Math.max(activeIndex, 0),
+            "--tabs": TAB_NAV.length,
+          } as React.CSSProperties
+        }
+      >
+        <LiquidPill activeIndex={activeIndex} />
         {TAB_NAV.map((item) => {
           const on = isActive(pathname, item.match);
           return (
@@ -46,5 +62,87 @@ export function TabBar() {
         })}
       </ul>
     </nav>
+  );
+}
+
+/**
+ * 액체 유리알 — CSS 트랜지션 대신 스프링을 직접 적분한다.
+ *
+ * 트랜지션은 위치만 알고 속도를 모른다. 액체처럼 보이려면 "지금 얼마나
+ * 빠른가"가 모양에 들어가야 한다: 빠를수록 진행 방향으로 길어지고(관성),
+ * 부피를 지키느라 세로로 얇아지며(비압축성), 바닥이 끌리는 만큼 몸이
+ * 앞으로 쏠린다(마찰). 감쇠는 임계 근처라 도착하면 조용히 멎는다 —
+ * 멈춘 뒤 반복해 흔들리는 잔진동은 두지 않는다(사용자 지시).
+ */
+function LiquidPill({ activeIndex }: { activeIndex: number }) {
+  const pillRef = useRef<HTMLLIElement>(null);
+  const beadRef = useRef<HTMLElement>(null);
+  const sim = useRef({ x: -1, v: 0, raf: 0 });
+
+  useEffect(() => {
+    const pill = pillRef.current;
+    const bead = beadRef.current;
+    if (!pill || !bead) return;
+    const s = sim.current;
+    const target = Math.max(activeIndex, 0);
+    // 첫 마운트는 이동이 아니다 — 제자리에서 시작한다
+    if (s.x < 0) s.x = target;
+
+    /* 멈출 땐 조용히 멎는다 — 착지 잔진동은 뺐다(사용자 지시) */
+    const still = () => {
+      s.x = target;
+      s.v = 0;
+      pill.style.transform = `translateX(${target * 100}%)`;
+      bead.style.transform = "";
+      bead.style.setProperty("--envx", String(target));
+    };
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      still();
+      return;
+    }
+    /* 이미 제자리면 아무 일도 없다 — 리렌더마다 출렁이면 액체가 아니라 고장이다 */
+    if (Math.abs(s.x - target) < 0.002 && Math.abs(s.v) < 0.02) {
+      still();
+      return;
+    }
+
+    cancelAnimationFrame(s.raf);
+    let last = performance.now();
+    const tick = (now: number) => {
+      // 프레임이 밀려도 폭주하지 않게 dt 상한 — 물리 적분의 기본 안전장치
+      const dt = Math.min((now - last) / 1000, 1 / 30);
+      last = now;
+      const K = 190; // 강성 — 갈 곳으로 당기는 힘
+      const C = 26; // 감쇠 — 임계 근처. 도착점에서 반복해 흔들리지 않는다
+      s.v += (-K * (s.x - target) - C * s.v) * dt;
+      s.x += s.v * dt;
+
+      if (Math.abs(s.v) < 0.02 && Math.abs(s.x - target) < 0.002) {
+        still();
+        return;
+      }
+      const speed = Math.abs(s.v);
+      /* 속도 → 변형. 늘어난 만큼 얇아져 넓이(부피)가 대강 보존된다 */
+      const stretch = Math.min(speed * 0.055, 0.38);
+      /* 속도 → 기울임. 바닥이 끌리고 몸이 앞서는 방향(위가 진행 방향) */
+      const lean = Math.max(-9, Math.min(9, s.v * 2.2));
+      pill.style.transform = `translateX(${s.x * 100}%)`;
+      bead.style.transform = `skewX(${-lean}deg) scale(${1 + stretch}, ${1 / (1 + stretch * 0.85)})`;
+      // 환경 반사 위치 — 렌즈가 훑는 만큼 반사가 반대쪽으로 흐른다
+      bead.style.setProperty("--envx", s.x.toFixed(4));
+      s.raf = requestAnimationFrame(tick);
+    };
+    s.raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(s.raf);
+  }, [activeIndex]);
+
+  return (
+    <li
+      ref={pillRef}
+      className={activeIndex < 0 ? "tabbar-pill is-off" : "tabbar-pill"}
+      aria-hidden
+    >
+      <i ref={beadRef} className="bead" />
+    </li>
   );
 }

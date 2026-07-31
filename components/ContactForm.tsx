@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Icon } from "./Icon";
 
 /**
  * 상담 폼 — 시안 정본 09번 `.formcard` 구조 그대로.
@@ -9,16 +8,7 @@ import { Icon } from "./Icon";
  * r4 서버 예외 ②(실접수). "데모라 전송되지 않습니다" 문구는 전환 지점을 무력화하므로 쓰지 않는다.
  * POST /api/contact로 실제 접수한다 — 데모에서 유일하게 서버로 나가는 쓰기다.
  */
-const MODULES = [
-  { name: "커뮤니티", on: true },
-  { name: "회사 리뷰", on: true },
-  { name: "AI 모더레이션", on: false },
-];
-
 export function ContactForm() {
-  const [picked, setPicked] = useState(
-    () => new Set(MODULES.filter((m) => m.on).map((m) => m.name)),
-  );
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +49,6 @@ export function ContactForm() {
               name: form.get("name"),
               contact: form.get("contact"),
               company: form.get("company"),
-              modules: [...picked],
               message: form.get("message"),
             }),
           });
@@ -93,7 +82,7 @@ export function ContactForm() {
           marginBottom: 22,
         }}
       >
-        모듈을 조합해 만들어요, 아래 정보를 남겨주시면 담당자가 연락드려요
+        아래 정보를 남겨주시면 담당자가 연락드려요
       </p>
 
       <div className="field">
@@ -120,36 +109,6 @@ export function ContactForm() {
           name="company"
           placeholder="예: WIGTN / 신사업팀"
         />
-      </div>
-
-      <div className="field">
-        <label>관심 모듈</label>
-        <div className="checkrow">
-          {MODULES.map((module) => {
-            const on = picked.has(module.name);
-            return (
-              <span
-                key={module.name}
-                className={on ? "checkitem on" : "checkitem"}
-                onClick={() =>
-                  setPicked((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(module.name)) next.delete(module.name);
-                    else next.add(module.name);
-                    return next;
-                  })
-                }
-              >
-                {on ? (
-                  <span className="bx">
-                    <Icon name="check" />
-                  </span>
-                ) : null}
-                {module.name}
-              </span>
-            );
-          })}
-        </div>
       </div>
 
       <div className="field">

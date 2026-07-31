@@ -13,7 +13,15 @@ const TITLE_WORDS = ["이", "화면", "그대로,", "업종만", "바꿔", "만�
 
 export function ClosingBanner() {
   const rootRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [live, setLive] = useState(false);
+
+  /* 영상은 뷰포트에 들어온 그 순간 한 번만 돈다(사용자 지시 — 반복 금지).
+     끝나면 마지막 프레임에 멈춘다. autoplay+loop로 두면 안 보이는 동안에도
+     계속 돌고, 스크롤로 도착했을 땐 이미 중간부터라 연출이 아니게 된다 */
+  useEffect(() => {
+    if (live) void videoRef.current?.play().catch(() => {});
+  }, [live]);
 
   useEffect(() => {
     const node = rootRef.current;
@@ -40,12 +48,12 @@ export function ClosingBanner() {
       {/* 다이내믹 영상 레이어 — 로고 네이비 면 위에서 빛만 남긴다(screen).
           텍스트 가독을 위해 딤 그라데이션이 그 위를 한 번 덮는다. */}
       <video
+        ref={videoRef}
         className="closing-video"
         src="/media/wigtn-dynamic.mp4"
-        autoPlay
         muted
-        loop
         playsInline
+        preload="auto"
         aria-hidden
       />
       <div className="closing-dim" aria-hidden />
