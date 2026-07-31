@@ -1,5 +1,5 @@
 {
-  "name": "wigtn-portfolio-demo",
+  "name": "portfolio-recruit-platform",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,9 +11,9 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@wigtn/backoffice-frame": "file:../../module/backoffice-frame",
-    "@wigtn/content-engine": "file:../../module/content-engine",
-    "@wigtn/ui-kit": "file:../../module/ui-kit",
+    "@wigtn/backoffice-frame": "0.1.0-beta.1",
+    "@wigtn/content-engine": "0.1.0-beta.1",
+    "@wigtn/ui-kit": "0.1.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "axios": "^1.19.0",

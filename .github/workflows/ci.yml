@@ -1,0 +1,43 @@
+# 푸시마다 타입, 단위 테스트, 빌드를 확인한다.
+#
+# E2E는 여기서 돌리지 않는다. 브라우저 설치와 실행에 몇 분이 들고, 이 저장소가
+# 깨지는 방식은 대부분 타입과 빌드에서 먼저 드러난다. 필요해지면 별도 워크플로로
+# 나눠 붙이는 편이 낫다.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  # @wigtn 코어 모듈이 비공개 패키지라 설치에 필요하다
+  packages: read
+
+jobs:
+  verify:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: "@wigtn"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+        env:
+          # GITHUB_TOKEN은 같은 조직의 비공개 패키지를 읽을 수 있다
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Build
+        run: npm run build
