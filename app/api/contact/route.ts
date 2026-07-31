@@ -200,7 +200,78 @@ export async function POST(request: Request) {
     }
   }
 
-  // 2순위: 웹훅
+  /* 2순위: 웹훅
+
+     슬랙은 받는 형식이 정해져 있다. text나 blocks가 아니면 400
+     invalid_payload로 거절한다. 우리 형식을 그대로 보내면 붙지 않는다.
+     그래서 주소를 보고 슬랙이면 슬랙 말로 바꿔 보낸다.
+
+     주소로 판별하는 이유는, 설정을 하나 더 만들면 웹훅 주소와 형식이
+     따로 놀 수 있어서다. 슬랙 주소를 넣었는데 형식이 generic이면 아무 일도
+     안 일어나고, 무엇이 잘못됐는지도 안 보인다. 주소가 곧 형식이면 어긋날
+     자리가 없다. */
+  const toSlack = /(^|\.)hooks\.slack\.com$/i.test(
+    (() => {
+      try {
+        return new URL(webhook!).hostname;
+      } catch {
+        return "";
+      }
+    })(),
+  );
+
+  const lead = {
+    receivedAt,
+    name: body.name,
+    contact: body.contact,
+    company: body.company,
+    modules: body.modules,
+    message,
+  };
+
+  const payload = toSlack
+    ? {
+        // 알림 목록과 미리보기에 뜨는 한 줄. blocks만 있으면 여기가 빈다
+        text: `상담 요청, ${body.name}${body.company ? ` (${body.company})` : ""}`,
+        blocks: [
+          {
+            type: "header",
+            text: { type: "plain_text", text: "상담 요청이 들어왔어요" },
+          },
+          {
+            type: "section",
+            fields: [
+              { type: "mrkdwn", text: `*이름*\n${body.name}` },
+              { type: "mrkdwn", text: `*연락처*\n${body.contact}` },
+              { type: "mrkdwn", text: `*회사*\n${body.company || "-"}` },
+              {
+                type: "mrkdwn",
+                text: `*관심 모듈*\n${body.modules.join(", ") || "-"}`,
+              },
+            ],
+          },
+          ...(message
+            ? [
+                {
+                  type: "section",
+                  // 본문은 살균을 거친 HTML이라 태그를 걷어내고 넘긴다
+                  text: {
+                    type: "mrkdwn",
+                    text: message.replace(/<[^>]*>/g, "").slice(0, 2900),
+                  },
+                },
+              ]
+            : []),
+          {
+            type: "context",
+            elements: [
+              { type: "mrkdwn", text: `${receivedAt} · ${requestId}` },
+            ],
+          },
+        ],
+      }
+    : { to, lead };
+
   try {
     const response = await withTimeout((signal) =>
       fetch(webhook!, {
@@ -209,17 +280,7 @@ export async function POST(request: Request) {
           "content-type": "application/json",
           "x-wigtn-request-id": requestId,
         },
-        body: JSON.stringify({
-          to,
-          lead: {
-            receivedAt,
-            name: body.name,
-            contact: body.contact,
-            company: body.company,
-            modules: body.modules,
-            message,
-          },
-        }),
+        body: JSON.stringify(payload),
         signal,
       }),
     );

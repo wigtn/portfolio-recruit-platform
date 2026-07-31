@@ -160,3 +160,70 @@ describe("문의 API", () => {
     expect(await response.json()).toMatchObject({ ok: false });
   });
 });
+
+/**
+ * 슬랙은 받는 형식이 정해져 있다.
+ *
+ * text나 blocks가 아니면 400 invalid_payload로 거절한다. 우리 형식을 그대로
+ * 보내면 붙지 않는데, 그 실패는 조용하다. 폼은 502를 내고 로그에만 남는다.
+ * 형식이 어긋나는 순간을 여기서 잡는다.
+ */
+describe("슬랙 웹훅", () => {
+  it("슬랙 주소면 슬랙 말로 바꿔 보낸다", async () => {
+    delete process.env.WIGTN_RESEND_API_KEY;
+    process.env.CONTACT_WEBHOOK_URL =
+      "https://hooks.slack.com/services/T000/B000/xxxx";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response("ok", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(
+      request({
+        name: "테스터",
+        contact: "tester@example.com",
+        company: "WIGTN",
+        modules: ["채용"],
+        message: "<script>alert(1)</script>문의드립니다",
+      }),
+    );
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const sent = JSON.parse(String(init.body));
+
+    expect(response.status).toBe(200);
+    // text가 있어야 알림 목록과 미리보기에 한 줄이 뜬다
+    expect(sent.text).toContain("테스터");
+    expect(Array.isArray(sent.blocks)).toBe(true);
+    // 우리 형식은 섞이지 않는다. 슬랙은 모르는 최상위 키를 만나면 거절한다
+    expect(sent.lead).toBeUndefined();
+
+    const flat = JSON.stringify(sent);
+    expect(flat).toContain("tester@example.com");
+    // 살균을 지난 뒤라도 꺾쇠는 남지 않는다
+    expect(flat).not.toContain("<script>");
+  });
+
+  it("슬랙이 아니면 원래 형식 그대로 보낸다", async () => {
+    delete process.env.WIGTN_RESEND_API_KEY;
+    process.env.CONTACT_WEBHOOK_URL = "https://webhook.example.test/contact";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await POST(
+      request({
+        name: "테스터",
+        contact: "tester@example.com",
+        company: "",
+        modules: [],
+        message: "문의",
+      }),
+    );
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const sent = JSON.parse(String(init.body));
+
+    expect(sent.lead).toBeDefined();
+    expect(sent.blocks).toBeUndefined();
+  });
+});
