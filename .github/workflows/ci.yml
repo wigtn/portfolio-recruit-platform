@@ -28,11 +28,10 @@ jobs:
           node-version: 22
           registry-url: https://npm.pkg.github.com
           scope: "@wigtn"
+          cache: npm
 
-      # 아직 npm ci가 아니다. 코어 패키지 발행 전이라 lock 파일이 없다.
-      # 발행 뒤 올바른 lock을 만들어 커밋하면서 npm ci와 캐시로 되돌린다.
       - name: Install
-        run: npm install --no-audit --no-fund
+        run: npm ci
         env:
           # GITHUB_TOKEN은 같은 조직의 비공개 패키지를 읽을 수 있다
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

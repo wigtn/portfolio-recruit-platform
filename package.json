@@ -11,7 +11,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@wigtn/backoffice-frame": "0.1.0-beta.1",
+    "@wigtn/backoffice-frame": "0.1.0-beta.3",
     "@wigtn/content-engine": "0.1.0-beta.1",
     "@wigtn/ui-kit": "0.1.0",
     "ajv": "^8.20.0",
