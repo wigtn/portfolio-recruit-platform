@@ -7,20 +7,21 @@ const LIMITS = {
   contact: 200,
   company: 200,
   message: 5_000,
-  modules: 12,
+  domain: 60,
 } as const;
 
 type Payload = {
   name: string;
   contact: string;
   company: string;
-  modules: string[];
+  /** 어느 업종의 서비스를 만들려는지. 고른 값이거나 직접 적은 값 */
+  domain: string;
   message: string;
 };
 
 function readString(
   source: Record<string, unknown>,
-  key: keyof Omit<Payload, "modules">,
+  key: keyof Payload,
   max: number,
 ) {
   const value = source[key];
@@ -36,20 +37,12 @@ function parsePayload(value: unknown): Payload {
     throw new Error("body:type");
   }
   const source = value as Record<string, unknown>;
-  const modules = source.modules ?? [];
-  if (
-    !Array.isArray(modules) ||
-    modules.length > LIMITS.modules ||
-    modules.some((item) => typeof item !== "string" || item.length > 80)
-  ) {
-    throw new Error("modules:type");
-  }
   return {
     name: readString(source, "name", LIMITS.name),
     contact: readString(source, "contact", LIMITS.contact),
     company: readString(source, "company", LIMITS.company),
     message: readString(source, "message", LIMITS.message),
-    modules: [...new Set(modules.map((item) => item.trim()).filter(Boolean))],
+    domain: readString(source, "domain", LIMITS.domain),
   };
 }
 
@@ -149,7 +142,7 @@ export async function POST(request: Request) {
     name: body.name,
     contact: body.contact,
     company: body.company,
-    modules: body.modules,
+    domain: body.domain,
     message,
   };
 
@@ -159,17 +152,75 @@ export async function POST(request: Request) {
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;");
+
+    /* 라벨과 값을 표로 늘어놓기만 하면 훑기 어렵다. 답장할 때 제일 먼저
+       찾는 건 연락처인데, 다른 줄과 똑같이 생기면 매번 눈으로 훑어야 한다.
+       연락처는 누를 수 있게 걸고, 나머지는 조용히 둔다. */
+    const link = (value: string) =>
+      value.includes("@")
+        ? `<a href="mailto:${escape(value)}" style="color:#7c3aed;text-decoration:none">${escape(value)}</a>`
+        : /^[\d+\-() ]+$/.test(value)
+          ? `<a href="tel:${escape(value.replace(/[^\d+]/g, ""))}" style="color:#7c3aed;text-decoration:none">${escape(value)}</a>`
+          : escape(value);
+
     const rows = [
-      ["이름", body.name],
-      ["연락처", body.contact],
-      ["회사", body.company || "-"],
-      ["관심 모듈", body.modules.join(", ") || "-"],
+      ["이름", escape(body.name)],
+      ["연락처", link(body.contact)],
+      ["회사, 직책", escape(body.company || "-")],
+      ["관심 분야", escape(body.domain || "-")],
     ]
       .map(
         ([label, value]) =>
-          `<tr><td style="padding:6px 14px 6px 0;color:#6b7280;white-space:nowrap">${label}</td><td style="padding:6px 0">${escape(value)}</td></tr>`,
+          `<tr>
+             <td style="padding:9px 18px 9px 0;color:#8b90a0;font-size:13px;white-space:nowrap;vertical-align:top">${label}</td>
+             <td style="padding:9px 0;color:#1b1e28;font-size:14px;font-weight:600">${value}</td>
+           </tr>`,
       )
       .join("");
+
+    const html = `<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:24px 12px;background:#f4f5f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,.08)">
+
+      <tr><td style="padding:20px 26px;background:#1b1e28">
+        <div style="color:#a78bfa;font-size:11px;font-weight:800;letter-spacing:.08em">WEB AGENCY</div>
+        <div style="color:#ffffff;font-size:18px;font-weight:800;letter-spacing:-.02em;margin-top:4px">상담 요청이 들어왔어요</div>
+      </td></tr>
+
+      <tr><td style="padding:22px 26px 6px">
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%">${rows}</table>
+      </td></tr>
+
+      ${
+        message
+          ? `<tr><td style="padding:6px 26px 4px">
+               <div style="color:#8b90a0;font-size:13px;margin-bottom:8px">문의 내용</div>
+               <div style="padding:14px 16px;background:#f7f8fa;border-radius:10px;color:#33384a;font-size:14px;line-height:1.7">${message}</div>
+             </td></tr>`
+          : ""
+      }
+
+      ${
+        body.contact.includes("@")
+          ? `<tr><td style="padding:18px 26px 4px">
+               <a href="mailto:${escape(body.contact)}?subject=${encodeURIComponent(`[Web-Agency] ${body.name}님 상담 요청 회신`)}"
+                  style="display:inline-block;padding:11px 20px;background:#7c3aed;color:#ffffff;font-size:14px;font-weight:700;border-radius:9px;text-decoration:none">답장하기</a>
+             </td></tr>`
+          : ""
+      }
+
+      <tr><td style="padding:20px 26px 22px">
+        <div style="border-top:1px solid #eceef2;padding-top:14px;color:#a4a9b8;font-size:11px;line-height:1.6">
+          ${receivedAt}<br>${requestId}
+        </div>
+      </td></tr>
+
+    </table>
+  </td></tr></table>
+</body></html>`;
+
     try {
       const response = await withTimeout((signal) =>
         fetch("https://api.resend.com/emails", {
@@ -186,12 +237,10 @@ export async function POST(request: Request) {
             to: [to],
             // 답장이 바로 리드에게 가도록 — 연락처가 이메일일 때만
             ...(body.contact.includes("@") ? { reply_to: body.contact } : {}),
-            subject: `[상담 요청] ${body.name}${body.company ? `, ${body.company}` : ""}`,
-            html: `<table style="font-size:14px;line-height:1.6">${rows}</table>${
-              message
-                ? `<hr style="margin:16px 0;border:0;border-top:1px solid #e5e7eb">${message}`
-                : ""
-            }<p style="margin-top:20px;font-size:12px;color:#9ca3af">requestId ${requestId}, ${receivedAt}</p>`,
+            /* 접두사는 고정이다. 받는 쪽에서 라벨과 필터를 이것으로 건다.
+               발신 주소로 거는 것보다 안 바뀐다 */
+            subject: `[Web-Agency] 상담 요청, ${body.name}${body.company ? ` (${body.company})` : ""}`,
+            html,
           }),
           signal,
         }),
@@ -246,7 +295,7 @@ export async function POST(request: Request) {
                 { type: "mrkdwn", text: `*회사*\n${body.company || "-"}` },
                 {
                   type: "mrkdwn",
-                  text: `*관심 모듈*\n${body.modules.join(", ") || "-"}`,
+                  text: `*관심 분야*\n${body.domain || "-"}`,
                 },
               ],
             },

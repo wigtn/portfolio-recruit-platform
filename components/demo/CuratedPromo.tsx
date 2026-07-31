@@ -8,11 +8,13 @@
 export function CuratedPromo() {
   return (
     <span className="promo-line">
+      {/* "이 화면 그대로"는 쓰지 않는다. 데모를 그대로 넘긴다는 말로 읽혀
+          정작 하려는 이야기(검증된 부품을 당신 업종으로 다시 조합한다)를 가린다 */}
       <span className="promo-wide">
-        이 화면 그대로, <b>업종만 바꿔</b> 만들어 드려요
+        검증된 모듈로, <b>당신의 업종에 맞게</b> 만들어 드려요
       </span>
       <span className="promo-mobile">
-        <b>업종만 바꿔</b> 제작해요
+        <b>당신의 업종에 맞게</b> 제작해요
       </span>
     </span>
   );

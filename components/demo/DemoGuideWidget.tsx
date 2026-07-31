@@ -155,7 +155,7 @@ export function DemoGuideWidget() {
             >
               <b>{FEATURES.length}가지를 전부 직접 확인하셨네요</b>
               <span>
-                이 화면 그대로, 업종만 바꿔 만들어 드립니다
+                같은 모듈로 당신의 업종에 맞게 만들어 드립니다
                 <Icon name="arrow" />
               </span>
             </Link>

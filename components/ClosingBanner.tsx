@@ -9,7 +9,9 @@ import { Icon } from "./Icon";
  * 스크롤로 들어오면 헤드라인이 단어 단위로 마스크를 뚫고 올라온다(AE식
  * 라인 마스크 리빌). 한 번만 재생하고, 모션 줄이기 설정이면 바로 최종 상태.
  */
-const TITLE_WORDS = ["이", "화면", "그대로,", "업종만", "바꿔", "만들어", "드립니다."];
+/* "이 화면 그대로"는 뺐다. 데모를 그대로 납품한다는 말로 읽혀서, 정작
+   하려는 이야기(같은 부품으로 당신 업종을 만든다)를 가린다. */
+const TITLE_WORDS = ["검증된", "모듈로,", "당신의", "서비스를", "만듭니다."];
 
 export function ClosingBanner() {
   const rootRef = useRef<HTMLElement>(null);
@@ -66,7 +68,7 @@ export function ClosingBanner() {
           </span>
         </p>
 
-        <h2 className="closing-title" aria-label="이 화면 그대로, 업종만 바꿔 만들어 드립니다.">
+        <h2 className="closing-title" aria-label="검증된 모듈로, 당신의 서비스를 만듭니다.">
           {TITLE_WORDS.map((word, index) => (
             <span className="w" key={index} aria-hidden>
               <span style={{ "--d": `${index * 80}ms` } as React.CSSProperties}>
@@ -76,7 +78,8 @@ export function ClosingBanner() {
           ))}
         </h2>
         <p className="closing-sub">
-          커머스, 숙박 예약, 헬프데스크, 같은 모듈을 다시 조합합니다.
+          커머스, 숙박 예약, 헬프데스크. 이미 검증을 마친 부품을 다시 조합해
+          처음부터 만드는 것보다 빠르고 덜 위험하게 갑니다.
         </p>
 
         <div className="closing-act">
@@ -86,28 +89,9 @@ export function ClosingBanner() {
           </Link>
         </div>
 
-        <ul className="closing-facts">
-          <li>
-            <b>산출물</b>
-            <strong>화면 20종을 통째로</strong>
-            <span>사용자 10화면 + 운영 백오피스 10화면</span>
-          </li>
-          <li>
-            <b>방식</b>
-            <strong>검증된 모듈 재조합</strong>
-            <span>처음부터 만들지 않아 빠릅니다</span>
-          </li>
-          <li>
-            <b>운영</b>
-            <strong>권한, 감사, 재인증 내장</strong>
-            <span>운영 도구까지 함께 인도합니다</span>
-          </li>
-          <li>
-            <b>확장</b>
-            <strong>업종만 바꿔 다시 조합</strong>
-            <span>커머스, 예약, 헬프데스크</span>
-          </li>
-        </ul>
+        {/* 네 칸짜리 표는 뺐다. 마무리 자리에서 읽는 사람은 이미 화면을
+            둘러본 뒤고, 여기서 필요한 건 다음 한 걸음이지 요약이 아니다.
+            같은 이야기를 네 번 나눠 적으면 CTA가 그만큼 멀어진다. */}
       </div>
     </section>
   );

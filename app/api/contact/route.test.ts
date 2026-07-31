@@ -62,7 +62,7 @@ describe("문의 API", () => {
         name: "테스터",
         contact: "tester@example.com",
         company: "WIGTN",
-        modules: ["채용", "채용"],
+        domain: "채용, 커리어",
         message: "<script>alert(1)</script>",
       }),
     );
@@ -73,7 +73,7 @@ describe("문의 API", () => {
     expect(response.status).toBe(200);
     expect(result).toMatchObject({ ok: true });
     expect(result.requestId).toEqual(expect.any(String));
-    expect(forwarded.lead.modules).toEqual(["채용"]);
+    expect(forwarded.lead.domain).toBe("채용, 커리어");
     expect(forwarded.lead.message).toContain("&lt;script&gt;");
     expect(forwarded.lead.message).not.toContain("<script>");
   });
@@ -183,7 +183,7 @@ describe("슬랙 웹훅", () => {
         name: "테스터",
         contact: "tester@example.com",
         company: "WIGTN",
-        modules: ["채용"],
+        domain: "채용, 커리어",
         message: "<script>alert(1)</script>문의드립니다",
       }),
     );
@@ -216,7 +216,6 @@ describe("슬랙 웹훅", () => {
         name: "테스터",
         contact: "tester@example.com",
         company: "",
-        modules: [],
         message: "문의",
       }),
     );
@@ -254,7 +253,6 @@ describe("발송 채널", () => {
         name: "테스터",
         contact: "tester@example.com",
         company: "WIGTN",
-        modules: [],
         message: "문의",
       }),
     );
@@ -282,7 +280,6 @@ describe("발송 채널", () => {
         name: "테스터",
         contact: "tester@example.com",
         company: "",
-        modules: [],
         message: "문의",
       }),
     );
@@ -306,7 +303,6 @@ describe("발송 채널", () => {
         name: "테스터",
         contact: "tester@example.com",
         company: "",
-        modules: [],
         message: "문의",
       }),
     );
