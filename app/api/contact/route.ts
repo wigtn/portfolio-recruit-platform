@@ -97,9 +97,10 @@ export async function POST(request: Request) {
   }
 
   // ── 발송 채널 ─────────────────────────────────────────────────
-  //  이메일(Resend REST)이 1순위, 웹훅이 2순위다. 이메일 실패 시 웹훅으로
-  //  폴백해 리드를 지킨다. 둘 다 없으면 성공으로 위장하지 않는다 —
-  //  사용자는 접수됐다고 믿는데 리드가 유실되는 게 최악이다.
+  //  이메일과 웹훅으로 **함께** 보낸다. 둘은 역할이 다르다 — 슬랙은 지금
+  //  알아채라고 있고, 메일은 나중에 찾으라고 있다. 하나라도 닿으면 접수
+  //  성공으로 본다. 둘 다 없으면 성공으로 위장하지 않는다 — 사용자는
+  //  접수됐다고 믿는데 리드가 유실되는 게 최악이다.
   //  키는 보안 규약대로 WIGTN_* 환경변수로만 받는다.
   const resendKey = process.env.WIGTN_RESEND_API_KEY;
   const webhook = process.env.CONTACT_WEBHOOK_URL;
@@ -130,25 +131,46 @@ export async function POST(request: Request) {
     }
   };
 
-  // 1순위: contact@wigtn.com 직접 발송
-  if (resendKey) {
+  /* 두 채널로 **함께** 보낸다.
+
+     예전에는 이메일이 성공하면 그 자리에서 끝내고 웹훅은 타지 않았다.
+     폴백 구조였다. 그런데 둘은 역할이 다르다. 슬랙은 지금 알아채라고 있고,
+     메일은 나중에 찾으라고 있다. 하나가 성공했다고 다른 하나를 건너뛰면
+     둘 중 하나의 목적이 사라진다.
+
+     같이 보내되 판정은 느슨하게 한다. **하나라도 닿으면 접수 성공**이다.
+     리드는 이미 우리 손에 들어왔으므로, 슬랙이 잠깐 죽었다고 방문자에게
+     실패를 보여줄 이유가 없다. 실패한 쪽은 로그에 남겨 나중에 본다.
+
+     동시에 보내는 이유는 각각 8초 상한이 걸려 있어서다. 차례로 보내면
+     둘 다 느린 날 16초를 기다리게 된다. */
+  const lead = {
+    receivedAt,
+    name: body.name,
+    contact: body.contact,
+    company: body.company,
+    modules: body.modules,
+    message,
+  };
+
+  const sendEmail = async (): Promise<boolean> => {
+    const escape = (value: string) =>
+      value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    const rows = [
+      ["이름", body.name],
+      ["연락처", body.contact],
+      ["회사", body.company || "-"],
+      ["관심 모듈", body.modules.join(", ") || "-"],
+    ]
+      .map(
+        ([label, value]) =>
+          `<tr><td style="padding:6px 14px 6px 0;color:#6b7280;white-space:nowrap">${label}</td><td style="padding:6px 0">${escape(value)}</td></tr>`,
+      )
+      .join("");
     try {
-      const escape = (value: string) =>
-        value
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;");
-      const rows = [
-        ["이름", body.name],
-        ["연락처", body.contact],
-        ["회사", body.company || "-"],
-        ["관심 모듈", body.modules.join(", ") || "-"],
-      ]
-        .map(
-          ([label, value]) =>
-            `<tr><td style="padding:6px 14px 6px 0;color:#6b7280;white-space:nowrap">${label}</td><td style="padding:6px 0">${escape(value)}</td></tr>`,
-        )
-        .join("");
       const response = await withTimeout((signal) =>
         fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -174,9 +196,7 @@ export async function POST(request: Request) {
           signal,
         }),
       );
-      if (response.ok) {
-        return NextResponse.json({ ok: true, requestId, channel: "email" });
-      }
+      if (response.ok) return true;
       console.error("[contact] 이메일 발송 실패", {
         requestId,
         reason: "resend_rejected",
@@ -188,126 +208,120 @@ export async function POST(request: Request) {
         reason: "resend_unreachable",
       });
     }
-    // 이메일이 실패해도 웹훅이 있으면 아래로 폴백한다
-    if (!webhook) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "지금 접수가 어려워요. 잠시 후 다시 시도해주세요.",
-        },
-        { status: 502 },
-      );
-    }
-  }
+    return false;
+  };
 
-  /* 2순위: 웹훅
+  const sendWebhook = async (): Promise<boolean> => {
+    /* 슬랙은 받는 형식이 정해져 있다. text나 blocks가 아니면 400
+       invalid_payload로 거절한다. 우리 형식을 그대로 보내면 붙지 않는다.
+       그래서 주소를 보고 슬랙이면 슬랙 말로 바꿔 보낸다.
 
-     슬랙은 받는 형식이 정해져 있다. text나 blocks가 아니면 400
-     invalid_payload로 거절한다. 우리 형식을 그대로 보내면 붙지 않는다.
-     그래서 주소를 보고 슬랙이면 슬랙 말로 바꿔 보낸다.
-
-     주소로 판별하는 이유는, 설정을 하나 더 만들면 웹훅 주소와 형식이
-     따로 놀 수 있어서다. 슬랙 주소를 넣었는데 형식이 generic이면 아무 일도
-     안 일어나고, 무엇이 잘못됐는지도 안 보인다. 주소가 곧 형식이면 어긋날
-     자리가 없다. */
-  const toSlack = /(^|\.)hooks\.slack\.com$/i.test(
-    (() => {
+       주소로 판별하는 이유는, 설정을 하나 더 만들면 웹훅 주소와 형식이
+       따로 놀 수 있어서다. 슬랙 주소를 넣었는데 형식이 generic이면 아무 일도
+       안 일어나고, 무엇이 잘못됐는지도 안 보인다. 주소가 곧 형식이면 어긋날
+       자리가 없다. */
+    const host = (() => {
       try {
         return new URL(webhook!).hostname;
       } catch {
         return "";
       }
-    })(),
-  );
+    })();
+    const toSlack = /(^|\.)hooks\.slack\.com$/i.test(host);
 
-  const lead = {
-    receivedAt,
-    name: body.name,
-    contact: body.contact,
-    company: body.company,
-    modules: body.modules,
-    message,
-  };
-
-  const payload = toSlack
-    ? {
-        // 알림 목록과 미리보기에 뜨는 한 줄. blocks만 있으면 여기가 빈다
-        text: `상담 요청, ${body.name}${body.company ? ` (${body.company})` : ""}`,
-        blocks: [
-          {
-            type: "header",
-            text: { type: "plain_text", text: "상담 요청이 들어왔어요" },
-          },
-          {
-            type: "section",
-            fields: [
-              { type: "mrkdwn", text: `*이름*\n${body.name}` },
-              { type: "mrkdwn", text: `*연락처*\n${body.contact}` },
-              { type: "mrkdwn", text: `*회사*\n${body.company || "-"}` },
-              {
-                type: "mrkdwn",
-                text: `*관심 모듈*\n${body.modules.join(", ") || "-"}`,
-              },
-            ],
-          },
-          ...(message
-            ? [
+    const payload = toSlack
+      ? {
+          // 알림 목록과 미리보기에 뜨는 한 줄. blocks만 있으면 여기가 빈다
+          text: `상담 요청, ${body.name}${body.company ? ` (${body.company})` : ""}`,
+          blocks: [
+            {
+              type: "header",
+              text: { type: "plain_text", text: "상담 요청이 들어왔어요" },
+            },
+            {
+              type: "section",
+              fields: [
+                { type: "mrkdwn", text: `*이름*\n${body.name}` },
+                { type: "mrkdwn", text: `*연락처*\n${body.contact}` },
+                { type: "mrkdwn", text: `*회사*\n${body.company || "-"}` },
                 {
-                  type: "section",
-                  // 본문은 살균을 거친 HTML이라 태그를 걷어내고 넘긴다
-                  text: {
-                    type: "mrkdwn",
-                    text: message.replace(/<[^>]*>/g, "").slice(0, 2900),
-                  },
+                  type: "mrkdwn",
+                  text: `*관심 모듈*\n${body.modules.join(", ") || "-"}`,
                 },
-              ]
-            : []),
-          {
-            type: "context",
-            elements: [
-              { type: "mrkdwn", text: `${receivedAt} · ${requestId}` },
-            ],
-          },
-        ],
-      }
-    : { to, lead };
+              ],
+            },
+            ...(message
+              ? [
+                  {
+                    type: "section",
+                    // 본문은 살균을 거친 HTML이라 태그를 걷어내고 넘긴다
+                    text: {
+                      type: "mrkdwn",
+                      text: message.replace(/<[^>]*>/g, "").slice(0, 2900),
+                    },
+                  },
+                ]
+              : []),
+            {
+              type: "context",
+              elements: [
+                { type: "mrkdwn", text: `${receivedAt} · ${requestId}` },
+              ],
+            },
+          ],
+        }
+      : { to, lead };
 
-  try {
-    const response = await withTimeout((signal) =>
-      fetch(webhook!, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-wigtn-request-id": requestId,
-        },
-        body: JSON.stringify(payload),
-        signal,
-      }),
-    );
-    if (!response.ok) {
+    try {
+      const response = await withTimeout((signal) =>
+        fetch(webhook!, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-wigtn-request-id": requestId,
+          },
+          body: JSON.stringify(payload),
+          signal,
+        }),
+      );
+      if (response.ok) return true;
       console.error("[contact] 발송 실패", {
         requestId,
         reason: "webhook_rejected",
         status: response.status,
       });
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "지금 접수가 어려워요. 잠시 후 다시 시도해주세요.",
-        },
-        { status: 502 },
-      );
+    } catch {
+      console.error("[contact] 발송 실패", {
+        requestId,
+        reason: "webhook_unreachable",
+      });
     }
-  } catch {
-    console.error("[contact] 발송 실패", {
-      requestId,
-      reason: "webhook_unreachable",
-    });
+    return false;
+  };
+
+  const [emailOk, webhookOk] = await Promise.all([
+    resendKey ? sendEmail() : Promise.resolve(false),
+    webhook ? sendWebhook() : Promise.resolve(false),
+  ]);
+
+  const channels = [
+    ...(emailOk ? ["email"] : []),
+    ...(webhookOk ? ["webhook"] : []),
+  ];
+
+  if (!channels.length) {
     return NextResponse.json(
       { ok: false, error: "지금 접수가 어려워요. 잠시 후 다시 시도해주세요." },
       { status: 502 },
     );
   }
 
-  return NextResponse.json({ ok: true, requestId, channel: "webhook" });
+  /* channel은 예전 이름을 유지한다. 여러 곳이 성공했을 때 어느 하나를
+     대표로 적어야 한다면 이메일이다. 기록으로 남는 쪽이라서. */
+  return NextResponse.json({
+    ok: true,
+    requestId,
+    channel: channels[0],
+    channels,
+  });
 }

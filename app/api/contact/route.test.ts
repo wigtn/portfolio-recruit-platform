@@ -227,3 +227,90 @@ describe("슬랙 웹훅", () => {
     expect(sent.blocks).toBeUndefined();
   });
 });
+
+/**
+ * 둘 다 보내는지.
+ *
+ * 예전에는 이메일이 성공하면 그 자리에서 끝내고 웹훅은 타지 않았다.
+ * 폴백이라 의도한 동작이었지만, 슬랙은 지금 알아채라고 있고 메일은 나중에
+ * 찾으라고 있어서 역할이 다르다. 하나가 됐다고 다른 하나를 건너뛰면 둘 중
+ * 하나의 목적이 사라진다.
+ *
+ * 되돌아가도 겉으로는 멀쩡해 보인다. 폼은 200을 내고 메일도 온다. 슬랙만
+ * 조용히 안 온다. 그래서 여기서 고정한다.
+ */
+describe("발송 채널", () => {
+  it("메일이 성공해도 웹훅을 함께 보낸다", async () => {
+    process.env.WIGTN_RESEND_API_KEY = "test-key";
+    process.env.CONTACT_WEBHOOK_URL =
+      "https://hooks.slack.com/services/T000/B000/xxxx";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response("ok", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(
+      request({
+        name: "테스터",
+        contact: "tester@example.com",
+        company: "WIGTN",
+        modules: [],
+        message: "문의",
+      }),
+    );
+    const result = await response.json();
+    const urls = fetchMock.mock.calls.map((c) => String(c[0]));
+
+    expect(response.status).toBe(200);
+    expect(urls).toContain("https://api.resend.com/emails");
+    expect(urls.some((u) => u.includes("hooks.slack.com"))).toBe(true);
+    expect(result.channels).toEqual(["email", "webhook"]);
+  });
+
+  it("한쪽이 죽어도 접수는 성공이다", async () => {
+    process.env.WIGTN_RESEND_API_KEY = "test-key";
+    process.env.CONTACT_WEBHOOK_URL = "https://webhook.example.test/contact";
+    const fetchMock = vi.fn(async (url: string) =>
+      String(url).includes("resend")
+        ? new Response(null, { status: 500 })
+        : new Response(null, { status: 204 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(
+      request({
+        name: "테스터",
+        contact: "tester@example.com",
+        company: "",
+        modules: [],
+        message: "문의",
+      }),
+    );
+    const result = await response.json();
+
+    // 리드는 이미 손에 들어왔다. 슬랙이 잠깐 죽었다고 실패를 보여줄 이유가 없다
+    expect(response.status).toBe(200);
+    expect(result.channels).toEqual(["webhook"]);
+  });
+
+  it("둘 다 죽으면 성공으로 위장하지 않는다", async () => {
+    process.env.WIGTN_RESEND_API_KEY = "test-key";
+    process.env.CONTACT_WEBHOOK_URL = "https://webhook.example.test/contact";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(null, { status: 500 })),
+    );
+
+    const response = await POST(
+      request({
+        name: "테스터",
+        contact: "tester@example.com",
+        company: "",
+        modules: [],
+        message: "문의",
+      }),
+    );
+
+    expect(response.status).toBe(502);
+  });
+});
