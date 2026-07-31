@@ -22,7 +22,7 @@ export default async function WritePage({
         <div className="ttl">
           <div>
             <h1>글 쓰기</h1>
-            <div className="desc">현장 경험을 나눠주세요. 익명으로 안전하게</div>
+            <div className="desc">현장 경험을 나눠주세요, 익명으로 안전하게</div>
           </div>
         </div>
       </div>

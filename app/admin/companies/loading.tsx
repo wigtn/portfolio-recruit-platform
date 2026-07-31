@@ -19,7 +19,7 @@ export default function CompaniesLoading() {
           <b>CSV 파일을 끌어다 놓거나 클릭해서 업로드</b>
         </div>
         <div className="sub">
-          회사명 · 업종 · 지역 열 인식 · 오류는 행 단위로 알려줘요 (콜드스타트
+          회사명, 업종, 지역 열 인식, 오류는 행 단위로 알려줘요 (콜드스타트
           대량 입력)
           <br />
           <span style={{ color: "var(--accent)", fontWeight: 700 }}>
@@ -33,7 +33,7 @@ export default function CompaniesLoading() {
         search="회사명 검색"
         cols={[
           "회사",
-          "업종 · 지역",
+          "업종, 지역",
           "리뷰",
           "평점",
           "상태",

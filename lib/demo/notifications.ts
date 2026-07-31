@@ -48,11 +48,11 @@ const REPORT_RESULT: Record<string, { title: string; body: string }> = {
   },
   블라인드: {
     title: "신고하신 콘텐츠가 블라인드됐어요",
-    body: "운영자 검토 결과예요. 사유는 처리 기록에 남아요",
+    body: "운영자 검토 결과예요, 사유는 처리 기록에 남아요",
   },
   삭제: {
     title: "신고하신 콘텐츠가 삭제됐어요",
-    body: "운영자 검토 결과예요. 사유는 처리 기록에 남아요",
+    body: "운영자 검토 결과예요, 사유는 처리 기록에 남아요",
   },
   반려: {
     title: "신고가 반려됐어요",
@@ -89,7 +89,7 @@ export function deriveNotifications(): DemoNotification[] {
       id: `report:${row.id}:${row.status}`,
       kind: "report",
       title: result.title,
-      body: `${row.target}: ${result.body}`,
+      body: `${row.target}, ${result.body}`,
       href: postId
         ? `/community/${postId}`
         : row.kind === "회사 리뷰"

@@ -33,13 +33,13 @@ type Stage = "idle" | "checking" | "streaming" | "rescan" | "fixing" | "posted";
 const SUBTASKS: Partial<Record<Stage, string[]>> = {
   checking: [
     "글 본문과 댓글 맥락을 읽고 있어요",
-    "질문 의도를 분류하고 있어요. 신규 개척 · 프로세스 문의",
+    "질문 의도를 분류하고 있어요. 신규 개척, 프로세스 문의",
     "참고할 현직자 리뷰 범위를 대조하고 있어요",
   ],
   rescan: [
     "생성된 문장에서 실명 패턴을 검사하고 있어요",
     "출처가 확인되지 않은 수치를 찾고 있어요",
-    "회사명·개인정보 노출 여부를 살피고 있어요",
+    "회사명, 개인정보 노출 여부를 살피고 있어요",
   ],
   fixing: [
     "위험 표현을 안전한 표현으로 바꾸고 있어요",
@@ -256,7 +256,7 @@ export function AiAnswerCard({
   const charCount = liveText !== null ? liveText.length : typed;
   const subText =
     stage === "streaming"
-      ? `리뷰 근거로 문장을 쓰는 중 · ${charCount.toLocaleString()}자`
+      ? `리뷰 근거로 문장을 쓰는 중, ${charCount.toLocaleString()}자`
       : ((SUBTASKS[stage] ?? [])[subIdx] ?? "");
   const stepOf: Record<string, number> = {
     checking: 1,
@@ -279,7 +279,7 @@ export function AiAnswerCard({
           <div className="cbody">
             <div className="cwho">
               <span className="ainick">AI 참고 답변</span>
-              <span>참고용 · 방금 생성</span>
+              <span>참고용, 방금 생성</span>
             </div>
             <div className="ctext">
               <PostedStream
@@ -290,7 +290,7 @@ export function AiAnswerCard({
             </div>
             <div className="aistat">
               <Icon name="shield" />
-              {SAFETY_STAT[level]} · 회사 실명·미확인 수치는 담지 않아요
+              {SAFETY_STAT[level]}, 회사 실명, 미확인 수치는 담지 않아요
             </div>
           </div>
         </div>
@@ -565,7 +565,7 @@ export function AiAnswerCard({
                       ))}
                     </div>
                     <div className="dcr">
-                      현재 <b>{SAFETY_LABEL[level]}</b> · {SAFETY_DESC[level]}
+                      현재 <b>{SAFETY_LABEL[level]}</b>, {SAFETY_DESC[level]}
                     </div>
                   </div>
                 ) : null}

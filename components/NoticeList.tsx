@@ -19,7 +19,7 @@ import { Sk, SkRegion, useMockLoading } from "./Skeleton";
 const KINDS: Array<{ key: Notice["kind"]; label: string }> = [
   { key: "notice", label: "공지사항" },
   { key: "faq", label: "자주 묻는 질문" },
-  { key: "terms", label: "약관 · 정책" },
+  { key: "terms", label: "약관, 정책" },
 ];
 
 const KIND_LABEL = Object.fromEntries(
@@ -97,7 +97,7 @@ export function NoticeList({
               <h1>{row.title}</h1>
               <div className="awho">
                 <span>운영팀</span>
-                <span>· {row.date}</span>
+                <span>, {row.date}</span>
               </div>
             </div>
             <div className="abody">

@@ -26,10 +26,10 @@ function reject(file: File): string | null {
     return "SVG는 스크립트를 담을 수 있어 받지 않아요";
   }
   if (!ALLOWED_POST_ATTACHMENT_TYPES.includes(file.type as never)) {
-    return `${file.type || "알 수 없는 형식"}은 받지 않아요. JPG · PNG · WebP · PDF만 가능해요`;
+    return `${file.type || "알 수 없는 형식"}은 받지 않아요, JPG, PNG, WebP, PDF만 가능해요`;
   }
   if (file.size > MAX_POST_ATTACHMENT_BYTES) {
-    return `${(file.size / MB).toFixed(1)}MB예요. 한도 ${MAX_POST_ATTACHMENT_BYTES / MB}MB를 넘어요`;
+    return `${(file.size / MB).toFixed(1)}MB, 한도 ${MAX_POST_ATTACHMENT_BYTES / MB}MB를 넘어요`;
   }
   return null;
 }
@@ -90,7 +90,7 @@ export function FileDrop({
         <div>
           <b>이미지를 끌어다 놓거나 클릭해서 업로드</b>
         </div>
-        <div className="sub">{note ?? "JPG · PNG · WebP · PDF · 10MB까지"}</div>
+        <div className="sub">{note ?? "JPG, PNG, WebP, PDF, 10MB까지"}</div>
       </div>
 
       {files.length ? (

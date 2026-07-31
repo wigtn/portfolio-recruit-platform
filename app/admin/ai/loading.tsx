@@ -72,7 +72,7 @@ export default function AiLoading() {
 
       <TableCardSk
         title="AI 처리 내역"
-        search="질문·규칙 검색"
+        search="질문, 규칙 검색"
         cols={["시각", "대상 질문", "AI 처리", "적용된 안전 규칙", "비교"]}
         rows={4}
         // P1 그리드 재실측(1440px) — 마지막 행은 구분선이 없어 1px 낮다

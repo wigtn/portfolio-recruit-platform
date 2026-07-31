@@ -25,6 +25,9 @@ import { HomeCompanyInsights } from "@/components/HomeDiscoverSections";
  * 구조를 재해석하지 않는다: .hero → .sec(추천 회사) → .sec/.split(피드+사이드) → .ctaband → .footer
  */
 /** 히어로 제목 — 마스크가 단어 단위라 토큰도 단어 단위로 끊는다. */
+/** 홈에 세우는 채용공고 수 — 스켈레톤과 실제 카드가 같이 읽는 하나의 값 */
+const HOME_JOBS = 3;
+
 const TITLE_WORDS: React.ReactNode[] = [
   "현장의",
   "답은,",
@@ -63,7 +66,7 @@ export default function HomePage() {
     <>
       <div className="hero">
         <div className="inner">
-          <span className="eyebrow">영업직 커뮤니티 · 회사 리뷰</span>
+          <span className="eyebrow">영업직 커뮤니티, 회사 리뷰</span>
           <h1 aria-label="현장의 답은, 현장 사람들에게.">
             {TITLE_WORDS.map((word, i) => (
               <Fragment key={i}>
@@ -111,7 +114,7 @@ export default function HomePage() {
                       )}
                     />
                   </b>
-                  현장 질문·노하우
+                  현장 질문, 노하우
                 </span>
                 <i />
                 <span>
@@ -142,16 +145,20 @@ export default function HomePage() {
         {loading ? (
           <SkRegion label="채용공고">
             <div className="cgrid">
-              {[0, 1, 2].map((index) => (
+              {Array.from({ length: HOME_JOBS }, (_, index) => (
                 <JobCardSkeleton key={index} />
               ))}
             </div>
           </SkRegion>
         ) : (
           <div className="cgrid sk-arrive">
-            {jobsWithCompany().map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
+            {/* 홈은 맛보기다 — 전체는 /jobs가 맡는다. 위 스켈레톤도 같은 수를
+                세우므로(자리 예약) 이 수를 바꾸면 스켈레톤도 같이 바꾼다. */}
+            {jobsWithCompany()
+              .slice(0, HOME_JOBS)
+              .map((job) => (
+                <JobCard key={job.id} job={job} />
+              ))}
           </div>
         )}
       </div>

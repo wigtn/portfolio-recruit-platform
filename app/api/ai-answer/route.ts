@@ -79,8 +79,8 @@ export async function POST(request: Request) {
         rateLimited: true,
         error:
           gate.why === "ip"
-            ? "실호출 한도(시간당)에 도달했어요. 예시 재생으로 이어가요."
-            : "오늘의 데모 생성 총량을 다 썼어요. 예시 재생으로 이어가요.",
+            ? "실호출 한도(시간당)에 도달했어요, 예시 재생으로 이어가요."
+            : "오늘의 데모 생성 총량을 다 썼어요, 예시 재생으로 이어가요.",
       },
       { status: 429 },
     );
@@ -89,67 +89,100 @@ export async function POST(request: Request) {
   // 위험 표현을 원문 그대로 포함시키라고 지시한다 — 안전 파이프라인의 재료
   const mustInclude = post.guarded.map((term) => `"${term.raw}"`).join(", ");
 
-  const upstream = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${key}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      stream: true,
-      temperature: 0.7,
-      max_tokens: 240,
-      messages: [
-        {
-          role: "system",
-          content:
-            "당신은 한국 영업직 커뮤니티의 AI 참고 답변입니다. 질문에 3~4문장, '~해요'체로 실무적으로 답하세요. 마크다운·목록 없이 문단 하나로만." +
-            (mustInclude
-              ? ` 답변 안에 다음 표현을 반드시 원문 그대로 자연스럽게 한 번씩 포함하세요: ${mustInclude}.`
-              : ""),
-        },
-        {
-          role: "user",
-          content: `제목: ${post.title}\n\n본문: ${post.body}`,
-        },
-      ],
-    }),
-  });
+  /* 첫 응답까지만 상한을 건다. 업스트림이 늘어지면 이 라우트가 붙들리고
+     화면은 생성 중 표시만 띄운 채 멈춘다. fetch는 헤더가 오면 resolve하므로
+     본문 스트림은 이 상한에 걸리지 않는다. */
+  const guard = new AbortController();
+  const guardTimer = setTimeout(() => guard.abort(), 15000);
+  let upstream: Response;
+  try {
+    upstream = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      signal: guard.signal,
+      headers: {
+        authorization: `Bearer ${key}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        stream: true,
+        temperature: 0.7,
+        max_tokens: 240,
+        messages: [
+          {
+            role: "system",
+            content:
+              "당신은 한국 영업직 커뮤니티의 AI 참고 답변입니다. 질문에 3~4문장, '~해요'체로 실무적으로 답하세요. 마크다운, 목록 없이 문단 하나로만." +
+              (mustInclude
+                ? ` 답변 안에 다음 표현을 반드시 원문 그대로 자연스럽게 한 번씩 포함하세요: ${mustInclude}.`
+                : ""),
+          },
+          {
+            role: "user",
+            content: `제목: ${post.title}\n\n본문: ${post.body}`,
+          },
+        ],
+      }),
+    });
+  } catch {
+    // 시작조차 못 했으면 폴백 연출로. 데모가 멈추는 것보다 낫다
+    return NextResponse.json({ fallback: true });
+  } finally {
+    clearTimeout(guardTimer);
+  }
 
   if (!upstream.ok || !upstream.body) {
     // 업스트림 장애도 데모를 멈추지 않는다 — 폴백 연출로
     return NextResponse.json({ fallback: true });
   }
 
-  // OpenAI SSE → 순수 텍스트 스트림 재방출
+  /* OpenAI SSE → 순수 텍스트 스트림 재방출.
+
+     네트워크 청크는 SSE 프레임 경계와 무관하게 잘려서 온다. 한 줄이 두 청크에
+     걸치면 앞 조각은 JSON으로 파싱되지 않는다. 그걸 그냥 버리면 그 프레임이
+     싣고 있던 글자가 통째로 사라져, 답변이 "전시회와드콜 모두 장단점이요"처럼
+     음절이 빠진 채로 나온다.
+
+     그래서 완성되지 않은 마지막 줄은 버퍼에 남겨 다음 청크와 이어 붙인다.
+     스트림이 끝나면 버퍼에 남은 것을 마지막으로 한 번 더 처리한다. */
   const decoder = new TextDecoder();
   const encoder = new TextEncoder();
   const reader = upstream.body.getReader();
+  let buffer = "";
+
+  const emit = (line: string, controller: ReadableStreamDefaultController<Uint8Array>) => {
+    const data = line.trim();
+    if (!data.startsWith("data:")) return;
+    const payload = data.slice(5).trim();
+    if (!payload || payload === "[DONE]") return;
+    try {
+      const delta = (
+        JSON.parse(payload) as {
+          choices?: Array<{ delta?: { content?: string } }>;
+        }
+      ).choices?.[0]?.delta?.content;
+      if (delta) controller.enqueue(encoder.encode(delta));
+    } catch {
+      /* 완성된 줄인데도 파싱이 안 되면 우리가 모르는 프레임이다. 건너뛴다 */
+    }
+  };
 
   const stream = new ReadableStream<Uint8Array>({
     async pull(controller) {
       const { done, value } = await reader.read();
       if (done) {
+        // 마지막 청크가 개행으로 끝나지 않았다면 아직 버퍼에 한 줄이 남아 있다
+        buffer += decoder.decode();
+        if (buffer.trim()) emit(buffer, controller);
+        buffer = "";
         controller.close();
         return;
       }
-      for (const line of decoder.decode(value, { stream: true }).split("\n")) {
-        const data = line.trim();
-        if (!data.startsWith("data:")) continue;
-        const payload = data.slice(5).trim();
-        if (payload === "[DONE]") continue;
-        try {
-          const delta = (
-            JSON.parse(payload) as {
-              choices?: Array<{ delta?: { content?: string } }>;
-            }
-          ).choices?.[0]?.delta?.content;
-          if (delta) controller.enqueue(encoder.encode(delta));
-        } catch {
-          /* 파편 프레임은 건너뛴다 */
-        }
-      }
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      // 마지막 조각은 아직 줄이 안 끝났을 수 있으니 다음 청크까지 들고 간다
+      buffer = lines.pop() ?? "";
+      for (const line of lines) emit(line, controller);
     },
     cancel() {
       void reader.cancel();

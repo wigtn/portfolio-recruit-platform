@@ -39,9 +39,9 @@ const GUARD_ROWS: Array<{ key: GuardKey; icon: string; desc: string }> = [
   {
     key: "rule",
     icon: "shield",
-    desc: "회사명 사전 · 수치 패턴 · 연락처 (토큰 0)",
+    desc: "회사명 사전, 수치 패턴, 연락처, 토큰 0",
   },
-  { key: "moderation", icon: "bot", desc: "맥락상 비방·민감 표현 판단" },
+  { key: "moderation", icon: "bot", desc: "맥락상 비방, 민감 표현 판단" },
   { key: "human", icon: "users", desc: "보류된 답변은 운영자가 최종 판단" },
 ];
 
@@ -71,7 +71,7 @@ export function AiOps() {
     await admin.act(tool, id, {
       reason:
         tool === "ai.guard.off"
-          ? "운영자 판단: 안전 장치 해제"
+          ? "운영자 판단, 안전 장치 해제"
           : "AI 설정 변경",
     });
   }
@@ -114,7 +114,7 @@ export function AiOps() {
             <div
               className="safety-preview"
               role="radiogroup"
-              aria-label="안전 강도: 강도별 문구 예시에서 선택"
+              aria-label="안전 강도, 강도별 문구 예시에서 선택"
             >
               {LEVELS.map((level) => {
                 const active = ai?.safety === level;
@@ -144,8 +144,8 @@ export function AiOps() {
                 );
               })}
               <p className="safety-note">
-                {ai ? SAFETY_DESC[ai.safety] : <Sk w={200} h={12} />}
-                <br />글 상세의 AI 참고 답변에 적용되며, 데모에선 글 화면에서도 바꿔볼 수
+                {ai ? SAFETY_DESC[ai.safety] : <Sk w={200} h={12} />}, 글
+                상세의 AI 참고 답변에 적용되며, 데모에선 글 화면에서도 바꿔볼 수
                 있어요.
               </p>
             </div>
@@ -194,7 +194,7 @@ export function AiOps() {
                     className={on ? "ptog on" : "ptog"}
                     disabled={busy || !ai}
                     title={
-                      on ? "누르면 꺼요. 재인증이 필요해요" : "누르면 켜요"
+                      on ? "누르면 꺼요, 재인증이 필요해요" : "누르면 켜요"
                     }
                     onClick={() =>
                       act(on ? "ai.guard.off" : "ai.guard.on", row.key)
@@ -223,7 +223,7 @@ export function AiOps() {
         <div className="mcard">
           <div className="mk">생성 보류</div>
           <div className="mv">
-            {AI_METRICS.held} <small className="up">스팸·저신뢰</small>
+            {AI_METRICS.held} <small className="up">스팸, 저신뢰</small>
           </div>
         </div>
       </div>
@@ -241,7 +241,7 @@ export function AiOps() {
             <Icon name="search" />
             <input
               value={query}
-              placeholder="질문·규칙 검색"
+              placeholder="질문, 규칙 검색"
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>
@@ -302,7 +302,7 @@ export function AiOps() {
                           규칙 적용 없음
                         </span>
                       )}
-                      {row.note ? ` · ${row.note}` : null}
+                      {row.note ? `, ${row.note}` : null}
                     </td>
                     <td>
                       {row.answer ? (
@@ -361,7 +361,7 @@ function DiffView({ answer }: { answer: AiSegment[] }) {
     return (
       <div className="ailog-diff">
         <div className="ailog-pane is-applied" style={{ gridColumn: "1 / -1" }}>
-          <div className="ailog-pane-head">생성된 답변: 규칙 적용 없음</div>
+          <div className="ailog-pane-head">생성된 답변, 규칙 적용 없음</div>
           <p>{answer.join("")}</p>
         </div>
       </div>

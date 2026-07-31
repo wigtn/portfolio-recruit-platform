@@ -13,6 +13,7 @@ import { PostRow } from "@/components/PostRow";
 import { LiveKeywords } from "@/components/LiveKeywords";
 import { Icon } from "@/components/Icon";
 import { Coach } from "@/components/Coach";
+import { Paging } from "@/components/Paging";
 
 export const metadata = { title: "커뮤니티 | W 세일즈" };
 
@@ -26,15 +27,21 @@ const SORTS = [
  * 작성 후 경과 분 — 최신순의 정렬 키(공유 계약: FeedItem.ageMinutes).
  * 필드가 아직 없는 시드가 섞여 있어도 깨지지 않게 0으로 방어한다.
  */
-const ageOf = (item: FeedItem) =>
-  (item as FeedItem & { ageMinutes?: number }).ageMinutes ?? 0;
-
-/** 모바일에서도 페이지 버튼이 무한히 늘지 않게 현재 페이지가 속한 5개 블록만 보인다. */
+/**
+ * 현재 페이지가 속한 블록만 보인다.
+ *
+ * 페이지 수만큼 버튼을 다 그리면 좁은 폭에서 줄이 넘치고, 페이저 높이가
+ * 바뀌면 버튼이 커서 밑에서 달아난다. 그건 Paging이 막으려는 것과 정면으로
+ * 부딪힌다. 다섯 개씩 끊어 보여주면 폭도 높이도 일정하다.
+ */
 function pageWindow(current: number, total: number, size = 5) {
   const start = Math.floor((current - 1) / size) * size + 1;
   const end = Math.min(total, start + size - 1);
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
 }
+
+const ageOf = (item: FeedItem) =>
+  (item as FeedItem & { ageMinutes?: number }).ageMinutes ?? 0;
 
 export default async function CommunityPage({
   searchParams,
@@ -118,7 +125,7 @@ export default async function CommunityPage({
           <div>
             <h1>커뮤니티</h1>
             <div className="desc">
-              현장에서 막 올라온 질문과 노하우: 영업직끼리 진짜 이야기
+              현장에서 막 올라온 질문과 노하우, 영업직끼리 진짜 이야기
             </div>
           </div>
           <Link
@@ -189,7 +196,7 @@ export default async function CommunityPage({
                   <input type="hidden" name="verified" value="1" />
                 ) : null}
                 <Icon name="search" />
-                <input name="q" defaultValue={q} placeholder="제목·내용 검색" />
+                <input name="q" defaultValue={q} placeholder="제목, 내용 검색" />
               </form>
               <div className="seg">
                 {SORTS.map((option) => (
@@ -208,7 +215,7 @@ export default async function CommunityPage({
               id="community-ai"
               cta={{ label: "인기 글 열기", href: "/community/p-4821" }}
             >
-              아무 글이나 열어보세요. <b>AI 참고 답변이 실제로 생성</b>돼요
+              아무 글이나 열어보세요, <b>AI 참고 답변이 실제로 생성</b>돼요
             </Coach>
 
             {items.length === 0 ? (
@@ -227,48 +234,24 @@ export default async function CommunityPage({
               </div>
             ) : (
               <>
-                <div className="feed">
+                {/* feed-fixed는 행 높이와 목록 최소 높이를 못 박는다 —
+                    페이저가 커서 밑에서 달아나지 않게 하는 쪽 절반이다 */}
+                <div
+                  className="feed feed-fixed"
+                  style={{ "--page-rows": PER_PAGE } as CSSProperties}
+                >
                   {shown.map((item) => (
                     <PostRow key={item.id} item={item} />
                   ))}
                 </div>
                 {pages > 1 ? (
-                  <div className="paging">
-                    {current > 1 ? (
-                      <Link
-                        href={qs({ page: String(current - 1) })}
-                        aria-label="이전 페이지"
-                      >
-                        ‹
-                      </Link>
-                    ) : (
-                      <button disabled aria-label="이전 페이지">
-                        ‹
-                      </button>
+                  <Paging
+                    current={current}
+                    hrefs={Array.from({ length: pages }, (_, index) =>
+                      qs({ page: String(index + 1) }),
                     )}
-                    {visiblePages.map((number) => (
-                      <Link
-                        key={number}
-                        className={number === current ? "on" : undefined}
-                        href={qs({ page: String(number) })}
-                        aria-current={number === current ? "page" : undefined}
-                      >
-                        {number}
-                      </Link>
-                    ))}
-                    {current < pages ? (
-                      <Link
-                        href={qs({ page: String(current + 1) })}
-                        aria-label="다음 페이지"
-                      >
-                        ›
-                      </Link>
-                    ) : (
-                      <button disabled aria-label="다음 페이지">
-                        ›
-                      </button>
-                    )}
-                  </div>
+                    visible={visiblePages}
+                  />
                 ) : null}
               </>
             )}

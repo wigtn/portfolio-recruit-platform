@@ -37,7 +37,7 @@ export function ReportDetail({
           </div>
           <h3>{report.target}</h3>
           <div className="dmeta">
-            {report.author} · {report.at} 작성 · 신고 사유 {report.reason}
+            {report.author}, {report.at} 작성, 신고 사유 {report.reason}
           </div>
         </div>
 

@@ -41,7 +41,7 @@ const SORT_GETTERS: Record<string, (row: Notice) => unknown> = {
 const KINDS: Array<{ key: Notice["kind"]; label: string; place: string }> = [
   { key: "notice", label: "공지사항", place: "공지사항" },
   { key: "faq", label: "자주 묻는 질문", place: "자주 묻는 질문" },
-  { key: "terms", label: "약관 · 정책", place: "푸터 · 약관" },
+  { key: "terms", label: "약관, 정책", place: "푸터, 약관" },
 ];
 
 const FIELDS = [
@@ -213,7 +213,7 @@ export function NoticesAdmin() {
                                 {
                                   reason: row.pinned
                                     ? "상단 고정 해제"
-                                    : "안내 우선 노출: 상단 고정",
+                                    : "안내 우선 노출, 상단 고정",
                                 },
                               )
                             }
@@ -229,7 +229,7 @@ export function NoticesAdmin() {
                             disabled={admin.busy}
                             onClick={() =>
                               admin.act("notice.unpublish", row.id, {
-                                reason: "운영자 판단: 노출 중단",
+                                reason: "운영자 판단, 노출 중단",
                               })
                             }
                           >

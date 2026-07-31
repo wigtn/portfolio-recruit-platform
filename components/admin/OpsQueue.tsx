@@ -26,7 +26,7 @@ const LIVE_COUNT: Record<string, (state: AdminState) => number> = {
   "답변 없는 질문": (state) => openQuestions(state.answers).length,
   "증빙 검토 대기": (state) =>
     state.evidence.filter((row) => row.status === "대기").length,
-  "회사 중복 · 사명 변경 확인": (state) =>
+  "회사 중복, 사명 변경 확인": (state) =>
     state.companies.filter((row) => row.status === "중복 의심").length,
 };
 

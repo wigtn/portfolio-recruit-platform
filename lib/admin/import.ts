@@ -50,7 +50,7 @@ export function parseCompanyImport(text: string): ImportResult {
     return {
       rows: [],
       errors: [],
-      fatal: `머리글에 ${HEADERS.join(" · ")} 열이 모두 있어야 해요. 지금은 "${first.join(" · ")}"이에요.`,
+      fatal: `머리글에 ${HEADERS.join(", ")} 열이 모두 있어야 해요. 지금은 "${first.join(", ")}"이에요.`,
     };
   }
 
@@ -68,7 +68,7 @@ export function parseCompanyImport(text: string): ImportResult {
       return;
     }
     if (!industry || !region) {
-      errors.push({ line: lineNo, raw: line, why: "업종·지역이 비어 있어요" });
+      errors.push({ line: lineNo, raw: line, why: "업종, 지역이 비어 있어요" });
       return;
     }
     if (seen.has(name)) {

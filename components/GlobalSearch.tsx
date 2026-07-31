@@ -52,7 +52,7 @@ export function GlobalSearch() {
   // 전부 들어 있으면 찾는다. 통짜 includes는 추천 검색어조차 스스로 실패했다.
   const tokens = needle
     .toLowerCase()
-    .split(/[\s·,]+/)
+    .split(/[\s,]+/)
     .filter(Boolean);
   const matches = (haystack: string) => {
     const lowered = haystack.toLowerCase();
@@ -83,7 +83,7 @@ export function GlobalSearch() {
       <button
         ref={trigger}
         className="gsearch"
-        aria-label="회사·글 검색 열기"
+        aria-label="회사, 글 검색 열기"
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen(true)}
@@ -185,12 +185,15 @@ export function GlobalSearch() {
                             onClick={() => move(`/companies/${company.slug}`)}
                           >
                             <span className="search-company-mark">
-                              {company.mark}
+                              <img
+                                src={company.logo}
+                                alt={`${company.name} 로고`}
+                              />
                             </span>
                             <span className="search-result-copy">
                               <span className="nm">{company.name}</span>
                               <span className="meta">
-                                {company.industry} · {company.region}
+                                {company.industry}, {company.region}
                               </span>
                             </span>
                             <Icon name="chevR" />
@@ -225,7 +228,7 @@ export function GlobalSearch() {
                               <span className="nm">{item.title}</span>
                               <span className="meta">
                                 익명 게시글
-                                {item.badges.includes("인증") ? " · 인증" : ""}
+                                {item.badges.includes("인증") ? ", 인증" : ""}
                               </span>
                             </span>
                             <Icon name="chevR" />

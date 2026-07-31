@@ -204,7 +204,7 @@ export const seed: Store = {
       id: "rp-1",
       target: "[광고] 이직 컨설팅 DM 주세요",
       kind: "커뮤니티 글",
-      reason: "스팸·광고",
+      reason: "스팸, 광고",
       count: 5,
       status: "임시 블라인드",
       postId: "p-4822",
@@ -213,12 +213,12 @@ export const seed: Store = {
       body:
         "이직 고민 있으신 분들 DM 주세요. 대기업 위주로 컨설팅 진행하고 있습니다.\n" +
         "상담은 무료고, 합격 시에만 수수료 받습니다. 010-1234-5678 편하게 연락 주세요.",
-      note: "3회 누적으로 자동 임시 블라인드된 상태예요. 삭제할지 복원할지 판단이 필요해요",
+      note: "3회 누적으로 자동 임시 블라인드된 상태예요, 삭제할지 복원할지 판단이 필요해요",
       filings: [
-        { at: "07.25 09:41", by: "익명1102", reason: "스팸·광고" },
+        { at: "07.25 09:41", by: "익명1102", reason: "스팸, 광고" },
         { at: "07.25 10:03", by: "영업7년차", reason: "연락처 노출" },
-        { at: "07.25 10:18", by: "익명5533", reason: "스팸·광고" },
-        { at: "07.25 11:22", by: "익명0917", reason: "스팸·광고" },
+        { at: "07.25 10:18", by: "익명5533", reason: "스팸, 광고" },
+        { at: "07.25 11:22", by: "익명0917", reason: "스팸, 광고" },
         { at: "07.25 13:40", by: "필드러너", reason: "상업적 홍보" },
       ],
     },
@@ -226,7 +226,7 @@ export const seed: Store = {
       id: "rp-2",
       target: "팀장 실명 험담 리뷰",
       kind: "회사 리뷰",
-      reason: "실명·비방",
+      reason: "실명, 비방",
       count: 3,
       status: "검토 대기",
       author: "익명1102",
@@ -236,9 +236,9 @@ export const seed: Store = {
         "성과는 본인이 다 챙깁니다. 3년 동안 그 팀에서만 5명 나갔어요.",
       note: "실명이 들어간 개인 지목이라 규칙상 블라인드 대상이지만, 근무 환경 정보로서의 가치도 있어요",
       filings: [
-        { at: "07.24 22:15", by: "익명3390", reason: "실명·비방" },
+        { at: "07.24 22:15", by: "익명3390", reason: "실명, 비방" },
         { at: "07.25 08:02", by: "익명7781", reason: "개인 지목" },
-        { at: "07.25 09:30", by: "익명2214", reason: "실명·비방" },
+        { at: "07.25 09:30", by: "익명2214", reason: "실명, 비방" },
       ],
     },
     {
@@ -253,7 +253,7 @@ export const seed: Store = {
       body:
         "2025년 연간 목표 340% 달성 인증합니다. 첨부한 실적표 확인 부탁드려요.\n" +
         "(첨부: 실적표 이미지 1장)",
-      note: "첨부 이미지의 회사 로고가 프로필에 등록된 소속 회사와 달라요. 확인이 필요해요",
+      note: "첨부 이미지의 회사 로고가 프로필에 등록된 소속 회사와 달라요, 확인이 필요해요",
       filings: [
         { at: "07.24 10:11", by: "익명4402", reason: "허위 정보" },
         { at: "07.24 16:38", by: "익명8890", reason: "증빙 불일치" },
@@ -289,7 +289,7 @@ export const seed: Store = {
       postId: "p-4809",
       author: "익명7420",
       at: "07.21 02:11",
-      body: "(이미지 3장 첨부: 본문 없음)",
+      body: "(이미지 3장 첨부, 본문 없음)",
       note: "이미 블라인드 처리된 건이에요. 복원하려면 근거가 필요해요",
       filings: [
         { at: "07.21 02:40", by: "익명2214", reason: "선정성" },
@@ -322,7 +322,7 @@ export const seed: Store = {
       id: "m-1",
       nick: "김영업",
       grade: "Lv.4 필드리더",
-      activity: "글 24 · 리뷰 3",
+      activity: "글 24, 리뷰 3",
       status: "정상",
       joined: "2025.11",
       email: "kim****@example.com",
@@ -336,7 +336,7 @@ export const seed: Store = {
       id: "m-2",
       nick: "박세일",
       grade: "Lv.5 세일즈마스터",
-      activity: "글 57 · 리뷰 8",
+      activity: "글 57, 리뷰 8",
       status: "정상",
       joined: "2025.08",
       email: "park****@example.com",
@@ -344,7 +344,7 @@ export const seed: Store = {
       lastSeen: "어제 18:40",
       reported: 1,
       history: [
-        { at: "2026.06.11", what: "신고 1건 접수: 반려 처리" },
+        { at: "2026.06.11", what: "신고 1건 접수, 반려 처리" },
         { at: "2025.12.20", what: "세일즈마스터 등급 승인" },
       ],
     },
@@ -352,7 +352,7 @@ export const seed: Store = {
       id: "m-3",
       nick: "스팸계정01",
       grade: "Lv.1 신입",
-      activity: "글 12 · 리뷰 0",
+      activity: "글 12, 리뷰 0",
       status: "정지",
       joined: "2026.07",
       email: "ad****@example.com",
@@ -360,7 +360,7 @@ export const seed: Store = {
       lastSeen: "07.25 13:40",
       reported: 5,
       history: [
-        { at: "2026.07.25", what: "신고 5회 누적: 정지" },
+        { at: "2026.07.25", what: "신고 5회 누적, 정지" },
         { at: "2026.07.25", what: "광고 글 3건 자동 블라인드" },
       ],
     },
@@ -368,7 +368,7 @@ export const seed: Store = {
       id: "m-4",
       nick: "정주임",
       grade: "Lv.2 현직",
-      activity: "글 8 · 리뷰 1",
+      activity: "글 8, 리뷰 1",
       status: "정상",
       joined: "2026.05",
       email: "jung****@example.com",
@@ -381,7 +381,7 @@ export const seed: Store = {
       id: "m-5",
       nick: "오사원",
       grade: "Lv.1 신입",
-      activity: "글 3 · 리뷰 0",
+      activity: "글 3, 리뷰 0",
       status: "정상",
       joined: "2026.07",
       email: "oh****@example.com",
@@ -394,7 +394,7 @@ export const seed: Store = {
       id: "m-6",
       nick: "필드러너",
       grade: "Lv.3 리뷰어",
-      activity: "글 31 · 리뷰 5",
+      activity: "글 31, 리뷰 5",
       status: "정상",
       joined: "2026.01",
       email: "run****@example.com",
@@ -529,7 +529,7 @@ export const seed: Store = {
       id: "nt-1",
       kind: "notice",
       title: "리뷰 운영정책 개정 안내",
-      place: "공지사항 · 상단 고정",
+      place: "공지사항, 상단 고정",
       date: "2026.07.20",
       status: "노출중",
       pinned: true,
@@ -577,7 +577,7 @@ export const seed: Store = {
       id: "nt-6",
       kind: "terms",
       title: "개인정보처리방침 v2.1",
-      place: "푸터 · 약관",
+      place: "푸터, 약관",
       date: "2026.05.02",
       status: "시행중",
       body: "수집 항목과 보관 기간을 명시합니다. 개정 시 30일 전 공지합니다.",
@@ -586,50 +586,50 @@ export const seed: Store = {
       id: "nt-7",
       kind: "terms",
       title: "이용약관 v3.0",
-      place: "푸터 · 약관",
+      place: "푸터, 약관",
       date: "2026.04.18",
       status: "시행중",
       body:
-        "제1조(목적) 이 약관은 회원이 서비스를 이용할 때의 권리·의무와 책임을 정합니다.\n" +
-        "제2조(회원) 가입 시 영업 직무 재직·재직 이력 확인 절차를 거칩니다.\n" +
-        "제3조(게시물) 회원이 작성한 리뷰·글의 저작권은 작성자에게 있으며, 서비스는 노출·보관에 필요한 범위에서만 이용합니다.\n" +
+        "제1조(목적) 이 약관은 회원이 서비스를 이용할 때의 권리, 의무와 책임을 정합니다.\n" +
+        "제2조(회원) 가입 시 영업 직무 재직, 재직 이력 확인 절차를 거칩니다.\n" +
+        "제3조(게시물) 회원이 작성한 리뷰, 글의 저작권은 작성자에게 있으며, 서비스는 노출, 보관에 필요한 범위에서만 이용합니다.\n" +
         "제4조(제한) 허위 사실, 특정 개인 식별, 광고성 게시물은 사전 통보 없이 블라인드될 수 있습니다.",
     },
     {
       id: "nt-8",
       kind: "terms",
       title: "운영정책 v1.4",
-      place: "푸터 · 약관",
+      place: "푸터, 약관",
       date: "2026.06.11",
       status: "시행중",
       body:
-        "블라인드 기준: 개인 식별 정보, 명백한 허위, 동일 문구 반복 게시.\n" +
-        "제재 단계: 1회 경고, 2회 7일 정지, 3회 영구 정지. 각 단계는 사유와 함께 기록되고 회원에게 통지됩니다.\n" +
-        "이의 신청: 조치 후 14일 이내 신청할 수 있고, 담당자가 아닌 별도 검토자가 판단합니다.\n" +
+        "블라인드 기준, 개인 식별 정보, 명백한 허위, 동일 문구 반복 게시.\n" +
+        "제재 단계, 1회 경고, 2회 7일 정지, 3회 영구 정지. 각 단계는 사유와 함께 기록되고 회원에게 통지됩니다.\n" +
+        "이의 신청, 조치 후 14일 이내 신청할 수 있고, 담당자가 아닌 별도 검토자가 판단합니다.\n" +
         "운영자 조치는 모두 처리 기록에 남아 사후 확인이 가능합니다.",
     },
     {
       id: "nt-9",
       kind: "terms",
       title: "리뷰 정책 v2.0",
-      place: "푸터 · 약관",
+      place: "푸터, 약관",
       date: "2026.06.11",
       status: "시행중",
       body:
-        "작성 자격: 해당 회사 재직 또는 퇴사 후 2년 이내, 영업 직무에 한합니다.\n" +
-        "익명 보장: 작성자 정보는 운영자에게도 표시되지 않습니다. 신고 처리 시에도 계정 식별자만 다룹니다.\n" +
-        "평점 축: 인센티브·목표현실성·매니저코칭·계정배분·성과압박 5개 축으로만 받습니다. 성과압박은 낮을수록 좋은 값으로 계산합니다.\n" +
-        "수정·삭제: 작성 후 30일 이내 수정 가능하며, 삭제 시 평점 집계에서도 즉시 제외됩니다.",
+        "작성 자격, 해당 회사 재직 또는 퇴사 후 2년 이내, 영업 직무에 한합니다.\n" +
+        "익명 보장, 작성자 정보는 운영자에게도 표시되지 않습니다. 신고 처리 시에도 계정 식별자만 다룹니다.\n" +
+        "평점 축, 인센티브, 목표현실성, 매니저코칭, 계정배분, 성과압박 5개 축으로만 받습니다. 성과압박은 낮을수록 좋은 값으로 계산합니다.\n" +
+        "수정, 삭제, 작성 후 30일 이내 수정 가능하며, 삭제 시 평점 집계에서도 즉시 제외됩니다.",
     },
     {
       id: "nt-10",
       kind: "faq",
       title: "신고는 어떻게 하고, 어떻게 처리되나요?",
-      place: "푸터 · 고객지원",
+      place: "푸터, 고객지원",
       date: "2026.06.20",
       status: "노출중",
       body:
-        "글·리뷰 우측의 신고를 누르고 사유를 고르면 접수됩니다. 접수 즉시 운영 큐에 쌓이고 담당자가 확인합니다.\n" +
+        "글, 리뷰 우측의 신고를 누르고 사유를 고르면 접수됩니다. 접수 즉시 운영 큐에 쌓이고 담당자가 확인합니다.\n" +
         "처리 결과는 신고자에게 알림으로 전달되며, 조치가 있었다면 사유가 함께 표시됩니다.\n" +
         "허위 신고가 반복되면 신고 기능 이용이 제한될 수 있습니다.",
     },
@@ -637,9 +637,9 @@ export const seed: Store = {
 
   curation: {
     companies: [
-      { id: "cs-1", name: "◇◇테크", meta: "4.3 · 리뷰 212" },
-      { id: "cs-2", name: "▓▓상사", meta: "4.1 · 리뷰 128" },
-      { id: "cs-3", name: "□□커머스", meta: "3.9 · 리뷰 87" },
+      { id: "cs-1", name: "◇◇테크", meta: "4.3, 리뷰 212" },
+      { id: "cs-2", name: "▓▓상사", meta: "4.1, 리뷰 128" },
+      { id: "cs-3", name: "□□커머스", meta: "3.9, 리뷰 87" },
     ],
     // 홈 고정은 FEED title 문자열로 매칭된다 — 제목이 한 글자라도 다르면 조용히 탈락한다
     posts: [
@@ -718,12 +718,12 @@ export const seed: Store = {
   policy: [
     {
       id: "pl-1",
-      label: "글 · 리뷰 열람",
+      label: "글, 리뷰 열람",
       grants: ["yes", "yes", "yes", "yes"],
     },
     {
       id: "pl-2",
-      label: "글 · 댓글 작성",
+      label: "글, 댓글 작성",
       grants: ["no", "yes", "yes", "yes"],
     },
     {
@@ -740,18 +740,18 @@ export const seed: Store = {
     },
     {
       id: "pl-5",
-      label: "회원 정지 · 해제",
+      label: "회원 정지, 해제",
       grants: ["no", "no", "yes", "yes"],
       cond: { 2: "재인증 필요" },
     },
     {
       id: "pl-6",
-      label: "증빙 승인 · 반려",
+      label: "증빙 승인, 반려",
       grants: ["no", "no", "yes", "yes"],
     },
     {
       id: "pl-7",
-      label: "회사 등록 · 엑셀 일괄",
+      label: "회사 등록, 엑셀 일괄",
       grants: ["no", "no", "yes", "yes"],
     },
     {
@@ -761,7 +761,7 @@ export const seed: Store = {
       cond: { 3: "감사 기록 필수" },
       locked: true,
       lockNote:
-        "익명 보호는 서비스 신뢰의 근거라 운영자에게 열어줄 수 없어요. 최고 운영자만 사유를 남기고 조회합니다",
+        "익명 보호는 서비스 신뢰의 근거라 운영자에게 열어줄 수 없어요, 최고 운영자만 사유를 남기고 조회합니다",
     },
     {
       id: "pl-9",
@@ -770,7 +770,7 @@ export const seed: Store = {
     },
     {
       id: "pl-10",
-      label: "공지 · 큐레이션 발행",
+      label: "공지, 큐레이션 발행",
       grants: ["no", "no", "yes", "yes"],
     },
     {
@@ -797,7 +797,7 @@ for (const row of seed.companies) {
 for (const slot of seed.curation.companies) {
   const service = serviceByName.get(slot.name);
   if (service) {
-    slot.meta = `${service.score.toFixed(1)} · 리뷰 ${service.reviewCount}`;
+    slot.meta = `${service.score.toFixed(1)}, 리뷰 ${service.reviewCount}`;
   }
 }
 

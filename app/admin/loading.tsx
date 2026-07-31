@@ -78,7 +78,7 @@ export default function AdminLoading() {
         </div>
         <div className="chartcard" aria-hidden>
           <div className="chd">
-            <h4>시스템 · AI 모니터링</h4>
+            <h4>시스템, AI 모니터링</h4>
           </div>
           <div className="ds-monlist">
             {/* 행 기하는 실물과 같은 .ds-monrow가 만든다 — 게이지 높이는

@@ -1,7 +1,7 @@
 import { EvidenceReview } from "@/components/admin/EvidenceReview";
 import { Icon } from "@/components/Icon";
 
-export const metadata = { title: "증빙 검토 | 백오피스" };
+export const metadata = { title: "증빙 검토, 백오피스" };
 
 /**
  * 시안 정본 13번(증빙 검토).

@@ -20,7 +20,7 @@ export const POLICY_ROLES = [
     name: "게스트",
     sub: "비로그인",
     icon: "user",
-    note: "게스트는 열람만 할 수 있어요. 나머지 권한은 잠겨 있어요",
+    note: "게스트는 열람만 할 수 있어요, 나머지 권한은 잠겨 있어요",
   },
   {
     name: "회원",
@@ -38,7 +38,7 @@ export const POLICY_ROLES = [
     name: "최고 운영자",
     sub: "super admin",
     icon: "key",
-    note: "최고 운영자는 모든 권한을 가져요. 여기서 뺄 수 없어요",
+    note: "최고 운영자는 모든 권한을 가져요, 여기서 뺄 수 없어요",
   },
 ] as const;
 
@@ -47,14 +47,14 @@ export const POLICY_ROLES = [
  * 정의한다. id 참조라 시드 순서가 바뀌어도 그룹이 안 깨진다.
  */
 export const POLICY_GROUPS = [
-  { name: "참여 · 열람", icon: "book-open", ids: ["pl-1", "pl-2", "pl-3"] },
+  { name: "참여, 열람", icon: "book-open", ids: ["pl-1", "pl-2", "pl-3"] },
   { name: "운영 조치", icon: "gauge", ids: ["pl-4", "pl-5", "pl-6"] },
   {
-    name: "콘텐츠 · 데이터",
+    name: "콘텐츠, 데이터",
     icon: "building",
     ids: ["pl-7", "pl-9", "pl-10"],
   },
-  { name: "보호 · 정책", icon: "cog", ids: ["pl-8", "pl-11"] },
+  { name: "보호, 정책", icon: "cog", ids: ["pl-8", "pl-11"] },
 ] as const;
 
 /** 권한 키별 아이콘 — P1 PERM_ICON 대응. 잠긴 행은 렌더 쪽에서 lock으로 바꾼다 */
@@ -77,7 +77,7 @@ export const policyPermIconOf = (row: PolicyRow) =>
 
 /** 하단 각주 — 실물·스켈레톤이 같은 문장을 그린다(자리 예약 = 실물 그대로) */
 export const POLICY_FOOT_NOTE =
-  "익명 리뷰 작성자 조회는 화면에서 열 수 없어요. 권한 변경은 저장할 때 본인 확인을 한 번 더 해요";
+  "익명 리뷰 작성자 조회는 화면에서 열 수 없어요, 권한 변경은 저장할 때 본인 확인을 한 번 더 해요";
 
 /** 토글 실측 크기 — .ptog(32×18)와 스켈레톤 자리가 같아야 행 높이가 안 튄다 */
 const TOGGLE_W = 32;
@@ -159,15 +159,15 @@ export function PolicyMatrixSk() {
 }
 
 const RISK_TABLE = [
-  { work: "콘텐츠 블라인드 · 삭제", risk: "hi", label: "높음", auth: true },
-  { work: "회원 정지 · 해제", risk: "hi", label: "높음", auth: true },
+  { work: "콘텐츠 블라인드, 삭제", risk: "hi", label: "높음", auth: true },
+  { work: "회원 정지, 해제", risk: "hi", label: "높음", auth: true },
   { work: "중복 회사 병합", risk: "hi", label: "높음", auth: true },
   { work: "권한 정책 변경", risk: "hi", label: "높음", auth: true },
   { work: "AI 안전 장치 끄기", risk: "hi", label: "높음", auth: true },
   { work: "익명 리뷰 작성자 조회", risk: "hi", label: "높음", auth: true },
-  { work: "증빙 승인 · 반려", risk: "mid", label: "중간", auth: false },
-  { work: "신고 반려 · 문서 내리기", risk: "mid", label: "중간", auth: false },
-  { work: "회사 등록 · 큐레이션", risk: "lo", label: "낮음", auth: false },
+  { work: "증빙 승인, 반려", risk: "mid", label: "중간", auth: false },
+  { work: "신고 반려, 문서 내리기", risk: "mid", label: "중간", auth: false },
+  { work: "회사 등록, 큐레이션", risk: "lo", label: "낮음", auth: false },
 ];
 
 export function PolicyRiskSection() {
@@ -175,7 +175,7 @@ export function PolicyRiskSection() {
     <div className="dashgrid" style={{ marginBottom: "0" }}>
       <div className="tablecard" style={{ gridColumn: "1 / -1" }}>
         <div className="tabletop">
-          <h4>민감 작업 보호: 재인증</h4>
+          <h4>민감 작업 보호, 재인증</h4>
           <span
             style={{
               marginLeft: "auto",
@@ -183,7 +183,7 @@ export function PolicyRiskSection() {
               color: "var(--ink-3)",
             }}
           >
-            위험도는 시스템이 자동 판정해요. 화면에서 바꿀 수 없어요
+            위험도는 시스템이 자동 판정해요, 화면에서 바꿀 수 없어요
           </span>
         </div>
         {/* 이 표의 의미 — 되돌리기 어려운 조치는 버튼을 눌러도 바로 실행되지

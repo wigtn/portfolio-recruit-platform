@@ -234,7 +234,7 @@ export function ReportsTable() {
             <Icon name="search" />
             <input
               value={query}
-              placeholder="신고 대상·사유 검색"
+              placeholder="신고 대상, 사유 검색"
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>

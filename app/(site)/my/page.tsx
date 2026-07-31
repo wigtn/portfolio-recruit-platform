@@ -20,7 +20,7 @@ export default function MyPage() {
           <div>
             <h1>마이페이지</h1>
             <div className="desc">
-              내 활동과 등급·증빙 상태를 한곳에서 확인해요
+              내 활동과 등급, 증빙 상태를 한곳에서 확인해요
             </div>
           </div>
         </div>

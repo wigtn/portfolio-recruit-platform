@@ -120,7 +120,7 @@ export function CurationPicker({
             <div className="pickempty">{emptyNote}</div>
           ) : shown.length === 0 ? (
             <div className="pickempty">
-              “{query.trim()}” 결과가 없어요. 다른 말로 찾아보세요
+              “{query.trim()}” 결과가 없어요, 다른 말로 찾아보세요
             </div>
           ) : (
             shown.map((item, index) => (
@@ -149,7 +149,7 @@ export function CurationPicker({
           )}
         </div>
 
-        <div className="pickfoot">↑↓ 이동 · Enter 추가 · Esc 닫기</div>
+        <div className="pickfoot">↑↓ 이동, Enter 추가, Esc 닫기</div>
       </div>
     </div>,
     document.body,

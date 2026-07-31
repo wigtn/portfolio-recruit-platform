@@ -12,7 +12,7 @@ export default function MembersLoading() {
       </div>
       <TableCardSk
         title="회원 목록"
-        search="닉네임·이메일 검색"
+        search="닉네임, 이메일 검색"
         tabs={["전체", "인증", "정지"]}
         cols={["", "회원", "등급", "활동", "상태", "가입일", "조치"]}
         rows={6}

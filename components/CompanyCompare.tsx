@@ -100,12 +100,12 @@ function Picker({
           options={COMPANIES.filter((c) => c.slug !== exclude).map((c) => ({
             value: c.slug,
             label: c.name,
-            sub: `${c.industry} · ${c.region}`,
+            sub: `${c.industry}, ${c.region}`,
           }))}
         />
       </span>
       <small>
-        {value.industry} · {value.region}
+        {value.industry}, {value.region}
       </small>
       {/* 어포던스 — 이름이 곧 셀렉트라는 걸 모르는 사람을 위한 한 줄 */}
       <span className="cmp-pickhint">
@@ -148,7 +148,7 @@ function Fixed({ value }: { value: Company }) {
         <b className="cmp-name">{value.name}</b>
       </span>
       <small>
-        {value.industry} · {value.region}
+        {value.industry}, {value.region}
       </small>
     </div>
   );

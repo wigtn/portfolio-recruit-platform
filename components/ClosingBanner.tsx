@@ -68,7 +68,7 @@ export function ClosingBanner() {
           ))}
         </h2>
         <p className="closing-sub">
-          커머스 · 숙박 예약 · 헬프데스크: 같은 모듈을 다시 조합합니다.
+          커머스, 숙박 예약, 헬프데스크, 같은 모듈을 다시 조합합니다.
         </p>
 
         <div className="closing-act">
@@ -91,13 +91,13 @@ export function ClosingBanner() {
           </li>
           <li>
             <b>운영</b>
-            <strong>권한 · 감사 · 재인증 내장</strong>
+            <strong>권한, 감사, 재인증 내장</strong>
             <span>운영 도구까지 함께 인도합니다</span>
           </li>
           <li>
             <b>확장</b>
             <strong>업종만 바꿔 다시 조합</strong>
-            <span>커머스 · 예약 · 헬프데스크</span>
+            <span>커머스, 예약, 헬프데스크</span>
           </li>
         </ul>
       </div>

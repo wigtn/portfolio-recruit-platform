@@ -50,7 +50,7 @@ export function SystemGauges() {
   return (
     <div className="chartcard">
       <div className="chd">
-        <h4>시스템 · AI 모니터링</h4>
+        <h4>시스템, AI 모니터링</h4>
         {state ? (
           <span
             className="ds-guardbadge"

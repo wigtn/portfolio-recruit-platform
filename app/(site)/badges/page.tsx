@@ -19,7 +19,7 @@ export default function BadgesPage() {
           <div>
             <h1>실적 인증</h1>
             <div className="desc">
-              증빙을 올리면 운영자가 확인하고 등급을 올려줘요. 인증 회원의
+              증빙을 올리면 운영자가 확인하고 등급을 올려줘요, 인증 회원의
               리뷰가 먼저 노출됩니다
             </div>
           </div>

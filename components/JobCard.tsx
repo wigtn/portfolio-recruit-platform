@@ -32,7 +32,7 @@ export function JobCard({
         <span className="job-company">
           <b>{company.name}</b>
           <small>
-            {company.industry} · {company.region}
+            {company.industry}, {company.region}
           </small>
         </span>
         <span

@@ -12,7 +12,7 @@ export default function BadgesLoading() {
       <div className="reviewgrid">
         <TableCardSk
           title="검토 큐"
-          search="신청자·변경 검색"
+          search="신청자, 변경 검색"
           tabs={["대기", "승인", "반려"]}
           cols={["신청일", "닉네임", "등급 변경", "증빙", "상태"]}
           rows={3}

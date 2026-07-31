@@ -11,7 +11,7 @@ export default function AuditLoading() {
       <TableCardSk
         title="최근 활동"
         actions={[146]}
-        search="대상·사유 검색"
+        search="대상, 사유 검색"
         tabs={["전체", "콘텐츠", "회원", "설정"]}
         cols={["시각", "운영자", "액션", "대상", "사유"]}
         rows={1}

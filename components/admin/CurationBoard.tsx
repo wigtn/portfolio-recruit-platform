@@ -43,7 +43,7 @@ const LIMIT: Record<Key, number> = { companies: 5, posts: 3, banners: 3 };
 const SK_CARDS: Array<{ title: string; slots: number }> = [
   { title: "추천 회사 (홈 상단)", slots: 3 },
   { title: "인기글 고정", slots: 2 },
-  { title: "메인 공지 · 배너", slots: 1 },
+  { title: "메인 공지, 배너", slots: 1 },
 ];
 
 export function CurationBoard() {
@@ -73,7 +73,7 @@ export function CurationBoard() {
       toast(res.message, { tone: "info" });
       return;
     }
-    toast("홈 화면 배치를 저장했어요. 변경 내역은 처리 기록에 남았어요.", {
+    toast("홈 화면 배치를 저장했어요, 변경 내역은 처리 기록에 남았어요.", {
       tone: "success",
     });
   }, [admin.result]);
@@ -86,7 +86,7 @@ export function CurationBoard() {
     const dirty =
       JSON.stringify(draft) !== JSON.stringify(admin.state.curation);
     if (dirty && !wasDirty.current) {
-      toast("저장하지 않은 변경이 있어요. 저장을 눌러야 홈에 반영돼요.", {
+      toast("저장하지 않은 변경이 있어요, 저장을 눌러야 홈에 반영돼요.", {
         tone: "info",
       });
     }
@@ -171,7 +171,7 @@ export function CurationBoard() {
               reason: "홈 첫 화면 배치 변경",
               payload: {
                 curation: draft,
-                summary: `추천 회사 ${draft.companies.length} · 인기글 ${draft.posts.length} · 배너 ${draft.banners.length}`,
+                summary: `추천 회사 ${draft.companies.length}, 인기글 ${draft.posts.length}, 배너 ${draft.banners.length}`,
               },
             })
           }
@@ -205,7 +205,7 @@ export function CurationBoard() {
         />
 
         <SlotCard
-          title="메인 공지 · 배너"
+          title="메인 공지, 배너"
           slots={draft.banners}
           addLabel="배너 추가"
           full={draft.banners.length >= LIMIT.banners}
@@ -226,7 +226,7 @@ export function CurationBoard() {
               lineHeight: "1.65",
             }}
           >
-            인기 키워드는 검색·조회로 자동 집계돼요. 운영자가 손댈 건 없어요.
+            인기 키워드는 검색, 조회로 자동 집계돼요, 운영자가 손댈 건 없어요.
             여기는 부적절한 키워드를 집계에서 제외합니다.
           </div>
           <div style={{ marginTop: 10 }}>
@@ -271,7 +271,7 @@ export function CurationBoard() {
         <CurationPicker
           title={adding === "companies" ? "추천 회사 추가" : "인기글 고정 추가"}
           searchPlaceholder={
-            adding === "companies" ? "회사명·업종 검색" : "글 제목·게시판 검색"
+            adding === "companies" ? "회사명, 업종 검색" : "글 제목, 게시판 검색"
           }
           emptyNote={
             adding === "companies"
@@ -286,8 +286,8 @@ export function CurationBoard() {
                 ).map((company) => ({
                   value: company.name,
                   title: company.name,
-                  sub: `${company.industry} · ${company.region}`,
-                  meta: `★ ${company.score.toFixed(1)} · 리뷰 ${company.reviewCount}`,
+                  sub: `${company.industry}, ${company.region}`,
+                  meta: `★ ${company.score.toFixed(1)}, 리뷰 ${company.reviewCount}`,
                   leading: (
                     <CompanyLogo
                       name={company.name}
@@ -301,7 +301,7 @@ export function CurationBoard() {
                 ).map((item) => ({
                   value: item.title,
                   title: item.title,
-                  sub: `${BOARD_LABEL[item.board] ?? item.board} · ${item.author}`,
+                  sub: `${BOARD_LABEL[item.board] ?? item.board}, ${item.author}`,
                   meta: `조회 ${item.views.toLocaleString()}`,
                 }))
           }
@@ -314,7 +314,7 @@ export function CurationBoard() {
               id: `${adding}-${crypto.randomUUID().slice(0, 8)}`,
               name: value,
               meta: company
-                ? `${company.score.toFixed(1)} · 리뷰 ${company.reviewCount}`
+                ? `${company.score.toFixed(1)}, 리뷰 ${company.reviewCount}`
                 : undefined,
             });
             setAdding(null);
@@ -408,7 +408,7 @@ function SlotCard({
             className="ds-draghandle"
             {...drag.handleProps(index)}
             // 훅의 범용 라벨 대신 어느 항목인지까지 읽어 준다(스프레드 뒤라 이긴다)
-            aria-label={`${slot.name} 순서 변경: 드래그 또는 키보드 ↑/↓`}
+            aria-label={`${slot.name} 순서 변경, 드래그 또는 키보드 ↑/↓`}
           >
             <Icon name="grip" />
           </button>
@@ -434,7 +434,7 @@ function SlotCard({
             className="nm"
             style={{ fontWeight: 600, color: "var(--ink-3)" }}
           >
-            비어 있어요. 홈에서 이 영역이 보이지 않아요
+            비어 있어요, 홈에서 이 영역이 보이지 않아요
           </span>
         </div>
       ) : null}

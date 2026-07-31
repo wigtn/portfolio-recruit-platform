@@ -15,7 +15,7 @@ export default function ReportsLoading() {
           버튼이 줄바꿈되지 않아 전 행이 한 줄이다. 마지막 행은 구분선이 없어 1px 낮다. */}
       <TableCardSk
         title="신고 목록"
-        search="신고 대상·사유 검색"
+        search="신고 대상, 사유 검색"
         tabs={["미처리", "처리완료"]}
         cols={["", "신고 대상", "유형", "사유", "누적", "상태", "조치"]}
         rows={4}

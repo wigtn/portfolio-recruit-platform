@@ -82,7 +82,7 @@ export function GridToolbar({
       ) : (
         <span className="gtoolbar-hint">
           <span className="gtoolbar-sep" aria-hidden />
-          컬럼 제목을 눌러 정렬 · Shift+클릭으로 조건 추가
+          컬럼 제목을 눌러 정렬, Shift+클릭으로 조건 추가
         </span>
       )}
     </div>

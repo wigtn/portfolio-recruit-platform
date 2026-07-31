@@ -130,7 +130,7 @@ export function AuditTable() {
             <Icon name="search" />
             <input
               value={query}
-              placeholder="대상·사유 검색"
+              placeholder="대상, 사유 검색"
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>

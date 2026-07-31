@@ -50,7 +50,7 @@ export const DEMO_FEATURES: Array<{
   {
     id: "company-review",
     group: "서비스",
-    title: "회사 리뷰 · 항목별 평점",
+    title: "회사 리뷰, 항목별 평점",
     description: "리뷰를 쓰면 평점이 바로 재계산돼요",
     href: "/companies/diamond-tech",
   },
@@ -58,7 +58,7 @@ export const DEMO_FEATURES: Array<{
     id: "content-safety",
     group: "서비스",
     title: "글쓰기 콘텐츠 안전",
-    description: "위험한 코드·연락처만 골라 제거돼요",
+    description: "위험한 코드, 연락처만 골라 제거돼요",
     href: "/community/write",
   },
   {
@@ -93,8 +93,11 @@ export const DEMO_FEATURES: Array<{
   {
     id: "step-up",
     group: "운영 왕복",
-    title: "고위험 조치 재인증 (step-up)",
-    description: "블라인드·계정 정지는 실행 전 2차 인증을 요구해요",
+    // 원래 "고위험 조치 재인증 (step-up)"이었다. step-up은 인증 업계 용어라
+    // 고객이 보는 목록에 그대로 두면 읽히지 않는다. 문구는 실제 모달이 쓰는
+    // "본인 확인"에 맞춘다. 같은 기능을 두 이름으로 부르지 않는다.
+    title: "중요한 조치 전 본인 확인",
+    description: "글 가림이나 계정 정지는 실행 직전에 본인 확인을 거쳐요",
     href: "/admin/reports",
   },
   {

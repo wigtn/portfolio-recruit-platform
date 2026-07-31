@@ -183,7 +183,7 @@ export function HomeCompanyInsights({
              실제 마크업과 같은 클래스로 그려 간격·정렬을 CSS에 맡긴다. */
           <>
             <span className="sr-only" role="status" aria-live="polite">
-              영업직 연봉·회사 비교 불러오는 중
+              영업직 연봉, 회사 비교 불러오는 중
             </span>
             <div className="home-market-summary" aria-hidden>
               <Sk w="82%" h={36.6} />
@@ -257,7 +257,7 @@ export function HomeCompanyInsights({
         ) : (
           <>
             <div className="home-market-summary sk-arrive">
-              <h2>영업직 연봉·회사 비교</h2>
+              <h2>영업직 연봉, 회사 비교</h2>
               <p>같은 항목으로 두 회사를 나란히 놓고 봅니다.</p>
               <div className="home-market-hero-stat">
                 <small>등록 회사 평균 연봉</small>

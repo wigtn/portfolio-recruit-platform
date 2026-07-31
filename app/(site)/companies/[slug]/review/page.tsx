@@ -31,7 +31,7 @@ export default async function ReviewWritePage({
           <div>
             <h1>{company.name} 리뷰 쓰기</h1>
             <div className="desc">
-              운영팀도 작성자를 알 수 없어요. 솔직하게 남겨주세요
+              운영팀도 작성자를 알 수 없어요, 솔직하게 남겨주세요
             </div>
           </div>
         </div>

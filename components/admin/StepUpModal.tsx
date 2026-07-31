@@ -64,7 +64,7 @@ export function StepUpModal({
         </div>
         <h3>본인 확인을 한 번 더 해주세요</h3>
         <div className="desc">
-          블라인드·삭제 같은 중요한 작업이라 재인증이 필요해요.
+          블라인드, 삭제 같은 중요한 작업이라 재인증이 필요해요.
         </div>
 
         <label className="codebox" style={{ cursor: "text" }}>
@@ -95,7 +95,7 @@ export function StepUpModal({
         </label>
 
         <div className="hint">
-          체험용 코드는 <b>{DEMO_CODE}</b> · 다른 숫자를 넣으면 어떻게 되는지도
+          체험용 코드는 <b>{DEMO_CODE}</b>, 다른 숫자를 넣으면 어떻게 되는지도
           확인해보세요
         </div>
 

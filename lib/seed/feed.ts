@@ -72,7 +72,7 @@ export const FEED: FeedItem[] = [
     views: 341,
     board: "knowhow",
     excerpt:
-      "면접 본 5개 회사의 인센티브 구조를 정리했습니다. 선형 지급과 구간 배율: 실수령은 목표 산정 방식이 갈랐어요.",
+      "면접 본 5개 회사의 인센티브 구조를 정리했습니다. 선형 지급과 구간 배율, 실수령은 목표 산정 방식이 갈랐어요.",
     image: "/images/community/pipeline-review.png",
   },
   {
@@ -126,7 +126,7 @@ export const FEED: FeedItem[] = [
     id: "f-6",
     postId: "p-4816",
     badges: ["노하우"],
-    title: "콜드콜 리스트 만드는 법: 3년치 정리",
+    title: "콜드콜 리스트 만드는 법, 3년치 정리",
     author: "한부장",
     at: "6일 전",
     ageMinutes: 8700,
@@ -135,7 +135,7 @@ export const FEED: FeedItem[] = [
     views: 488,
     board: "knowhow",
     excerpt:
-      "3년 동안 쓴 리스트 만드는 방식을 정리합니다. 업종·규모로 자르고, 결정권자를 못 채우면 그 줄은 버립니다.",
+      "3년 동안 쓴 리스트 만드는 방식을 정리합니다. 업종, 규모로 자르고, 결정권자를 못 채우면 그 줄은 버립니다.",
   },
   {
     id: "f-7",
@@ -211,7 +211,7 @@ export const FEED: FeedItem[] = [
     views: 354,
     board: "qna",
     excerpt:
-      "제조에서 SaaS로 옮기려는데 고객사명·계약 금액은 어디까지 쓸 수 있나요? SaaS가 특히 보는 지표도 궁금합니다.",
+      "제조에서 SaaS로 옮기려는데 고객사명, 계약 금액은 어디까지 쓸 수 있나요? SaaS가 특히 보는 지표도 궁금합니다.",
   },
   {
     id: "f-12",
@@ -363,7 +363,7 @@ export const FEED: FeedItem[] = [
     views: 867,
     board: "proof",
     excerpt:
-      "갱신 대상 34곳 중 32곳 재계약했습니다. 계약 후 2주·3개월·갱신 3개월 전, 세 번은 무조건 만납니다.",
+      "갱신 대상 34곳 중 32곳 재계약했습니다. 계약 후 2주, 3개월, 갱신 3개월 전, 세 번은 무조건 만납니다.",
   },
   {
     id: "f-22",
@@ -743,7 +743,7 @@ export const LATEST_REVIEWS = [
     score: 4.0,
     company: "▓▓상사",
     who: "영업 전직",
-    topic: "목표 · 코칭",
+    topic: "목표, 코칭",
   },
   {
     quote: "계정 배분이 연차 위주라 신입은 힘들어요",
@@ -764,14 +764,14 @@ export const LATEST_REVIEWS = [
     score: 4.4,
     company: "▽▽바이오",
     who: "영업 전직",
-    topic: "교육 · 성장",
+    topic: "교육, 성장",
   },
   {
     quote: "성과 압박은 있지만 보상 기준만큼은 명확해요",
     score: 3.8,
     company: "○○물산",
     who: "영업 현직",
-    topic: "성과 · 보상",
+    topic: "성과, 보상",
   },
 ];
 

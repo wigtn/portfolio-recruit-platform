@@ -70,7 +70,7 @@ export function AccountMenu() {
         className={open ? "acct-btn is-open" : "acct-btn"}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`계정 메뉴: ${ROLE_LABEL[role]}`}
+        aria-label={`계정 메뉴, ${ROLE_LABEL[role]}`}
         onClick={() => {
           const next = !open;
           setOpen(next);

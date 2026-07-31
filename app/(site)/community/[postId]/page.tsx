@@ -63,8 +63,7 @@ export default async function PostDetailPage({
                 <h1>{post.title}</h1>
                 <div className="awho">
                   <AnonymousIdentity verified={post.badges.includes("인증")} />
-                  <span>
-                    · 영업 {post.authorYears}년차 · {post.postedAt}
+                  <span>, 영업 {post.authorYears}년차, {post.postedAt}
                   </span>
                   <span className="met">
                     <span>

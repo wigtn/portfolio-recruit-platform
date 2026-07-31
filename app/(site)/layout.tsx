@@ -4,6 +4,7 @@ import { AccountMenu } from "@/components/AccountMenu";
 import { NotificationBell } from "@/components/NotificationBell";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { NavMenu } from "@/components/NavMenu";
+import { TabBar } from "@/components/TabBar";
 import { RouteMotion } from "@/components/demo/RouteMotion";
 import { CuratedPromo } from "@/components/demo/CuratedPromo";
 import { EventPopup } from "@/components/demo/EventPopup";
@@ -54,7 +55,7 @@ export default function SiteLayout({
               세일즈
             </div>
             <p className="ft-desc">
-              영업직을 위한 커뮤니티와 회사 리뷰: 현장의 답을 현장 사람들에게.
+              영업직을 위한 커뮤니티와 회사 리뷰, 현장의 답을 현장 사람들에게.
             </p>
           </div>
           <div>
@@ -89,18 +90,19 @@ export default function SiteLayout({
         </div>
         <div className="fbot">
           <div>
-            (주)◇◇컴퍼니 · 대표 김데모 · 사업자등록번호 000-00-00000
+            (주)◇◇컴퍼니, 대표 김데모, 사업자등록번호 000-00-00000
             <br />
-            서울특별시 ◇◇구 ◇◇로 00, 0층 · contact@demo.wigtn.dev
+            서울특별시 ◇◇구 ◇◇로 00, 0층, contact@wigtn.com
           </div>
           <div className="fbot-note">
-            © 2026 ◇◇컴퍼니 · WIGTN 데모
+            © 2026 ◇◇컴퍼니, WIGTN 데모
             <br />
-            모든 회사·회원·수치는 가상 데이터예요
+            모든 회사, 회원, 수치는 가상 데이터예요
           </div>
         </div>
       </footer>
 
+      <TabBar />
       <EventPopup />
     </div>
   );

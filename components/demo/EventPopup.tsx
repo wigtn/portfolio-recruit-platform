@@ -114,7 +114,7 @@ export function EventPopup() {
       <div className="evpop-body">
         <span className="evpop-tag">EVENT</span>
         <strong className="evpop-title">{banner}</strong>
-        <p className="evpop-sub">회사별 평점·연봉까지 바로 볼 수 있어요</p>
+        <p className="evpop-sub">회사별 평점, 연봉까지 바로 볼 수 있어요</p>
         <Link className="evpop-cta" href="/companies" onClick={() => close()}>
           리뷰 보러 가기
           <Icon name="arrow" />

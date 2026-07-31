@@ -44,7 +44,7 @@ export default async function CompaniesPage({
           <div>
             <h1>회사 리뷰</h1>
             <div className="desc">
-              영업직이 직접 남긴 익명 리뷰: 평점·연봉·항목별 만족도를 한눈에
+              영업직이 직접 남긴 익명 리뷰, 평점, 연봉, 항목별 만족도를 한눈에
             </div>
           </div>
           <Link
@@ -97,7 +97,7 @@ export default async function CompaniesPage({
           after
           cta={{ label: "두 회사 비교", href: "/compare" }}
         >
-          평점 축이 <b>영업 직무 기준</b>이에요. 인센티브·계정배분·성과압박을
+          평점 축이 <b>영업 직무 기준</b>이에요, 인센티브, 계정배분, 성과압박을
           회사끼리 바로 비교할 수 있어요
         </Coach>
 

@@ -36,7 +36,17 @@ const SK_W = [
   "38%",
 ];
 
-export function SeenCard() {
+/**
+ * 행 실측 높이.
+ *
+ * 스켈레톤이 실물과 같은 높이를 잡아야 데이터가 와도 화면이 안 밀린다.
+ * compact는 좌측 고정 레일용이다. 9개 항목을 기본 높이로 세우면 카드가 화면
+ * 높이를 넘어서 레일 안에 스크롤바가 생긴다. 레일은 끝까지 따라오는 물건이라
+ * 그 안에서 또 스크롤하게 만들면 두 개의 스크롤이 겹친다.
+ */
+const ROW_H = { normal: 62.6, normalLast: 61.6, compact: 44, compactLast: 43 };
+
+export function SeenCard({ compact = false }: { compact?: boolean } = {}) {
   const [progress, setProgress] = useState<Set<DemoFeature> | null>(null);
 
   // 홈과 같은 강제 지연 — 체크 상태가 빈 목록 뒤에 튀어 들어오지 않게 한다
@@ -54,7 +64,7 @@ export function SeenCard() {
   const done = progress ?? new Set<DemoFeature>();
 
   return (
-    <div className="card">
+    <div className={compact ? "card seen-compact" : "card"}>
       <h4>
         방금 보신 것들{" "}
         <span className="mini">
@@ -77,9 +87,16 @@ export function SeenCard() {
               className="titem"
               key={feature.id}
               aria-hidden
-              // Sk는 block이라 strut이 없다 — 행 높이(실측 62.6, 마지막 61.6)를 못 박는다
+              // Sk는 block이라 strut이 없다 — 실물과 같은 행 높이를 못 박는다
               style={{
-                height: index === DEMO_FEATURES.length - 1 ? 61.6 : 62.6,
+                height:
+                  index === DEMO_FEATURES.length - 1
+                    ? compact
+                      ? ROW_H.compactLast
+                      : ROW_H.normalLast
+                    : compact
+                      ? ROW_H.compact
+                      : ROW_H.normal,
                 boxSizing: "border-box",
               }}
             >

@@ -33,7 +33,7 @@ export default function ComparePage() {
           <div>
             <h1>회사 비교</h1>
             <div className="desc">
-              두 회사를 골라 평점·연봉·영업 직무 만족도를 같은 축에서 봅니다
+              두 회사를 골라 평점, 연봉, 영업 직무 만족도를 같은 축에서 봅니다
             </div>
           </div>
         </div>
@@ -59,7 +59,7 @@ export default function ComparePage() {
           </li>
           <li>
             <b>3</b>
-            <span>공통 지표: 평점 · 연봉 · 리뷰 수</span>
+            <span>공통 지표, 평점, 연봉, 리뷰 수</span>
           </li>
         </ul>
 
@@ -124,7 +124,7 @@ export default function ComparePage() {
               <span className="cmp-roster-name">
                 <b>{company.name}</b>
                 <small>
-                  {company.industry} · {company.region}
+                  {company.industry}, {company.region}
                 </small>
               </span>
               <span className="cmp-roster-score">
@@ -150,8 +150,8 @@ const AXIS_ICON: Record<string, string> = {
 
 const AXIS_DESC: Record<string, string> = {
   incentive: "성과급 산정 기준이 공개되고 실제로 그대로 지급되는가",
-  goalRealism: "할당 목표가 시장·계정 규모에 비해 달성 가능한가",
-  managerCoaching: "매니저가 동행·피드백으로 실제 도움을 주는가",
-  accountAllocation: "계정이 연차가 아니라 역량·형평 기준으로 배분되는가",
-  pressure: "미달 시 압박의 강도: 낮을수록 지속 가능한 환경",
+  goalRealism: "할당 목표가 시장, 계정 규모에 비해 달성 가능한가",
+  managerCoaching: "매니저가 동행, 피드백으로 실제 도움을 주는가",
+  accountAllocation: "계정이 연차가 아니라 역량, 형평 기준으로 배분되는가",
+  pressure: "미달 시 압박의 강도, 낮을수록 지속 가능한 환경",
 };

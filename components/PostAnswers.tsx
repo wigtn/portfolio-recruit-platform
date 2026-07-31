@@ -228,7 +228,7 @@ export function PostAnswers({ post }: { post: Post }) {
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <div className="cwho">
                         <AnonymousIdentity />
-                        <span>영업 4년차 · 방금</span>
+                        <span>영업 4년차, 방금</span>
                       </div>
                       <div className="ctext">{reply.text}</div>
                       <div className="cact">
@@ -282,7 +282,7 @@ export function PostAnswers({ post }: { post: Post }) {
               <div className="cbody">
                 <div className="cwho">
                   <AnonymousIdentity />
-                  <span>영업 4년차 · 내가 쓴 답변</span>
+                  <span>영업 4년차, 내가 쓴 답변</span>
                 </div>
                 <div className="ctext">{item.text}</div>
                 <div className="cact">
@@ -311,7 +311,7 @@ export function PostAnswers({ post }: { post: Post }) {
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div className="cwho">
                           <AnonymousIdentity />
-                          <span>영업 4년차 · 방금</span>
+                          <span>영업 4년차, 방금</span>
                         </div>
                         <div className="ctext">{reply.text}</div>
                         <div className="cact">
@@ -367,7 +367,7 @@ export function PostAnswers({ post }: { post: Post }) {
       {/* 모달에서 로그인하면 안내도 함께 걷는다 — 로그인했는데 남아 있으면 거짓말 */}
       {gateNote && role === "guest" ? (
         <div className="safenote" style={{ margin: "18px 0 0" }}>
-          <b>지금은 게스트로 보고 있어요. 답변은 로그인해야 남길 수 있어요.</b>
+          <b>지금은 게스트로 보고 있어요, 답변은 로그인해야 남길 수 있어요.</b>
         </div>
       ) : null}
 

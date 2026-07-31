@@ -41,10 +41,10 @@ function lockMessage(row: PolicyRow, roleIndex: number): string | null {
   if (row.locked) return row.lockNote ?? "이 권한은 화면에서 바꿀 수 없어요.";
   // 게스트는 열람만 — 작성·조치를 열어주면 익명 스팸을 막을 방법이 사라진다
   if (roleIndex === GUEST && row.id !== "pl-1")
-    return "게스트에게는 열람 외 권한을 줄 수 없어요. 계정 없이 쓴 글은 책임을 물을 수 없어요.";
+    return "게스트에게는 열람 외 권한을 줄 수 없어요, 계정 없이 쓴 글은 책임을 물을 수 없어요.";
   // 최고 운영자는 모든 권한을 가진다 — 여기서 빼면 복구할 사람이 없어진다
   if (roleIndex === SUPER)
-    return "최고 운영자 권한은 뺄 수 없어요. 잘못 잠갔을 때 되돌릴 사람이 없어져요.";
+    return "최고 운영자 권한은 뺄 수 없어요, 잘못 잠갔을 때 되돌릴 사람이 없어져요.";
   return null;
 }
 
@@ -77,7 +77,7 @@ export function PolicyMatrix() {
     }
     // run.ts 공용 템플릿("~를 적용했어요")은 조사·문맥이 이 화면과 안 맞아
     // 화면 카피로 대체한다 — 어디에 기록됐는지까지 한 문장으로.
-    toast("권한 정책을 저장했어요. 변경 내역은 처리 기록에 남았어요.", {
+    toast("권한 정책을 저장했어요, 변경 내역은 처리 기록에 남았어요.", {
       tone: "success",
     });
   }, [admin.result]);
@@ -135,7 +135,7 @@ export function PolicyMatrix() {
 
   function save() {
     void admin.act("policy.save", "matrix", {
-      reason: `권한 변경: ${changed.map((row) => row.label).join(", ")}`,
+      reason: `권한 변경, ${changed.map((row) => row.label).join(", ")}`,
       payload: {
         policy: draft,
         summary: changed.map((row) => row.label).join(", ") || "역할별 권한",

@@ -7,9 +7,8 @@ import {
   type Company,
 } from "@/lib/seed/companies";
 import { reviewsOf } from "@/lib/seed/reviews";
-import { ReviewCard } from "@/components/ReviewCard";
 import { MyReviews } from "./MyReviews";
-import { GuestReviewGate } from "@/components/GuestReviewGate";
+import { ReviewList } from "./ReviewList";
 import { FollowButton } from "@/components/FollowButton";
 import { Coach } from "@/components/Coach";
 import { CompanyTabs } from "@/components/CompanyTabs";
@@ -60,11 +59,15 @@ export default async function CompanyDetailPage({
       salaryCount={salaryCount}
       header={
         <div className="top">
-          <div className="lg">{company.mark}</div>
+          {/* 목록·비교·공고 카드는 전부 로고 이미지를 쓴다. 상세만 글리프(◇)로
+              남아 있어 같은 회사인데 표식이 달라 보였다 — 정본은 로고다. */}
+          <div className="lg">
+            <img src={company.logo} alt={`${company.name} 로고`} />
+          </div>
           <div className="info">
             <h1>{company.name}</h1>
             <div className="meta">
-              {company.industry} · {company.region} · 정규직 · 사원수{" "}
+              {company.industry}, {company.region}, 정규직, 사원수{" "}
               {employees.toLocaleString()}명
             </div>
           </div>
@@ -87,7 +90,7 @@ export default async function CompanyDetailPage({
             <StarBar score={company.score} />
           </div>
           <div className="cnt">
-            전·현직 영업직 리뷰 <b>{company.reviewCount}</b>건
+            전, 현직 영업직 리뷰 <b>{company.reviewCount}</b>건
           </div>
           <div
             className="ratings"
@@ -141,32 +144,16 @@ export default async function CompanyDetailPage({
           </div>
 
           <Coach id="company-anon">
-            리뷰는 <b>익명</b>이에요. 운영자도 작성자를 못 봐요. 직접 써보면{" "}
+            리뷰는 <b>익명</b>이에요, 운영자도 작성자를 못 봐요. 직접 써보면{" "}
             <b>평점이 바로 재계산</b>돼요
           </Coach>
 
           {/* 체험 중 등록한 내 리뷰가 맨 위 — 클라이언트에서 병합한다 */}
           <MyReviews company={company} />
 
-          {/* 맛보기 한 건은 그대로, 나머지는 게스트에게 잠긴다 */}
-          {reviews.slice(0, 1).map((review) => (
-            <ReviewCard
-              key={review.id}
-              review={review}
-              company={company.name}
-            />
-          ))}
-          {reviews.length > 1 ? (
-            <GuestReviewGate count={reviews.length - 1}>
-              {reviews.slice(1).map((review) => (
-                <ReviewCard
-                  key={review.id}
-                  review={review}
-                  company={company.name}
-                />
-              ))}
-            </GuestReviewGate>
-          ) : null}
+          {/* 맛보기 한 건은 그대로, 나머지는 게스트에게 잠긴다.
+              회원에게는 스크롤로 이어 부른다(ReviewList) */}
+          <ReviewList reviews={reviews} company={company.name} />
         </>
       }
     />
@@ -229,7 +216,7 @@ function SalaryPanel({
           </b>
           <span>만원</span>
         </div>
-        <p className="salbase">전·현직 영업직이 남긴 {salaryCount}건 기준</p>
+        <p className="salbase">전, 현직 영업직이 남긴 {salaryCount}건 기준</p>
 
         <div className="salmix">
           <div className="salmix-bar" aria-hidden>
@@ -328,7 +315,7 @@ function SalaryPanel({
 
       {/* 카드 4 — 보상 만족도(인센티브 축 평점, 등록사 평균 대비) */}
       <div className="salcard">
-        <div className="salcap">보상 만족도: 인센티브 축</div>
+        <div className="salcap">보상 만족도, 인센티브 축</div>
         <div className="salrate">
           <b>{company.axes.incentive.toFixed(1)}</b>
           <span className="of">/ 5.0</span>
@@ -392,7 +379,7 @@ function SalaryPanel({
                 <span className="qwho">
                   익명
                   <small>
-                    영업 · {top.employment} · {top.years}년차
+                    영업, {top.employment}, {top.years}년차
                   </small>
                 </span>
                 <span className="qscore">

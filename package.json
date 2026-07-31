@@ -16,9 +16,12 @@
     "@wigtn/ui-kit": "file:../../module/ui-kit",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
+    "axios": "^1.19.0",
+    "lottie-web": "^5.13.0",
     "next": "15.5.22",
     "react": "19.2.7",
-    "react-dom": "19.2.7"
+    "react-dom": "19.2.7",
+    "thinking-orbs": "^0.1.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.0",

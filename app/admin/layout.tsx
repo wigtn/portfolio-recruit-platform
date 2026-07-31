@@ -24,7 +24,7 @@ const GROUPS: AdminNavGroup[] = [
     ],
   },
   {
-    title: "회원 · 인증",
+    title: "회원, 인증",
     items: [
       { href: "/admin/members", icon: "users", label: "회원 관리" },
       {
@@ -36,7 +36,7 @@ const GROUPS: AdminNavGroup[] = [
     ],
   },
   {
-    title: "콘텐츠 · 데이터",
+    title: "콘텐츠, 데이터",
     items: [
       {
         href: "/admin/questions",
@@ -49,11 +49,11 @@ const GROUPS: AdminNavGroup[] = [
       { href: "/admin/companies", icon: "building", label: "회사 관리" },
       { href: "/admin/jobs", icon: "trending", label: "채용공고" },
       { href: "/admin/curation", icon: "layout", label: "큐레이션" },
-      { href: "/admin/notices", icon: "notice", label: "공지 · 정책" },
+      { href: "/admin/notices", icon: "notice", label: "공지, 정책" },
     ],
   },
   {
-    title: "감사 · 보안",
+    title: "감사, 보안",
     items: [
       { href: "/admin/audit", icon: "doc", label: "처리 기록" },
       { href: "/admin/policies", icon: "lock", label: "권한 정책" },

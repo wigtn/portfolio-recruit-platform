@@ -39,7 +39,7 @@ export function CompanyReviewCard({
         <div className="company-identity">
           <div className="cn">{company.name}</div>
           <div className="ci">
-            {company.industry} · {company.region}
+            {company.industry}, {company.region}
           </div>
         </div>
         <span

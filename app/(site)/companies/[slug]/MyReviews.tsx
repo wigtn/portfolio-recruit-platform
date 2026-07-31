@@ -32,11 +32,11 @@ export function MyReviews({ company }: { company: Company }) {
         </span>
         <div>
           <b>
-            내 별점 반영 평균 {average.toFixed(1)} · 리뷰{" "}
+            내 별점 반영 평균 {average.toFixed(1)}, 리뷰{" "}
             {company.reviewCount + mine.length}건
           </b>
           <span>
-            방금 남긴 리뷰를 얹어 다시 계산한 값이에요. 체험용이라 이
+            방금 남긴 리뷰를 얹어 다시 계산한 값이에요, 체험용이라 이
             브라우저에만 반영돼요.
           </span>
         </div>

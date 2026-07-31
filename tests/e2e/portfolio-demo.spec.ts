@@ -65,7 +65,7 @@ test("헤더 통합 검색은 추천어와 검색 결과를 모달에서 탐색�
 }) => {
   await page.goto("/");
 
-  const trigger = page.getByRole("button", { name: "회사·글 검색 열기" });
+  const trigger = page.getByRole("button", { name: "회사, 글 검색 열기" });
   await trigger.click();
 
   const dialog = page.getByRole("dialog", { name: "무엇을 찾고 계신가요?" });
@@ -249,7 +249,7 @@ test("증빙 승인이 회원 관리의 등급·이력까지 함께 올린다", 
 
   // 대기 큐 첫 신청(필드러너 Lv.3 → Lv.4)이 자동 선택돼 있다
   await expect(
-    page.getByRole("heading", { name: "증빙 검토: 필드러너" }),
+    page.getByRole("heading", { name: "증빙 검토, 필드러너" }),
   ).toBeVisible();
   // "승인"은 탭 세그먼트에도 있다. 패널의 조치 버튼(.evacts)으로 좁힌다
   await page.locator(".evacts").getByRole("button", { name: "승인" }).click();

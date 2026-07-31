@@ -35,7 +35,7 @@ const STAT_FACE: Record<string, { icon: string; tint: StatTint }> = {
 
 /** 추이 두 계열의 색 — 도넛(콘텐츠 구성)과 같은 짝이어야 화면 안에서 색이 정보가 된다 */
 export const TREND_SERIES = [
-  { key: "posts", label: "글 · 댓글", color: "var(--accent)" },
+  { key: "posts", label: "글, 댓글", color: "var(--accent)" },
   { key: "reviews", label: "리뷰", color: "var(--ds-purple)" },
 ] as const;
 
@@ -89,7 +89,7 @@ export function DashboardMetrics({ children }: { children: React.ReactNode }) {
               <span
                 className={metric.dir === "up" ? "ds-delta up" : "ds-delta dn"}
               >
-                {metric.delta} · 지난 기간 대비
+                {metric.delta}, 지난 기간 대비
               </span>
             }
           />

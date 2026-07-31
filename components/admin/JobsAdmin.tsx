@@ -58,7 +58,7 @@ export function JobsAdmin() {
           <div className="tabletop">
             <h4>채용공고</h4>
             <span className="tcnt">
-              노출중 {openCount} · 전체 {rows.length}
+              노출중 {openCount}, 전체 {rows.length}
             </span>
             <form
               className="search"
@@ -68,7 +68,7 @@ export function JobsAdmin() {
               <Icon name="search" />
               <input
                 value={query}
-                placeholder="직무 · 회사 검색"
+                placeholder="직무, 회사 검색"
                 aria-label="채용공고 검색"
                 onChange={(event) => setQuery(event.target.value)}
               />
@@ -88,7 +88,7 @@ export function JobsAdmin() {
               <tr>
                 <th>직무</th>
                 <th>회사</th>
-                <th>고용 · 경력</th>
+                <th>고용, 경력</th>
                 <th>제시 연봉</th>
                 <th>마감</th>
                 <th>상태</th>
@@ -113,7 +113,7 @@ export function JobsAdmin() {
                     </td>
                     <td>{row.company}</td>
                     <td>
-                      {row.employment} · {row.career}
+                      {row.employment}, {row.career}
                     </td>
                     <td style={{ fontVariantNumeric: "tabular-nums" }}>
                       {row.payLow.toLocaleString()}~
@@ -135,7 +135,7 @@ export function JobsAdmin() {
                             disabled={admin.busy}
                             onClick={() =>
                               void admin.act("job.close", row.id, {
-                                reason: `공고 마감: ${row.title}`,
+                                reason: `공고 마감, ${row.title}`,
                               })
                             }
                           >
@@ -147,7 +147,7 @@ export function JobsAdmin() {
                             disabled={admin.busy}
                             onClick={() =>
                               void admin.act("job.open", row.id, {
-                                reason: `공고 재노출: ${row.title}`,
+                                reason: `공고 재노출, ${row.title}`,
                               })
                             }
                           >
@@ -208,7 +208,7 @@ export function JobsAdmin() {
               (item) => item.name === values.company,
             );
             void admin.act("job.create", `j-${Date.now()}`, {
-              reason: `공고 등록: ${values.title}`,
+              reason: `공고 등록, ${values.title}`,
               payload: {
                 company: values.company,
                 companySlug: company?.slug ?? "",
@@ -229,14 +229,14 @@ export function JobsAdmin() {
           title={`“${removing.title}” 공고를 삭제할까요?`}
           desc="삭제하면 되돌릴 수 없어요. 사용자 화면에서도 즉시 사라져요."
           confirmLabel="삭제"
-          initialReason={`공고 삭제: ${removing.title}`}
+          initialReason={`공고 삭제, ${removing.title}`}
           busy={admin.busy}
           onCancel={() => setRemoving(null)}
           onConfirm={(reason) => {
             const target = removing;
             setRemoving(null);
             void admin.act("job.delete", target.id, {
-              reason: reason ?? `공고 삭제: ${target.title}`,
+              reason: reason ?? `공고 삭제, ${target.title}`,
             });
           }}
         />
@@ -269,7 +269,7 @@ export function JobsAdminSk() {
             <tr>
               <th>직무</th>
               <th>회사</th>
-              <th>고용 · 경력</th>
+              <th>고용, 경력</th>
               <th>제시 연봉</th>
               <th>마감</th>
               <th>상태</th>

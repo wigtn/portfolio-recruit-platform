@@ -80,7 +80,7 @@ export function ReactBar({ post, likes }: { post: Post; likes: number }) {
       );
     } else {
       // 카카오 공유는 SDK 앱 키가 필요하다 — 데모는 정직하게 말한다
-      toast("카카오톡 공유는 데모에서 연결하지 않았어요. 링크 복사를 써보세요", {
+      toast("카카오톡 공유는 데모에서 연결하지 않았어요, 링크 복사를 써보세요", {
         tone: "info",
       });
     }

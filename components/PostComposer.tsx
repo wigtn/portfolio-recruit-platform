@@ -5,6 +5,13 @@ import { renderSanitizedHtml, type ContentBlock } from "@wigtn/content-engine";
 import { Icon } from "./Icon";
 import { Coach } from "./Coach";
 import { loadUser, saveUser } from "@/lib/demo/user";
+import {
+  COMPOSE_DONE_EVENT,
+  COMPOSE_EVENT,
+  COMPOSE_TICK_EVENT,
+  type ComposeRequest,
+  type ComposeResult,
+} from "@/lib/demo/compose";
 import { useRole } from "@/lib/demo/role";
 import { RoleModal } from "./demo/RoleModal";
 import { FileDrop, type Accepted } from "./FileDrop";
@@ -29,9 +36,7 @@ import { HOT_KEYWORDS } from "@/lib/seed/feed";
 
 const RISKY_RAW = `안녕하세요, 신규 거래처 정리한 내용 공유해요.
 
-**대면 미팅이 콜드콜보다 빨랐어요**
-· 전시회에서 담당자 명함 확보
-· 1주 내 후속 연락
+**대면 미팅이 콜드콜보다 빨랐어요**, 전시회에서 담당자 명함 확보, 1주 내 후속 연락
 
 <script>alert("계정 정보 탈취")</script><img src="x" onerror="sendCookie()">`;
 
@@ -76,6 +81,8 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
   const timers = useRef<number[]>([]);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
+  /** 챗봇이 대신 쓰는 중인가. 반복해서 오는 신호를 한 번만 받는다 */
+  const composing = useRef(false);
 
   useEffect(
     () => () => timers.current.forEach((id) => window.clearTimeout(id)),
@@ -104,19 +111,33 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
     }
   }, []);
 
-  /** 등록 — 살균된 본문만 저장한다(원문이 아니라 모듈이 걸러낸 결과) */
-  function publish() {
+  /**
+   * 등록 — 살균된 본문만 저장한다(원문이 아니라 모듈이 걸러낸 결과).
+   *
+   * over는 챗봇이 대신 쓸 때 넘어온다. 상태 갱신은 다음 렌더에 반영되므로
+   * 방금 채운 값을 여기서 곧바로 읽을 수 없다. 그래서 값을 함께 받는다.
+   * 대신 **지나는 문은 하나다.** 사람이 손으로 쓰든 챗봇이 쓰든 같은 권한
+   * 확인과 같은 살균을 지난다. 문이 둘이면 언젠가 한쪽은 안 잠긴다.
+   *
+   * 실패 사유를 돌려준다. 챗봇이 등록됐는지 모른 채 "썼어요"라고 말하면
+   * 그게 제일 나쁘다.
+   */
+  function publish(over?: { board?: string; title?: string; body?: string }) {
+    const useBoard = over?.board ?? board;
+    const useTitle = over?.title ?? title;
+    const useBody = over?.body ?? body;
+
     // 권한 매트릭스 pl-2: 게스트는 글 작성 불가 — 실행 대신 로그인으로 유도한다
     if (role === "guest") {
-      setError(
-        "지금은 게스트로 보고 있어요. 글은 로그인해야 등록할 수 있어요.",
-      );
+      const why = "지금은 게스트로 보고 있어요, 글은 로그인해야 등록할 수 있어요.";
+      setError(why);
       setGateOpen(true);
-      return;
+      return why;
     }
-    if (!title.trim() || !body.trim()) {
-      setError("제목과 내용을 입력해주세요.");
-      return;
+    if (!useTitle.trim() || !useBody.trim()) {
+      const why = "제목과 내용을 입력해주세요.";
+      setError(why);
+      return why;
     }
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -126,10 +147,10 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
       posts: [
         {
           id: `mine-${user.posts.length + 1}`,
-          board,
-          title: title.trim(),
+          board: useBoard,
+          title: useTitle.trim(),
           // 붙여넣은 위험 코드는 여기 들어오지 않는다 — content-engine이 걸러낸 뒤다
-          body: body.replace(/<[^>]*>/g, "").trim(),
+          body: useBody.replace(/<[^>]*>/g, "").trim(),
           tags,
           files: files.length,
           at: `${pad(now.getMonth() + 1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
@@ -140,7 +161,85 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
     window.localStorage.removeItem(DRAFT_KEY);
     setError(null);
     setSubmitted(true);
+    return null;
   }
+
+  /**
+   * 챗봇이 대신 쓴다.
+   *
+   * 값을 통째로 꽂지 않고 한 글자씩 흘려 넣는다. 텍스트가 순간이동하면
+   * 화면이 다시 그려진 것처럼 보이고, 무엇이 쓰이는지 읽을 틈이 없다.
+   * 사람이 타이핑하는 것처럼 들어가야 "대신 써 주는 중"으로 읽힌다.
+   */
+  useEffect(() => {
+    const onCompose = async (event: Event) => {
+      const ask = (event as CustomEvent<ComposeRequest>).detail;
+      if (!ask?.title || !ask?.body) return;
+      /* 챗봇은 화면이 붙을 때까지 같은 신호를 반복해서 보낸다. 첫 신호만
+         받고 나머지는 흘린다. 안 그러면 같은 글이 여러 번 써진다 */
+      if (composing.current) return;
+      composing.current = true;
+
+      const done = (error?: string) =>
+        window.dispatchEvent(
+          new CustomEvent<ComposeResult>(COMPOSE_DONE_EVENT, {
+            detail: { error },
+          }),
+        );
+
+      if (BOARDS.includes(ask.board)) setBoard(ask.board);
+      setTab("write");
+
+      const reduced = window.matchMedia?.(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      /* 글자 수가 아니라 **렌더 횟수**를 기준으로 나눈다.
+         이 화면은 한 글자 바뀔 때마다 살균과 미리보기를 다시 만든다. 글자당
+         한 번씩 찍으면 300자 본문에 300번을 다시 그리게 되고, 그 자체로 몇십
+         초가 간다. 실제로 완료 신호가 상한을 넘겨 실패로 끝났다.
+         길이와 무관하게 정해진 횟수만 그리면 시간이 예측 가능해진다. */
+      const FRAMES = 18;
+      const type = async (
+        text: string,
+        put: (value: string) => void,
+        ms: number,
+      ) => {
+        if (reduced) {
+          put(text);
+          return;
+        }
+        const stride = Math.max(1, Math.ceil(text.length / FRAMES));
+        for (let at = stride; at < text.length; at += stride) {
+          put(text.slice(0, at));
+          /* 한 걸음마다 살아 있다고 알린다. 방문자가 다른 탭으로 옮기면
+             브라우저가 타이머를 1초 단위로 늦춰서, 1초짜리 일이 30초가 된다.
+             챗봇이 시간으로만 재면 멀쩡히 돌고 있는 일을 끊는다 */
+          window.dispatchEvent(new Event(COMPOSE_TICK_EVENT));
+          await new Promise((r) => window.setTimeout(r, ms));
+        }
+        put(text);
+      };
+
+      /* 어떤 길로 끝나든 반드시 답을 보낸다. 여기서 신호가 새면 챗봇은 상한이
+         찰 때까지 기다리다 "응답이 끊겼어요"로 끝낸다. 실제로 그랬다 */
+      let outcome: string | undefined;
+      try {
+        await type(ask.title, setTitle, 40);
+        await type(ask.body, setBody, 34);
+        await new Promise((r) => window.setTimeout(r, 240));
+        outcome = publish(ask) ?? undefined;
+      } catch {
+        outcome = "글을 쓰다가 멈췄어요.";
+      } finally {
+        composing.current = false;
+        done(outcome);
+      }
+    };
+
+    window.addEventListener(COMPOSE_EVENT, onCompose);
+    return () => window.removeEventListener(COMPOSE_EVENT, onCompose);
+  });
 
   /** 위험 원문 유입 공통 처리 — 데모 버튼도, 실제 붙여넣기도 같은 문을 지난다.
       본문(textarea)에는 처음부터 **걸러진 텍스트**가 들어가 계속 편집 가능하고,
@@ -174,7 +273,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
       at(3350, () => {
         setQuarantine(null);
         setPhase("idle");
-        toast(`안전하지 않은 코드 ${found.length}곳을 걸러냈어요. 서식은 그대로예요`, {
+        toast(`안전하지 않은 코드 ${found.length}곳을 걸러냈어요, 서식은 그대로예요`, {
           tone: "success",
           pos: "top",
         });
@@ -206,7 +305,15 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
   );
 
   const risky = hits.length > 0;
-  const sanitized = safeRender(body);
+  /* 미리보기는 미리보기 탭에서만 만든다.
+     예전에는 글자가 하나 바뀔 때마다 살균과 HTML 생성을 통째로 다시 돌렸다.
+     쓰는 중에는 보이지도 않는 결과인데 값은 매번 치렀고, 한 글자 입력에 렌더
+     하나가 1초 가까이 걸렸다. 챗봇이 대신 쓸 때 30초가 넘어가면서 드러났지만,
+     사람이 타이핑할 때도 같은 값을 내고 있었다. */
+  const sanitized = useMemo(
+    () => (tab === "preview" ? safeRender(body) : ""),
+    [tab, body],
+  );
 
   // 태그 — 추천(인기 키워드 포함) 풀에서 입력으로 거르고, 최대 5개
   const suggestedTags = useMemo(() => {
@@ -275,7 +382,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
               marginBottom: 20,
             }}
           >
-            살균을 거친 본문만 저장됐어요. 이 브라우저에만 남아요.
+            살균을 거친 본문만 저장됐어요, 이 브라우저에만 남아요.
             <br />
             마이페이지 <b>내 글</b>에서 확인할 수 있어요.
           </p>
@@ -444,7 +551,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
                     {risky ? (
                       <span className="cut">
                         <Icon name="shield" style={{ width: 12, height: 12 }} />
-                        이미지·서식은 남고, 실행 코드 {hits.length}곳만 빠졌어요
+                        이미지, 서식은 남고, 실행 코드 {hits.length}곳만 빠졌어요
                       </span>
                     ) : null}
                   </>
@@ -460,7 +567,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
 
           <div style={{ marginTop: 10 }}>
             <Coach id="write-sanitize">
-              <b>위험한 코드가 섞인 글 붙여넣기</b>를 눌러보세요. 무엇이
+              <b>위험한 코드가 섞인 글 붙여넣기</b>를 눌러보세요, 무엇이
               걸러지는지 보여드려요
             </Coach>
             <button type="button" className="demobtn" onClick={pasteRisky}>
@@ -548,7 +655,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
               files={files}
               onChange={setFiles}
               compact
-              note="증빙이 검토·승인되면 글에 인증 배지가 붙어요. JPG · PNG · WebP · PDF · 10MB까지"
+              note="증빙이 검토, 승인되면 글에 인증 배지가 붙어요, JPG, PNG, WebP, PDF, 10MB까지"
             />
           </div>
         ) : null}
@@ -568,7 +675,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
             {/* 실제 동작과 같은 약속만 — 등록한 글은 마이 "내 글"에 남고,
                 AI 생성 체험은 커뮤니티 글 상세에서 한다 */}
             등록한 글은 마이페이지{" "}
-            <b style={{ color: "var(--ink-2)" }}>내 글</b>에 남아요 ·{" "}
+            <b style={{ color: "var(--ink-2)" }}>내 글</b>에 남아요, {" "}
             <b style={{ color: "var(--accent-ink)" }}>AI 답변 생성</b>은
             커뮤니티 글 상세에서 체험할 수 있어요
           </span>
@@ -586,7 +693,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
             >
               {saved ? "저장했어요" : "임시저장"}
             </button>
-            <button className="btn primary" onClick={publish}>
+            <button className="btn primary" onClick={() => void publish()}>
               등록하기
             </button>
           </span>
@@ -609,7 +716,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
             </li>
             <li>
               <Icon name="eyeoff" />
-              회사명·실명은 자동 비식별 처리돼요
+              회사명, 실명은 자동 비식별 처리돼요
             </li>
             <li>
               <Icon name="award" />
@@ -627,7 +734,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
           <ul className="tiplist">
             <li>
               <Icon name="flag" />
-              비방·광고·개인정보 노출 글은 신고 후 자동 블라인드돼요
+              비방, 광고, 개인정보 노출 글은 신고 후 자동 블라인드돼요
             </li>
           </ul>
         </div>
@@ -646,12 +753,12 @@ function safeRender(raw: string) {
     .split(/\n{2,}/)
     .flatMap<ContentBlock>((chunk) => {
       const lines = chunk.split("\n").filter(Boolean);
-      const items = lines.filter((line) => /^[-·]\s?/.test(line));
+      const items = lines.filter((line) => /^-\s?/.test(line));
       if (items.length === lines.length && items.length > 0) {
         return [
           {
             type: "unordered-list",
-            items: items.map((line) => line.replace(/^[-·]\s?/, "")),
+            items: items.map((line) => line.replace(/^-\s?/, "")),
           },
         ];
       }

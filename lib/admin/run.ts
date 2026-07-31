@@ -163,7 +163,7 @@ const TOOLS: Record<string, ToolSpec> = {
           ? {
               ...row,
               history: [
-                { at: "오늘", what: `경고: ${reason ?? "정책 위반"}` },
+                { at: "오늘", what: `경고, ${reason ?? "정책 위반"}` },
                 ...row.history,
               ],
             }
@@ -188,7 +188,7 @@ const TOOLS: Record<string, ToolSpec> = {
               history: [
                 {
                   at: "오늘",
-                  what: `등급 조정: ${row.grade} → ${String(payload?.grade ?? row.grade)}`,
+                  what: `등급 조정, ${row.grade} → ${String(payload?.grade ?? row.grade)}`,
                 },
                 ...row.history,
               ],

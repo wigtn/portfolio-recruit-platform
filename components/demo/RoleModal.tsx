@@ -8,9 +8,9 @@ import { Icon } from "@/components/Icon";
 
 /** 시안 정본 20번 — .modalwrap > .modal > .roles */
 const ROLES: Array<{ key: Role; icon: string; desc: string }> = [
-  { key: "guest", icon: "view", desc: "둘러보기만 · 회사 리뷰는 일부만" },
-  { key: "member", icon: "users", desc: "글·리뷰 작성 · 전체 열람" },
-  { key: "admin", icon: "bot", desc: "백오피스 · 모더레이션" },
+  { key: "guest", icon: "view", desc: "둘러보기만, 회사 리뷰는 일부만" },
+  { key: "member", icon: "users", desc: "글, 리뷰 작성, 전체 열람" },
+  { key: "admin", icon: "bot", desc: "백오피스, 모더레이션" },
 ];
 
 export function RoleModal({

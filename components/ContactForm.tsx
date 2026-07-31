@@ -93,7 +93,7 @@ export function ContactForm() {
           marginBottom: 22,
         }}
       >
-        모듈을 조합해 만들어요. 아래 정보를 남겨주시면 담당자가 연락드려요
+        모듈을 조합해 만들어요, 아래 정보를 남겨주시면 담당자가 연락드려요
       </p>
 
       <div className="field">
@@ -114,7 +114,7 @@ export function ContactForm() {
         />
       </div>
       <div className="field">
-        <label>회사 · 직책</label>
+        <label>회사, 직책</label>
         <input
           className="in"
           name="company"
@@ -172,7 +172,7 @@ export function ContactForm() {
         style={{ alignItems: "center", justifyContent: "space-between" }}
       >
         <span style={{ fontSize: 12, color: "var(--ink-4)" }}>
-          이 요청은 실제로 접수돼요. 1영업일 내 연락드려요
+          이 요청은 실제로 접수돼요, 1영업일 내 연락드려요
         </span>
         <button className="btn primary" type="submit" disabled={sending}>
           {sending ? "전송 중…" : "상담 요청 보내기"}

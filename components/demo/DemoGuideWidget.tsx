@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { applyTheme, THEMES } from "@/lib/demo/theme";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/Icon";
@@ -51,35 +52,6 @@ function loadVisited(): Set<DemoFeature> {
   } catch {
     return new Set();
   }
-}
-
-const THEMES = [
-  { id: "indigo", color: "#4f46e5", ink: "#3730a3", soft: "#eef0ff" },
-  { id: "red", color: "#ef4444", ink: "#b91c1c", soft: "#fff1f2" },
-  { id: "amber", color: "#f59e0b", ink: "#b45309", soft: "#fffbeb" },
-  { id: "ink", color: "#1b1e28", ink: "#111318", soft: "#f1f2f5" },
-];
-
-function applyTheme(id: string) {
-  // "custom:#rrggbb" — 피커로 고른 색. ink(진하게)·soft(옅게)는 색상 혼합으로 파생
-  if (id.startsWith("custom:")) {
-    const hex = id.slice(7);
-    const root = document.documentElement.style;
-    root.setProperty("--accent", hex);
-    root.setProperty(
-      "--accent-ink",
-      `color-mix(in oklab, ${hex} 76%, #1b1e28)`,
-    );
-    root.setProperty(
-      "--accent-soft",
-      `color-mix(in oklab, ${hex} 12%, #ffffff)`,
-    );
-    return;
-  }
-  const theme = THEMES.find((item) => item.id === id) ?? THEMES[0];
-  document.documentElement.style.setProperty("--accent", theme.color);
-  document.documentElement.style.setProperty("--accent-ink", theme.ink);
-  document.documentElement.style.setProperty("--accent-soft", theme.soft);
 }
 
 /** 이 브라우저의 체험 기록을 지우고 처음 상태로 되돌린다 */
@@ -151,7 +123,7 @@ export function DemoGuideWidget() {
         <div className="coach up guide-coach uk-pop-in">
           <span className="cb">데모</span>
           <span className="ct">
-            여기 있는 <b>{FEATURES.length}가지, 전부 실제로 동작해요</b>: 눌러서 확인해보세요
+            여기 있는 <b>{FEATURES.length}가지, 전부 실제로 동작해요</b>, 눌러서 확인해보세요
           </span>
           <button
             className="cx"
@@ -189,7 +161,7 @@ export function DemoGuideWidget() {
             </Link>
           ) : (
             <div className="dwsub">
-              누르면 그 화면으로 가요. 실행까지 마치면 체크가 켜져요
+              누르면 그 화면으로 가요, 실행까지 마치면 체크가 켜져요
             </div>
           )}
           <div className="dwlist">

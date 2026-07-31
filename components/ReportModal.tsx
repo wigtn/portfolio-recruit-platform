@@ -15,8 +15,8 @@ import { Icon } from "./Icon";
  */
 
 const REASONS = [
-  "스팸·광고",
-  "실명·비방",
+  "스팸, 광고",
+  "실명, 비방",
   "허위 정보",
   "선정성",
   "개인정보 노출",
@@ -112,7 +112,7 @@ export function ReportModal({
           <>
             <h3>이 콘텐츠를 신고할게요</h3>
             <div className="msub">
-              사유를 골라주세요. 운영자가 원문과 함께 확인해요
+              사유를 골라주세요, 운영자가 원문과 함께 확인해요
             </div>
 
             <div className="field">

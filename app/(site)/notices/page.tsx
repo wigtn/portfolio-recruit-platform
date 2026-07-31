@@ -2,7 +2,7 @@ import { NoticeList } from "@/components/NoticeList";
 import { Crumb } from "@/components/Crumb";
 import type { Notice } from "@/lib/admin/seed";
 
-export const metadata = { title: "공지 · 정책 | W 세일즈" };
+export const metadata = { title: "공지, 정책 | W 세일즈" };
 
 /**
  * 서비스 쪽 공지·약관 — 백오피스 `공지 · 정책`이 올리고 내리는 대상이다.
@@ -18,10 +18,10 @@ export default async function NoticesPage({
   return (
     <>
       <div className="pagehead">
-        <Crumb items={[{ label: "고객지원" }, { label: "공지 · 정책" }]} />
+        <Crumb items={[{ label: "고객지원" }, { label: "공지, 정책" }]} />
         <div className="ttl">
           <div>
-            <h1>공지 · 정책</h1>
+            <h1>공지, 정책</h1>
             <div className="desc">서비스 안내와 약관을 확인하세요</div>
           </div>
         </div>

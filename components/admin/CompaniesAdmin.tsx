@@ -44,7 +44,7 @@ type Editing = { mode: "create" } | { mode: "edit"; row: Company };
    중복 정리는 "리뷰 적은 쪽을 큰 쪽에 합치는" 판단이라 리뷰 수 정렬이 실제로 쓰인다. */
 const SORT_LABELS: Record<string, string> = {
   name: "회사",
-  industry: "업종 · 지역",
+  industry: "업종, 지역",
   reviews: "리뷰",
   score: "평점",
   status: "상태",
@@ -137,7 +137,7 @@ export function CompaniesAdmin() {
               </div>
             </div>
             <div className="mcard">
-              <div className="mk">검토 필요 (중복·사명변경)</div>
+              <div className="mk">검토 필요 (중복, 사명변경)</div>
               <div className="mv">
                 {dupes} {dupes ? <small className="up">확인</small> : null}
               </div>
@@ -179,7 +179,7 @@ export function CompaniesAdmin() {
           <b>CSV 파일을 끌어다 놓거나 클릭해서 업로드</b>
         </div>
         <div className="sub">
-          회사명 · 업종 · 지역 열 인식. 오류는 행 단위로 알려줘요 (콜드스타트
+          회사명, 업종, 지역 열 인식, 오류는 행 단위로 알려줘요 (콜드스타트
           대량 입력)
           <br />
           <span
@@ -197,7 +197,7 @@ export function CompaniesAdmin() {
               a.click();
               URL.revokeObjectURL(url);
               // 순간 안내는 토스트로 — 기록이 필요한 처리 결과(ResultNote)와 구분한다
-              toast("양식을 내려받았어요. 엑셀에서 열어 작성하세요", {
+              toast("양식을 내려받았어요, 엑셀에서 열어 작성하세요", {
                 tone: "success",
               });
             }}
@@ -230,8 +230,8 @@ export function CompaniesAdmin() {
                 <b style={{ fontSize: 13.5 }}>
                   {imported.rows.length}행 등록
                   {imported.errors.length
-                    ? ` · ${imported.errors.length}행 건너뜀`
-                    : " · 오류 없음"}
+                    ? `, ${imported.errors.length}행 건너뜀`
+                    : ", 오류 없음"}
                 </b>
                 <button
                   className="tbtn"
@@ -303,7 +303,7 @@ export function CompaniesAdmin() {
                   {(
                     [
                       ["name", "회사"],
-                      ["industry", "업종 · 지역"],
+                      ["industry", "업종, 지역"],
                       ["reviews", "리뷰"],
                       ["score", "평점"],
                       ["status", "상태"],
@@ -347,7 +347,7 @@ export function CompaniesAdmin() {
                         {row.name}
                       </td>
                       <td>
-                        {row.industry} · {row.region}
+                        {row.industry}, {row.region}
                       </td>
                       <td>{row.reviews}</td>
                       <td>
@@ -386,7 +386,7 @@ export function CompaniesAdmin() {
                               className="tbtn no"
                               style={{ whiteSpace: "nowrap" }}
                               disabled={admin.busy}
-                              title={`${into.name}에 합쳐요. 되돌릴 수 없어요`}
+                              title={`${into.name}에 합쳐요, 되돌릴 수 없어요`}
                               onClick={() => setMerging({ row, into })}
                             >
                               병합
@@ -399,7 +399,7 @@ export function CompaniesAdmin() {
                               disabled={admin.busy}
                               onClick={() =>
                                 admin.act("company.hide", row.id, {
-                                  reason: "운영자 판단: 목록에서 숨김",
+                                  reason: "운영자 판단, 목록에서 숨김",
                                 })
                               }
                             >
@@ -412,7 +412,7 @@ export function CompaniesAdmin() {
                               disabled={admin.busy}
                               onClick={() =>
                                 admin.act("company.publish", row.id, {
-                                  reason: "확인 완료: 목록 노출",
+                                  reason: "확인 완료, 목록 노출",
                                 })
                               }
                             >
@@ -505,7 +505,7 @@ export function CompaniesAdmin() {
             const target = merging;
             setMerging(null);
             void admin.act("company.merge", target.row.id, {
-              reason: `중복 확인: ${target.into.name}에 병합`,
+              reason: `중복 확인, ${target.into.name}에 병합`,
               payload: { into: target.into.id },
             });
           }}

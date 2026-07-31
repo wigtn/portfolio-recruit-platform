@@ -164,12 +164,12 @@ export async function POST(request: Request) {
             to: [to],
             // 답장이 바로 리드에게 가도록 — 연락처가 이메일일 때만
             ...(body.contact.includes("@") ? { reply_to: body.contact } : {}),
-            subject: `[상담 요청] ${body.name}${body.company ? ` · ${body.company}` : ""}`,
+            subject: `[상담 요청] ${body.name}${body.company ? `, ${body.company}` : ""}`,
             html: `<table style="font-size:14px;line-height:1.6">${rows}</table>${
               message
                 ? `<hr style="margin:16px 0;border:0;border-top:1px solid #e5e7eb">${message}`
                 : ""
-            }<p style="margin-top:20px;font-size:12px;color:#9ca3af">requestId ${requestId} · ${receivedAt}</p>`,
+            }<p style="margin-top:20px;font-size:12px;color:#9ca3af">requestId ${requestId}, ${receivedAt}</p>`,
           }),
           signal,
         }),

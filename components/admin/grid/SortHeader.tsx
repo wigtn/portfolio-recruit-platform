@@ -94,7 +94,7 @@ export function SortHeader({
         type="button"
         className="gth-btn"
         onClick={(event) => onSort(sortKey, event.shiftKey)}
-        title="클릭: 이 컬럼으로 정렬(오름차순 → 내림차순 → 해제) · Shift+클릭: 다중 정렬에 추가"
+        title="클릭: 이 컬럼으로 정렬(오름차순 → 내림차순 → 해제), Shift+클릭: 다중 정렬에 추가"
         aria-label={`${label} 정렬`}
       >
         <span className="gth-label">{label}</span>

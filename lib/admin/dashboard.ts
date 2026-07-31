@@ -30,19 +30,19 @@ export const METRICS: Record<Period, Metric[]> = {
   today: [
     { key: "visit", label: "방문자", value: "486", delta: "▲ 8%", dir: "up", spark: SPARK_UP },
     { key: "signup", label: "신규 가입", value: "12", delta: "▲ 4%", dir: "up", spark: SPARK_MID },
-    { key: "posts", label: "새 글 · 댓글", value: "63", delta: "▼ 2%", dir: "down", spark: SPARK_DOWN },
+    { key: "posts", label: "새 글, 댓글", value: "63", delta: "▼ 2%", dir: "down", spark: SPARK_DOWN },
     { key: "reviews", label: "새 리뷰", value: "19", delta: "▲ 15%", dir: "up", spark: SPARK_STEEP },
   ],
   "7d": [
     { key: "visit", label: "방문자", value: "3,182", delta: "▲ 12%", dir: "up", spark: SPARK_UP },
     { key: "signup", label: "신규 가입", value: "86", delta: "▲ 9%", dir: "up", spark: SPARK_MID },
-    { key: "posts", label: "새 글 · 댓글", value: "412", delta: "▼ 4%", dir: "down", spark: SPARK_DOWN },
+    { key: "posts", label: "새 글, 댓글", value: "412", delta: "▼ 4%", dir: "down", spark: SPARK_DOWN },
     { key: "reviews", label: "새 리뷰", value: "128", delta: "▲ 21%", dir: "up", spark: SPARK_STEEP },
   ],
   "30d": [
     { key: "visit", label: "방문자", value: "13,940", delta: "▲ 18%", dir: "up", spark: SPARK_UP },
     { key: "signup", label: "신규 가입", value: "371", delta: "▲ 14%", dir: "up", spark: SPARK_MID },
-    { key: "posts", label: "새 글 · 댓글", value: "1,806", delta: "▼ 1%", dir: "down", spark: SPARK_DOWN },
+    { key: "posts", label: "새 글, 댓글", value: "1,806", delta: "▼ 1%", dir: "down", spark: SPARK_DOWN },
     { key: "reviews", label: "새 리뷰", value: "544", delta: "▲ 26%", dir: "up", spark: SPARK_STEEP },
   ],
 };
@@ -72,14 +72,14 @@ export const QUEUE: Array<{
   },
   {
     label: "답변 없는 질문",
-    note: "· 48시간 경과",
+    note: ", 48시간 경과",
     count: 12,
     href: "/community?board=qna",
     icon: "comment",
   },
   { label: "증빙 검토 대기", count: 3, href: "/admin/badges", icon: "award" },
   {
-    label: "회사 중복 · 사명 변경 확인",
+    label: "회사 중복, 사명 변경 확인",
     count: 4,
     href: "/admin/companies",
     icon: "building",

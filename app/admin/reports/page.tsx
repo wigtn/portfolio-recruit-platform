@@ -1,6 +1,6 @@
 import { ReportsTable } from "@/components/admin/ReportsTable";
 
-export const metadata = { title: "신고 처리 | 백오피스" };
+export const metadata = { title: "신고 처리, 백오피스" };
 
 /**
  * 시안 정본 12번(신고 관리).

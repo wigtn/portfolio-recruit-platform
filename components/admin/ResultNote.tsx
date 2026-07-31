@@ -29,7 +29,7 @@ export function ResultNote({
     last.current = result;
     toast(
       result.ok
-        ? `${result.message}: ${where}에 남았어요`
+        ? `${result.message}, ${where}에 남았어요`
         : result.message,
       { tone: result.ok ? "success" : "error" },
     );
