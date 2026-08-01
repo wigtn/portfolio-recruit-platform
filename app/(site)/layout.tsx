@@ -6,7 +6,7 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 import { NavMenu } from "@/components/NavMenu";
 import { TabBar } from "@/components/TabBar";
 import { RouteMotion } from "@/components/demo/RouteMotion";
-import { CuratedPromo } from "@/components/demo/CuratedPromo";
+import { PromoBar } from "@/components/demo/PromoBar";
 import { EventPopup } from "@/components/demo/EventPopup";
 
 /** 서비스 셸 — 시안 정본의 .promobar / .nav / .footer */
@@ -18,17 +18,7 @@ export default function SiteLayout({
   return (
     <div className="screen">
       {/* 데모 장치 — 서비스 UI와 분리된 레이어 */}
-      <div className="promobar">
-        {/* 문구는 화면 정가운데, CTA는 오른쪽 끝. 가운데 칸을 따로 둬야
-            버튼 폭이 문구 위치를 밀지 않는다. */}
-        <span aria-hidden />
-        <CuratedPromo />
-        <Link className="rbtn" href="/contact">
-          <span className="promo-cta-wide">상담 요청</span>
-          <span className="promo-cta-mobile">상담</span>
-          <Icon name="arrow" />
-        </Link>
-      </div>
+      <PromoBar />
 
       <nav className="nav">
         <div className="inner">
@@ -58,8 +48,19 @@ export default function SiteLayout({
               영업직을 위한 커뮤니티와 회사 리뷰, 현장의 답을 현장 사람들에게.
             </p>
           </div>
-          <div>
-            <h6>서비스</h6>
+          {/* 링크 묶음은 <details>다.
+
+              모바일에서 이 셋이 세로로 쌓이면 푸터만 화면 두 개 분량이 된다.
+              그런데 여기까지 스크롤한 사람이 찾는 건 대개 하나뿐이라, 제목만
+              보여 주고 필요한 것만 펼치게 한다.
+
+              JS 없이 <details>로 가는 이유는 상태가 브라우저에 있기 때문이다 —
+              하이드레이션 전에도 눌리고, 스크립트가 실패해도 열린다. 넓은
+              화면에서는 CSS가 강제로 펼쳐 두므로 접히는 물건이 아니게 된다. */}
+          <details className="fcol">
+            <summary>
+              <h6>서비스</h6>
+            </summary>
             <div className="flinks">
               <Link href="/community">커뮤니티</Link>
               <Link href="/companies">회사 리뷰</Link>
@@ -67,26 +68,30 @@ export default function SiteLayout({
               <Link href="/jobs">채용공고</Link>
               <Link href="/badges">실적 인증</Link>
             </div>
-          </div>
-          <div>
-            <h6>고객지원</h6>
+          </details>
+          <details className="fcol">
+            <summary>
+              <h6>고객지원</h6>
+            </summary>
             <div className="flinks">
               <Link href="/notices?kind=notice">공지사항</Link>
               <Link href="/notices?kind=faq">자주 묻는 질문</Link>
               <Link href="/notices?kind=faq&doc=nt-10">신고 안내</Link>
             </div>
-          </div>
+          </details>
           {/* 약관·운영정책·리뷰 정책은 전부 "정책 문서" 한 화면의 문서들 —
               화면 단위로만 건다. 개인정보처리방침은 법정 고지라 이름을 남긴다. */}
-          <div>
-            <h6>정책</h6>
+          <details className="fcol">
+            <summary>
+              <h6>정책</h6>
+            </summary>
             <div className="flinks">
               <Link href="/notices?kind=terms">정책 문서</Link>
               <Link href="/notices?kind=terms&doc=nt-6">
                 <b>개인정보처리방침</b>
               </Link>
             </div>
-          </div>
+          </details>
         </div>
         <div className="fbot">
           <div>
