@@ -1326,11 +1326,9 @@ small,
   }
 }
 @media (max-width: 560px) {
-  .footer .ftop {
-    grid-template-columns: 1fr;
-    /* 접힌 상태에서는 제목 세 줄이라 간격이 넓으면 허전하다 */
-    gap: 2px;
-  }
+  /* 열 수와 간격은 여기서 정하지 않는다. 같은 폭 조건의 블록이 파일
+     뒤쪽(10700 부근)에도 있어서, 여기서 잡아 봐야 그쪽이 덮는다.
+     실제로 그렇게 2열로 되돌아가 깨져 있었다 — 정본은 뒤쪽 하나로 둔다. */
 
   /* ── 여기서만 접힌다 ──
      셋이 다 펼쳐지면 푸터가 화면 두 개 분량이다. 여기까지 내려온 사람이
@@ -10690,19 +10688,31 @@ select.in {
   .footer .ftop {
     gap: 22px 28px;
   }
-  .footer .ftop > div:first-child {
+  .footer .ft-brand-block {
     grid-column: 1 / -1;
     padding-bottom: 4px;
     border-bottom: 1px solid var(--line);
   }
 }
 @media (max-width: 560px) {
+  /* 링크 묶음이 접히는 아코디언이 되면서 2열이 성립하지 않게 됐다.
+
+     예전에는 제목+목록이 늘 펼쳐져 있어 2열이 스크롤을 줄여 줬다. 지금은
+     제목만 한 줄로 있다가 눌러야 펼쳐진다. 그 상태에서 2열로 두면 셋 중
+     하나가 홀로 남아 빈 칸이 생기고, 하나를 펼치면 옆 칸이 따라 늘어나
+     경계가 어긋난다. 접히는 목록은 세로 한 줄이 정석이다.
+
+     이 규칙이 위쪽(1328 부근) 블록보다 뒤에 있어서, 거기서 1열로 잡아도
+     여기서 2열로 되돌아가고 있었다 — 실제로 그렇게 깨져 있었다. */
   .footer .ftop {
-    grid-template-columns: 1fr 1fr; /* 링크 그룹은 2열 유지 — 1열 나열은 과도한 스크롤 */
-    gap: 20px 18px;
+    grid-template-columns: 1fr;
+    gap: 0;
   }
-  .footer .ftop > div:first-child {
+  /* 브랜드 블록은 클래스로 짚는다. `> div:first-child`는 링크 묶음이
+     <details>로 바뀌면서 무엇을 가리키는지 불분명해졌다 */
+  .footer .ft-brand-block {
     grid-column: 1 / -1;
+    padding-bottom: 8px;
   }
   .footer .flinks a {
     padding: 6px 0; /* 터치 타깃 확보 */
@@ -12625,6 +12635,13 @@ select.in {
   /* 여기도 기본은 정지. 멈춰 있어도 코닉 그라디언트에 블러가 얹힌 그림은
      그대로라 겉보기는 거의 같다 — 도는 것만 멈춘다 */
   z-index: 0;
+  /* 자기도 둥글게 잘린다.
+
+     부모의 overflow: hidden에만 기대면 안 된다. filter가 걸린 자식은 새
+     합성 레이어로 올라가는데, 사파리는 그때 부모의 둥근 클립을 사각으로
+     떨어뜨린다 — 블롭이어야 할 아바타가 그라데이션 사각형으로 보인다.
+     자기 radius를 물려받아 두면 부모가 실패해도 모양이 남는다. */
+  border-radius: inherit;
 }
 
 /* ── 살아 움직이는 아바타 ──
@@ -15314,11 +15331,18 @@ select.in {
    띠가 좌우로 훑는 무한 애니메이션이었다. 읽으려는 글자가 계속 흔들려서
    다 나올 때까지 기다리게 됐고(스트리밍의 목적과 반대다), background-position
    애니메이션이라 매 프레임 본문을 다시 칠했다. 그라데이션은 남기되 세운다. */
+/* 클립은 **단어마다** 건다.
+
+   부모에 걸었더니 글자가 사라졌다. 자식 .tw에 transform이 붙는 순간 새
+   스택 컨텍스트가 생겨 부모의 background-clip: text 대상에서 빠지는데,
+   color: transparent만 상속되니 색 없는 글자만 남는다 — 스트리밍 중
+   본문이 통째로 안 보였다.
+
+   그래서 색을 입히는 주체와 움직이는 주체를 같은 요소로 맞춘다. 문장
+   전체를 가로지르는 한 줄 그라데이션은 포기하지만, 단어가 짧아 색 차이가
+   크지 않아 문단으로 보면 같은 톤으로 읽힌다. 보이는 것이 먼저다. */
 .chatbody .bub .chatstream {
-  background-image: linear-gradient(100deg, #7c3aed, #d946ef 52%, #6366f1);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--ink-2);
 }
 /* 새로 붙은 단어 — 아래에서 한 번 떠오른다.
 
@@ -15326,12 +15350,23 @@ select.in {
    그러면 단어가 통째로 줄바꿈 단위가 되는데, 원래 단어 경계에서 끊기므로
    결과는 같다.
 
-   blur는 넣지 않는다. filter는 스택 컨텍스트를 새로 만들어서, 부모의
-   background-clip: text로 입힌 그라데이션이 이 단어에서 끊긴다. */
+   그라데이션을 여기서 직접 입는다. 자기 배경이라 transform이 만드는
+   스택 컨텍스트와 무관하게 항상 보인다. */
 .chatbody .bub .chatstream .tw {
   display: inline-block;
   font-style: normal;
+  background-image: linear-gradient(100deg, #7c3aed, #d946ef 60%, #6366f1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   animation: tw-rise 0.34s var(--ease-out-soft) backwards;
+}
+/* 클립을 못 쓰는 환경에서는 글자가 통째로 사라진다. 색부터 세워 두고
+   지원될 때만 투명으로 바꾼다 — 안 보이는 것보다 그라데이션이 없는 편이 낫다 */
+@supports not ((background-clip: text) or (-webkit-background-clip: text)) {
+  .chatbody .bub .chatstream .tw {
+    color: var(--ink-2);
+  }
 }
 @keyframes tw-rise {
   from {
@@ -17435,20 +17470,21 @@ body:has(.pdrawer) {
      그래서 도구가 도는 동안에는 높이를 머리 줄만 남기고 접는다. 닫지는
      않는다. 닫아 버리면 무슨 작업이 도는 중인지 알 수 없고, 끝난 뒤 다시
      열어야 한다. 머리 줄에는 지금 무엇을 하는지가 적혀 있다. */
+  /* 높이를 박지 않는다.
+
+     56px을 박았더니 레이아웃이 깨졌다. 머리 줄이 실제로 63px이라 그 안에
+     들어가지 못하고, 패널이 flex column이라 남은 자식들까지 눌려 뭉갰다.
+     "머리만 남긴다"는 의도를 픽셀로 옮기려다 실측을 안 맞춘 것이다.
+
+     내용을 빼면 높이는 알아서 머리 줄이 된다. display: none이라 접히는
+     동작은 안 보이지만, 어긋난 높이로 뭉개지는 것보다 낫다. */
   .chatpanel.is-operating {
-    height: 56px;
+    height: auto;
     min-height: 0;
-    overflow: hidden;
-    transition:
-      height 0.34s var(--ease-out-soft),
-      background-color 0.32s ease,
-      backdrop-filter 0.32s ease;
   }
   .chatpanel.is-operating .chatbody,
   .chatpanel.is-operating .chatform {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.16s ease;
+    display: none;
   }
   /* 여기에 있던 `body:has(.evpop) .chatwidget` 리프트도 뺐다. 팝업이 fab
      자리를 비켜서므로 겹치지 않고, 올리면 챗 패널이 화면 위로 넘친다. */
