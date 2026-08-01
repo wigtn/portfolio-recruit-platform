@@ -209,7 +209,9 @@ export function ContactForm() {
             placeholder="어떤 업종인지 적어주세요"
             aria-label="관심 분야 직접 입력"
             style={{ marginTop: 8 }}
-            maxLength={40}
+            /* 서버 LIMITS.domain과 같은 값. 어긋나면 화면에서는 다 쳤는데
+               서버가 조용히 잘라내는 구간이 생긴다 */
+            maxLength={60}
             autoFocus
           />
         ) : null}

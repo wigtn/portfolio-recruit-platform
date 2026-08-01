@@ -147,17 +147,31 @@ export async function POST(request: Request) {
   };
 
   const sendEmail = async (): Promise<boolean> => {
+    /* 따옴표까지 바꾼다. 이 값들은 본문뿐 아니라 href 속성 안으로도 들어가는데,
+       꺾쇠만 막으면 따옴표로 속성을 닫고 나와 <a>에 임의 속성을 붙일 수 있다.
+       본문용과 속성용을 나누는 대신 하나로 강하게 두는 쪽을 택했다 — 두 벌이면
+       호출부에서 언젠가 약한 쪽을 고르게 된다. */
     const escape = (value: string) =>
       value
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+
+    /* 링크로 걸어 줄 이메일의 형태. `@`가 들어 있으면 링크였는데, 그러면
+       href 자리에 들어갈 값을 사실상 아무거나 허용한 것이 된다. 공백·따옴표·
+       꺾쇠가 없는 주소만 링크로 만들고 나머지는 글자로 둔다. escape가 이미
+       막지만, 애초에 이상한 값이 href에 닿지 않는 편이 낫다. */
+    const isEmail = (value: string) =>
+      /^[^\s@"'<>]+@[^\s@"'<>]+\.[^\s@"'<>]+$/.test(value);
+    const replyTo = isEmail(body.contact) ? body.contact : null;
 
     /* 라벨과 값을 표로 늘어놓기만 하면 훑기 어렵다. 답장할 때 제일 먼저
        찾는 건 연락처인데, 다른 줄과 똑같이 생기면 매번 눈으로 훑어야 한다.
        연락처는 누를 수 있게 걸고, 나머지는 조용히 둔다. */
     const link = (value: string) =>
-      value.includes("@")
+      isEmail(value)
         ? `<a href="mailto:${escape(value)}" style="color:#7c3aed;text-decoration:none">${escape(value)}</a>`
         : /^[\d+\-() ]+$/.test(value)
           ? `<a href="tel:${escape(value.replace(/[^\d+]/g, ""))}" style="color:#7c3aed;text-decoration:none">${escape(value)}</a>`
@@ -203,9 +217,9 @@ export async function POST(request: Request) {
       }
 
       ${
-        body.contact.includes("@")
+        replyTo
           ? `<tr><td style="padding:18px 26px 4px">
-               <a href="mailto:${escape(body.contact)}?subject=${encodeURIComponent(`[Web-Agency] ${body.name}님 상담 요청 회신`)}"
+               <a href="mailto:${escape(replyTo)}?subject=${encodeURIComponent(`[Web-Agency] ${body.name}님 상담 요청 회신`)}"
                   style="display:inline-block;padding:11px 20px;background:#7c3aed;color:#ffffff;font-size:14px;font-weight:700;border-radius:9px;text-decoration:none">답장하기</a>
              </td></tr>`
           : ""
@@ -235,8 +249,10 @@ export async function POST(request: Request) {
               process.env.CONTACT_FROM ??
               "W 세일즈 데모 <onboarding@resend.dev>",
             to: [to],
-            // 답장이 바로 리드에게 가도록 — 연락처가 이메일일 때만
-            ...(body.contact.includes("@") ? { reply_to: body.contact } : {}),
+            /* 답장이 바로 리드에게 가도록 — 연락처가 이메일 형태일 때만.
+               형태가 아닌 값을 넣으면 Resend가 메일 전체를 거절해, 링크 하나
+               때문에 접수 자체가 조용히 실패한다 */
+            ...(replyTo ? { reply_to: replyTo } : {}),
             /* 접두사는 고정이다. 받는 쪽에서 라벨과 필터를 이것으로 건다.
                발신 주소로 거는 것보다 안 바뀐다 */
             subject: `[Web-Agency] 상담 요청, ${body.name}${body.company ? ` (${body.company})` : ""}`,
