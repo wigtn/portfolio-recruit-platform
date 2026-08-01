@@ -263,6 +263,15 @@ const MAX_STEPS = 6;
    라우트가 도구 판단 12초, 답변 시작 15초를 스스로 재므로 그 뒤에 선다.
    여기가 먼저 끊으면 멀쩡한 응답을 죽인다. */
 const FIRST_BYTE_MS = 30000;
+
+/**
+ * 한 턴이 끝나야 하는 시각.
+ *
+ * FIRST_BYTE_MS는 응답이 시작되는지만 본다. 시작된 뒤 스트림이 안 닫히거나
+ * 에이전트 루프가 한 걸음에서 멈추면 아무도 끊지 않아 로딩이 영원히 돈다.
+ * 도구를 여러 번 부르는 턴도 있어서 넉넉히 두되, 상한은 반드시 있어야 한다.
+ */
+const TURN_MS = 90000;
 /** 답을 기다리는 동안 세워 두는 걸음. 실제 도구가 아니라 표시용이다 */
 const WRAP_STEP = "__wrap";
 
@@ -1386,6 +1395,21 @@ export function ChatWidget() {
     const controller = new AbortController();
     abort.current = controller;
 
+    /* 턴 전체에 상한을 건다.
+
+       askServer의 데드라인은 **첫 응답까지만** 본다. 헤더가 도착하면
+       타이머를 지우므로, 그 뒤 본문 스트림이 안 닫히거나 에이전트 루프가
+       한 걸음에서 멈추면 아무도 끊지 않는다 — 로딩이 영원히 돈다. 실제로
+       거절 답변 뒤에 그 상태로 남는 걸 봤다.
+
+       무엇이 원인이든 여기서 끝난다. 사용자에게 "멈춘 화면"을 남기는 것보다
+       "오래 걸려서 멈췄다"고 말하는 편이 낫다. */
+    let timedOut = false;
+    const turnGuard = window.setTimeout(() => {
+      timedOut = true;
+      if (abort.current === controller) controller.abort();
+    }, TURN_MS);
+
     try {
       const response = await askServer(
         { turns, role: roleNow.current },
@@ -1496,6 +1520,15 @@ export function ChatWidget() {
       if (controller.signal.aborted) {
         write.put(acc);
         write.seal({ stopped: true });
+        /* 사용자가 멈춘 것과 시간이 다 된 것은 다르다. 눌러서 멈춘 건
+           본인이 아니까 조용히 끝내고, 시간이 다 된 건 왜 끊겼는지 말한다 */
+        if (timedOut) {
+          push({
+            role: "bot",
+            text: "답이 오래 걸려서 여기서 멈췄어요. 다시 물어봐 주세요.",
+            notice: "timeout",
+          });
+        }
         return;
       }
 
@@ -1505,11 +1538,21 @@ export function ChatWidget() {
       }
       write.seal();
     } catch {
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted) {
+        if (timedOut) {
+          push({
+            role: "bot",
+            text: "답이 오래 걸려서 여기서 멈췄어요. 다시 물어봐 주세요.",
+            notice: "timeout",
+          });
+        }
+        return;
+      }
       await scripted();
     } finally {
       /* 어떤 길로 끝나든 흐르던 말풍선은 여기서 닫힌다. 위쪽 분기가 하나
          빠져도 로더가 남지 않는 유일한 지점이다 */
+      window.clearTimeout(turnGuard);
       write.seal();
       setRunning(null);
       if (abort.current === controller) abort.current = null;
@@ -1542,7 +1585,11 @@ export function ChatWidget() {
             .join(" ")}
         >
           <div className="chathead">
-            <AiAvatar size="sm" thinking={playing} />
+            {/* 머리 줄 아바타는 정적이다. 생각 중이라는 사실은 본문의
+                '읽고 있어요' 줄이 이미 말한다 — 같은 화면에서 아바타 둘이
+                동시에 돌면 값만 두 배로 든다(측정에서 .aiav.sm 2개가
+                동시에 도는 것으로 잡혔다) */}
+            <AiAvatar size="sm" />
             <div className="ct">
               <b>상담 챗봇</b>
               <span>
