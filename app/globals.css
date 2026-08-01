@@ -3424,7 +3424,7 @@ select:focus-visible,
   width: 15px;
   height: 15px;
 }
-.search-modal .search-modal-input {
+.gsearch-body .search-modal-input {
   max-width: none;
   margin: 0 24px;
   padding: 13px 14px;
@@ -3436,7 +3436,7 @@ select:focus-visible,
   min-width: 0;
   font-size: 14px;
 }
-.search-modal kbd {
+.gsearch-body kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3458,14 +3458,21 @@ select:focus-visible,
   border-radius: 50%;
   background: var(--bg);
 }
-.search-modal .sresults {
+.gsearch-body .sresults {
   max-height: min(52vh, 470px);
   margin-top: 18px;
   border-top: 1px solid var(--line);
   overflow-y: auto;
 }
+/* 넓은 화면 드롭다운에는 입력칸이 없다(그건 위 헤더 안에 있다). 입력칸과
+   결과를 가르던 선과 여백이 그대로 남으면 맨 위에 빈 줄 하나가 생긴다 */
+.gsearch-drop .sresults,
+.gsearch-drop .search-start {
+  margin-top: 0;
+  border-top: 0;
+}
 .search-result-summary,
-.search-modal .sgroup {
+.gsearch-body .sgroup {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3478,14 +3485,14 @@ select:focus-visible,
 .search-result-summary b {
   color: var(--ink-2);
 }
-.search-modal .sresults section {
+.gsearch-body .sresults section {
   padding: 0 14px 8px;
 }
-.search-modal .sgroup {
+.gsearch-body .sgroup {
   padding: 10px 10px 6px;
   letter-spacing: 0.02em;
 }
-.search-modal .sr {
+.gsearch-body .sr {
   display: flex;
   align-items: center;
   gap: 11px;
@@ -3499,8 +3506,8 @@ select:focus-visible,
   font-family: inherit;
   text-align: left;
 }
-.search-modal .sr:hover,
-.search-modal .sr:focus-visible {
+.gsearch-body .sr:hover,
+.gsearch-body .sr:focus-visible {
   background: var(--bg);
   outline: 0;
 }
@@ -3542,7 +3549,7 @@ select:focus-visible,
   flex-direction: column;
   gap: 3px;
 }
-.search-modal .sr > .ic {
+.gsearch-body .sr > .ic {
   width: 14px;
   height: 14px;
   color: var(--ink-4);
@@ -3551,15 +3558,15 @@ select:focus-visible,
     opacity var(--duration-fast) var(--ease-out-soft),
     transform var(--duration-fast) var(--ease-out-soft);
 }
-.search-modal .sr:hover > .ic,
-.search-modal .sr:focus-visible > .ic {
+.gsearch-body .sr:hover > .ic,
+.gsearch-body .sr:focus-visible > .ic {
   opacity: 1;
   transform: translateX(2px);
 }
-.search-modal .sr .nm {
+.gsearch-body .sr .nm {
   flex: none;
 }
-.search-modal .sr .meta {
+.gsearch-body .sr .meta {
   flex-shrink: 1;
 }
 .search-empty {
@@ -3696,7 +3703,7 @@ select:focus-visible,
   .search-modal-head h2 {
     font-size: 18px;
   }
-  .search-modal .search-modal-input {
+  .gsearch-body .search-modal-input {
     margin: 0 18px;
   }
   .search-start,
@@ -3704,10 +3711,10 @@ select:focus-visible,
     padding-right: 18px;
     padding-left: 18px;
   }
-  .search-modal .sresults {
+  .gsearch-body .sresults {
     max-height: 58vh;
   }
-  .search-modal .sresults section {
+  .gsearch-body .sresults section {
     padding-right: 8px;
     padding-left: 8px;
   }

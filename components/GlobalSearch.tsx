@@ -291,7 +291,7 @@ export function GlobalSearch() {
       {open && !narrow ? (
         <div className="gsearch-inline" role="dialog" aria-label="통합 검색">
           {field}
-          <div className="gsearch-drop">{body}</div>
+          <div className="gsearch-drop gsearch-body">{body}</div>
         </div>
       ) : null}
 
@@ -308,7 +308,7 @@ export function GlobalSearch() {
                 if (event.target === event.currentTarget) close();
               }}
             >
-              <div className="gsearch-inner">
+              <div className="gsearch-inner gsearch-body">
                 <div className="search-modal-head">
                   <div>
                     <span className="search-eyebrow">통합 검색</span>
