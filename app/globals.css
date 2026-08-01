@@ -15791,22 +15791,73 @@ select.in {
   }
 }
 
+/* 짚는 동안에는 광고도 물러난다.
+
+   챗 패널만 접어서는 부족했다. 이벤트 팝업이 화면 가운데를 크게 덮고 있어서,
+   정작 챗봇이 가리킨 자리가 그 뒤에 있었다(실제 캡처로 확인). 안내가 도는
+   몇 초 동안은 안내가 우선이다 — 닫지는 않고 비켜 준다. */
+body:has(.agc-ring) .evpop {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s ease;
+}
+
+/* ── 안내 말풍선 ──
+
+   보라 판에 흰 글자 한 덩어리였다. 같은 제품 안에서 챗봇은 말풍선으로
+   말하는데 화면을 짚을 때만 다른 모양이면, 같은 주체가 말한다는 게 안
+   읽힌다. 챗봇 말풍선의 문법을 그대로 쓴다 — 왼쪽에 얼굴, 오른쪽에 말,
+   흰 바탕에 검은 글씨.
+
+   AI라는 사실은 색으로 말한다. 테두리에 보라→자홍→인디고 그라데이션을
+   한 겹 두르면, 판 전체를 물들이지 않고도 이 말풍선이 어디서 왔는지
+   전해진다(AI 답변 카드와 같은 색이다). */
 .agc-note {
   position: absolute;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
   max-width: 290px;
-  padding: 10px 13px;
-  border-radius: 11px;
+  padding: 10px 13px 10px 10px;
+  border-radius: 14px;
+  corner-shape: squircle;
   font-size: 12.5px;
   line-height: 1.6;
-  font-weight: 600;
-  color: #fff;
-  background: linear-gradient(
-    135deg,
-    var(--accent),
-    color-mix(in srgb, var(--accent) 55%, #a855f7)
-  );
-  box-shadow: 0 16px 32px -16px rgba(14, 16, 24, 0.75);
+  font-weight: 650;
+  color: var(--ink);
+  background: var(--card);
+  box-shadow:
+    0 16px 32px -16px rgba(14, 16, 24, 0.4),
+    0 2px 8px rgba(14, 16, 24, 0.08);
   animation: agc-note-in 0.34s var(--ease-spring) 0.12s backwards;
+}
+/* 그라데이션 테두리 — 배경 두 겹(패딩 박스는 카드색, 보더 박스는 그라데이션)을
+   서로 다른 원점에 깔아 1.5px 링만 색으로 남긴다 */
+.agc-note::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  corner-shape: squircle;
+  background: linear-gradient(120deg, #7c3aed, #d946ef 52%, #6366f1);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.agc-note .aiav {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.agc-note b {
+  min-width: 0;
+  font-weight: 650;
 }
 .agc-note.is-up {
   transform: translateY(-100%);
@@ -17355,6 +17406,31 @@ body:has(.pdrawer) {
   }
   .chatwidget {
     right: max(12px, var(--safe-r));
+  }
+
+  /* ── 짚는 동안에는 창이 접힌다 ──
+
+     좁은 화면에서 챗 패널은 세로의 절반 넘게 차지한다. 그 상태로 챗봇이
+     화면을 짚으면 정작 짚은 자리가 패널 뒤에 있다 — 유리를 아무리 얇게
+     해도 그 아래 글자는 겹쳐 읽힌다.
+
+     그래서 도구가 도는 동안에는 높이를 머리 줄만 남기고 접는다. 닫지는
+     않는다. 닫아 버리면 무슨 작업이 도는 중인지 알 수 없고, 끝난 뒤 다시
+     열어야 한다. 머리 줄에는 지금 무엇을 하는지가 적혀 있다. */
+  .chatpanel.is-operating {
+    height: 56px;
+    min-height: 0;
+    overflow: hidden;
+    transition:
+      height 0.34s var(--ease-out-soft),
+      background-color 0.32s ease,
+      backdrop-filter 0.32s ease;
+  }
+  .chatpanel.is-operating .chatbody,
+  .chatpanel.is-operating .chatform {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease;
   }
   /* 이벤트 팝업이 하단 전폭을 쓰는 동안 두 fab을 그 위로 올린다. 예전엔
      아예 숨겼는데, 그러면 팝업을 닫기 전까지 상담으로 가는 길이 없다.
