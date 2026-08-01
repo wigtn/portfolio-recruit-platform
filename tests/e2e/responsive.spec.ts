@@ -23,6 +23,17 @@ async function setRole(page: Page, role: "guest" | "member" | "admin") {
       window.localStorage.setItem("wigtn-demo-role-v1", nextRole);
     }
     window.localStorage.setItem("wigtn-demo-coach-guide", "1");
+    /* 이벤트 팝업을 미리 닫아 둔다.
+
+       팝업이 떠 있으면 탭바가 물러난다(body:has(.evpop) .tabbar). 레이아웃을
+       보려는 테스트가 광고 때문에 실패하면 무엇이 깨졌는지 알 수 없다.
+
+       팝업 자체를 보는 테스트는 이 값을 지워 되살린다 — addInitScript는
+       등록 순서대로 돌아서, 뒤에서 removeItem을 부르면 그쪽이 이긴다. */
+    window.localStorage.setItem(
+      "wigtn-demo-event-popup-v1",
+      String(Date.now() + 60 * 60 * 1000),
+    );
   }, role);
 }
 
@@ -52,10 +63,11 @@ async function expectNoDocumentOverflow(page: Page) {
   ).toBeLessThanOrEqual(sizes.clientWidth + 1);
 }
 
-test("320~430px 사용자 화면은 문서와 헤더가 가로로 밀리지 않는다", async ({
-  page,
-}) => {
-  test.setTimeout(60_000);
+/* 한 케이스가 라우트 14개와 뷰포트 4개를 다 돌고 있었다. dev 서버는 라우트를
+   처음 열 때 컴파일하므로 그 합이 60초를 넘겨 타임아웃으로 죽었다 — 무엇이
+   깨졌는지가 아니라 "오래 걸렸다"만 남는다. 보는 것이 다르니 케이스도 나눈다. */
+test("320px에서 사용자 화면이 가로로 밀리지 않는다", async ({ page }) => {
+  test.setTimeout(90_000);
   await setRole(page, "member");
 
   await page.setViewportSize({ width: 320, height: 844 });
@@ -73,36 +85,45 @@ test("320~430px 사용자 화면은 문서와 헤더가 가로로 밀리지 않�
     expect(box).not.toBeNull();
     expect(box!.height).toBeLessThan(20);
   }
+});
+
+test("좁은 폭에서 주 메뉴는 하단 탭바 하나다", async ({ page }) => {
+  test.setTimeout(60_000);
+  await setRole(page, "member");
 
   for (const width of [320, 360, 390, 430]) {
     await page.setViewportSize({ width, height: 844 });
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expectNoDocumentOverflow(page);
 
-    const navMetrics = await page.locator(".nav .links").evaluate((node) => {
-      const rect = node.getBoundingClientRect();
-      const links = [...node.querySelectorAll("a")].map((link) => {
-        const linkRect = link.getBoundingClientRect();
-        return {
-          left: linkRect.left,
-          right: linkRect.right,
-          width: linkRect.width,
-        };
-      });
-      return {
-        left: rect.left,
-        right: rect.right,
-        clientWidth: node.clientWidth,
-        scrollWidth: node.scrollWidth,
-        links,
-      };
-    });
-    expect(navMetrics.scrollWidth).toBe(navMetrics.clientWidth);
-    expect(navMetrics.links).toHaveLength(4);
-    for (const link of navMetrics.links) {
-      expect(link.left).toBeGreaterThanOrEqual(navMetrics.left - 1);
-      expect(link.right).toBeLessThanOrEqual(navMetrics.right + 1);
-      expect(link.width).toBeGreaterThan(50);
+    /* 좁은 화면의 주 메뉴는 하단 탭바 하나다.
+
+       예전에는 헤더에도 GNB 네 개가 깔려 있어서, 이 자리에서 그 링크들의
+       폭과 위치를 봤다. 지금은 헤더에서 접었다 — 같은 목적지가 화면 위아래에
+       두 벌 있으면 어느 쪽이 주인지 모호하고, 고정 헤더가 96px을 먹었다.
+
+       그래서 보는 것을 바꾼다. 헤더 메뉴가 실제로 접혀 있는지, 그리고 그
+       목적지들이 탭바에서 눌리는지. 숨긴 자리에 대체 경로가 없으면 그건
+       메뉴를 없앤 것이지 옮긴 것이 아니다. */
+    await expect(page.locator(".nav .links")).toBeHidden();
+
+    const tabs = page.locator(".tabbar a");
+    await expect(tabs).toHaveCount(6);
+    const tabBox = await page.locator(".tabbar").boundingBox();
+    expect(tabBox).not.toBeNull();
+
+    for (const href of ["/community", "/companies", "/jobs", "/notices"]) {
+      const tab = page.locator(`.tabbar a[href="${href}"]`);
+      await expect(tab).toBeVisible();
+      const box = await tab.boundingBox();
+      expect(box).not.toBeNull();
+      // 손가락이 닿는 최소 폭. 320px에서 6칸이면 칸당 49px이 하한이다
+      expect(box!.width).toBeGreaterThan(44);
+      // 칸이 판 밖으로 삐져나오지 않는다
+      expect(box!.x).toBeGreaterThanOrEqual(tabBox!.x - 1);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(
+        tabBox!.x + tabBox!.width + 1,
+      );
     }
   }
 });
@@ -266,9 +287,13 @@ test("모바일 탭·페이지네이션·푸터·채용 필터가 좁은 폭에 
   await expectNoDocumentOverflow(page);
 });
 
+/* 라우트를 여럿 도는 케이스다. dev 서버는 처음 여는 라우트마다 컴파일하고,
+   그 값은 앞선 케이스들이 얼마나 돌았는지에 따라 달라진다 — 단독으로는
+   44초에 끝나는데 전체 실행에서는 기본 상한을 넘겼다. */
 test("모바일 비교표와 관리자 카드가 세로 흐름으로 재배치된다", async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   await page.setViewportSize({ width: 390, height: 844 });
   await setRole(page, "member");
   await page.goto("/compare");
@@ -342,7 +367,15 @@ test("모바일 비교표와 관리자 카드가 세로 흐름으로 재배치�
     "butt",
   );
 
-  await page.getByRole("button", { name: "상담 챗봇 열기" }).click();
+  /* 눌러서 열릴 때까지 다시 시도한다.
+
+     dev 서버는 라우트를 처음 열 때 컴파일하므로, 버튼이 그려진 뒤에도
+     React가 아직 안 붙어 있는 순간이 있다. 그때 누르면 아무 일도 일어나지
+     않고 "패널이 없다"로만 남는다 — 무엇이 문제인지 안 보인다. */
+  await expect(async () => {
+    await page.getByRole("button", { name: "상담 챗봇 열기" }).click();
+    await expect(page.locator(".chatpanel")).toBeVisible({ timeout: 2_000 });
+  }).toPass();
   const chatPanel = await page.locator(".chatpanel").boundingBox();
   expect(chatPanel).not.toBeNull();
   expect(chatPanel!.x).toBeGreaterThanOrEqual(11);
