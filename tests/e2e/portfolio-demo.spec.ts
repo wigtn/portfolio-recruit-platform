@@ -43,7 +43,13 @@ async function reportPost(page: Page) {
   }).toPass();
   await page.getByRole("button", { name: "신고하기", exact: true }).click();
   await expect(page.getByText("신고가 접수됐어요")).toBeVisible();
-  await page.getByRole("button", { name: "닫기", exact: true }).click();
+  /* 모달 안의 닫기로 좁힌다. 화면에는 이벤트 팝업의 닫기도 있어서 이름만으로
+     찾으면 둘이 잡힌다(strict mode 위반). 팝업이 역할과 무관하게 뜨게 되면서
+     드러났는데, 애초에 이 단정이 어느 닫기를 말하는지 불분명했다. */
+  await page
+    .locator(".modalwrap")
+    .getByRole("button", { name: "닫기", exact: true })
+    .click();
 }
 
 /** 관리자 신고 관리에서 p-4821 신고를 블라인드 처리한다(확인 다이얼로그 → step-up) */
@@ -60,7 +66,10 @@ async function blindReport(page: Page) {
   await expect(page.getByText("적용했어요", { exact: false })).toBeVisible();
 }
 
-test("헤더 통합 검색은 추천어와 검색 결과를 모달에서 탐색한다", async ({
+/* 모달이 아니라 헤더에 붙는 패널이다(뒤를 덮지 않는다). 여기서 지키는
+   계약은 그대로다 — 열면 입력에 포커스가 가고, ESC로 닫으면 트리거로
+   포커스가 돌아온다. 돌아오지 않으면 키보드 사용자는 문서 맨 위로 튕긴다. */
+test("헤더 통합 검색은 추천어와 검색 결과를 패널에서 탐색한다", async ({
   page,
 }) => {
   await page.goto("/");

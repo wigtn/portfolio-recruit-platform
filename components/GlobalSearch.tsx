@@ -110,8 +110,13 @@ export function GlobalSearch() {
         return;
       }
       if (event.key === "Escape" && open) {
-        setOpen(false);
-        trigger.current?.focus();
+        /* 닫기와 포커스 되돌리기를 한 곳(close)에서 한다.
+
+           여기서 setOpen 직후 focus()를 부르면 실패한다. 열려 있는 동안
+           트리거는 visibility: hidden이고, React가 아직 리렌더하지 않아
+           그 시점에도 hidden이다 — 숨은 요소는 포커스를 못 받는다.
+           close()는 한 프레임 뒤에 부르므로 그때는 보인다. */
+        close();
       }
     };
     window.addEventListener("keydown", onKey);

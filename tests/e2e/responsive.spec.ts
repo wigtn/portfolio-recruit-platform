@@ -141,8 +141,42 @@ test("모바일 플로팅 UI는 이벤트·가이드·챗 패널을 동시에 �
   await page.goto("/");
 
   await expect(page.locator(".evpop")).toBeVisible();
-  await expect(page.locator(".demowidget")).toBeHidden();
-  await expect(page.locator(".chatwidget")).toBeHidden();
+
+  /* 계약이 바뀌었다.
+
+     전에는 팝업이 뜨면 두 fab을 숨겼다(toBeHidden). 그러면 팝업을 닫기
+     전까지 상담으로 가는 길이 화면에서 사라진다 — 사용자 지시로 버튼은
+     남기기로 했다.
+
+     대신 지켜야 할 것은 "겹치지 않는다"다. 겹치면 팝업을 누르려다 fab이
+     눌리거나 그 반대가 된다. 겹침을 실제 사각형으로 확인한다. */
+  await expect(page.locator(".demowidget")).toBeVisible();
+  await expect(page.locator(".chatwidget")).toBeVisible();
+
+  const boxes = await page.evaluate(() => {
+    const rect = (selector: string) => {
+      const el = document.querySelector(selector);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { l: r.left, t: r.top, r: r.right, b: r.bottom };
+    };
+    return {
+      pop: rect(".evpop"),
+      guide: rect(".demowidget .fab"),
+      chat: rect(".chatwidget .chatfab"),
+      vh: window.innerHeight,
+    };
+  });
+  const hits = (
+    a: { l: number; t: number; r: number; b: number } | null,
+    b: { l: number; t: number; r: number; b: number } | null,
+  ) => !!a && !!b && a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+
+  expect(boxes.pop).not.toBeNull();
+  expect(hits(boxes.pop, boxes.guide)).toBe(false);
+  expect(boxes.pop && hits(boxes.pop, boxes.chat)).toBe(false);
+  // fab은 하단에 남는다 — 팝업을 피하겠다고 화면 중간까지 올라가면 안 된다
+  expect(boxes.chat!.b).toBeGreaterThan(boxes.vh - 160);
 });
 
 test("모바일 탭·페이지네이션·푸터·채용 필터가 좁은 폭에 맞게 정리된다", async ({
