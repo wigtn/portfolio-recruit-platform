@@ -12,7 +12,19 @@ import { useEffect, useState } from "react";
  * 데모라 실제 네트워크가 없으므로 지연은 강제한다 — 스켈레톤이 한 프레임만
  * 스치면 로딩 처리를 했는지 안 했는지 보이지 않는다.
  */
-export const MOCK_DELAY = 2000;
+/* 2초였다. 스켈레톤을 보여 주려는 값이었는데, 화면을 옮길 때마다 2초씩
+   쌓이니 데모가 느린 서비스처럼 읽혔다. 보여 주려던 것(로딩 상태를 다룬다)은
+   0.6초면 충분히 전해지고, 그 이상은 기다림일 뿐이다. */
+export const MOCK_DELAY = 600;
+
+/**
+ * 무한 스크롤이 다음 묶음을 불러오는 데 쓰는 지연.
+ *
+ * 여기는 반대로 **너무 빠르면 안 된다.** 즉시 채워지면 페이지가 원래
+ * 길었던 것처럼 보여서, 스크롤이 계속 이어진다는 사실 자체가 안 읽힌다.
+ * 짧게 비어 있다 채워져야 "더 불러오는 중"으로 보인다.
+ */
+export const MOCK_PAGE_DELAY = 500;
 
 export function useMockLoading(delay: number = MOCK_DELAY) {
   const [loading, setLoading] = useState(true);

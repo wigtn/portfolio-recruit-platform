@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MOCK_PAGE_DELAY } from "./Skeleton";
 
 /**
  * 무한 스크롤 — 목록 화면이 공통으로 쓰는 한 벌.
@@ -36,7 +37,24 @@ export function useInfiniteCount(
     setCount(Math.min(initial, total));
   }, [total, initial]);
 
-  const more = () => setCount((current) => Math.min(current + step, total));
+  /* 다음 묶음은 잠깐 뜸을 들이고 온다.
+
+     즉시 채우면 페이지가 원래 그만큼 길었던 것처럼 보인다 — 스크롤이 계속
+     이어진다는 사실 자체가 안 읽힌다. 짧게 비어 있다 채워져야 "더 불러오는
+     중"이 보이고, 그제서야 이 목록이 무한이라는 걸 알게 된다.
+
+     로딩 상태를 따로 두는 이유는 발치에 표시를 걸기 위해서다. 지연만 주고
+     아무 표시가 없으면 그냥 멈춘 것으로 보인다. */
+  const [pending, setPending] = useState(false);
+
+  const more = () => {
+    if (pending) return;
+    setPending(true);
+    window.setTimeout(() => {
+      setCount((current) => Math.min(current + step, total));
+      setPending(false);
+    }, MOCK_PAGE_DELAY);
+  };
 
   useEffect(() => {
     if (!sentinel || count >= total) return;
@@ -50,9 +68,15 @@ export function useInfiniteCount(
     observer.observe(sentinel);
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sentinel, count, total, step]);
+  }, [sentinel, count, total, step, pending]);
 
-  return { count, sentinelRef: setSentinel, more, done: count >= total };
+  return {
+    count,
+    sentinelRef: setSentinel,
+    more,
+    pending,
+    done: count >= total,
+  };
 }
 
 /**
@@ -68,6 +92,7 @@ export function InfiniteFoot({
   label,
   sentinelRef,
   onMore,
+  pending,
 }: {
   count: number;
   total: number;
@@ -76,6 +101,8 @@ export function InfiniteFoot({
   /** useInfiniteCount가 주는 콜백 ref */
   sentinelRef: (node: HTMLDivElement | null) => void;
   onMore: () => void;
+  /** 다음 묶음을 가져오는 중 */
+  pending?: boolean;
 }) {
   return (
     <div className="inf-foot">
@@ -84,6 +111,16 @@ export function InfiniteFoot({
       {done ? (
         <p className="inf-end" role="status">
           {label} {total}건을 모두 봤어요
+        </p>
+      ) : pending ? (
+        /* 불러오는 중 — 이 표시가 있어야 목록이 스크롤로 이어진다는 게
+           보인다. 점 세 개는 기다림의 길이를 말하지 않아서, 짧은 지연에
+           스피너보다 덜 요란하다 */
+        <p className="inf-loading" role="status" aria-live="polite">
+          <i />
+          <i />
+          <i />
+          <span>{label}를 더 불러오는 중</span>
         </p>
       ) : (
         <>
