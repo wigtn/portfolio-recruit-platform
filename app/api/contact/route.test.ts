@@ -23,8 +23,52 @@ afterEach(() => {
   } else {
     process.env.WIGTN_RESEND_API_KEY = originalResendKey;
   }
+  delete process.env.CONTACT_SITE;
+  delete process.env.CONTACT_SITE_URL;
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+});
+
+/* 이 라우트는 포폴마다 복사돼 간다. 받는 메일함과 슬랙 채널은 하나인데
+   보내는 사이트는 여럿이라, 출처가 빠지면 첫 회신에서 "어느 화면 보셨어요"를
+   되물어야 한다. 두 채널 모두에서 확인한다. */
+describe("요청 출처", () => {
+  it("메일 제목과 본문에 사이트가 들어간다", async () => {
+    process.env.WIGTN_RESEND_API_KEY = "unit-test-key";
+    process.env.CONTACT_SITE = "테스트 포폴";
+    process.env.CONTACT_SITE_URL = "https://example.test";
+    delete process.env.CONTACT_WEBHOOK_URL;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await POST(request({ name: "테스터", contact: "t@example.com" }));
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const mail = JSON.parse(String(init.body));
+
+    expect(mail.subject).toContain("테스트 포폴");
+    expect(mail.html).toContain("요청 출처");
+    expect(mail.html).toContain("https://example.test");
+  });
+
+  it("슬랙 미리보기 한 줄에도 사이트가 들어간다", async () => {
+    delete process.env.WIGTN_RESEND_API_KEY;
+    process.env.CONTACT_SITE = "테스트 포폴";
+    process.env.CONTACT_WEBHOOK_URL =
+      "https://hooks.slack.com/services/T000/B000/xxxx";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response("ok", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await POST(request({ name: "테스터", contact: "t@example.com" }));
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const sent = JSON.parse(String(init.body));
+
+    // 열어보기 전에 어느 건인지 알아야 하므로 text에 있어야 한다
+    expect(sent.text).toContain("테스트 포폴");
+  });
 });
 
 describe("문의 API", () => {

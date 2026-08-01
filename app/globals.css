@@ -756,11 +756,20 @@ small,
   --dock-b: calc(var(--dock-base) + var(--tabbar-h) + var(--tabbar-gap));
 }
 
-/* 탭바가 서는 폭. 헤더 주 메뉴가 두 행으로 접히는 지점과 같이 간다 */
+/* 탭바가 서는 폭. 헤더 주 메뉴가 두 행으로 접히는 지점과 같이 간다.
+
+   폭만 보고 자리를 비우면 안 된다. 백오피스에는 탭바가 아예 렌더되지
+   않는데(TabBar.tsx), 그래도 72px을 예약하고 있어서 플로팅 버튼이 허공에
+   떠 있었다. 실제로 탭바가 문서에 있을 때만 자리를 준다.
+
+   --dock-b를 여기서 다시 계산하는 이유: 커스텀 속성은 쓰는 시점이 아니라
+   정의된 요소에서 치환된다. :root에 정의된 --dock-b는 :root의 --tabbar-h로
+   이미 굳어 있어서, body에서 --tabbar-h만 바꿔도 따라오지 않는다. */
 @media (max-width: 720px) {
-  :root {
+  body:has(.tabbar) {
     --tabbar-h: 58px;
     --tabbar-gap: 14px;
+    --dock-b: calc(var(--dock-base) + var(--tabbar-h) + var(--tabbar-gap));
   }
 
   /* ── 입력할 때 화면이 확대되지 않게 ──
@@ -981,13 +990,35 @@ small,
   /* 알 본체 — 변형(skew·scale)은 이 요소에 걸린다. 굴절 테가 ::before로
      이 안에 있어서 몸이 늘어나면 테도 같이 휜다. 유리판 위 액체의 조건:
      투과(렌즈 blur), 상단 하이라이트, 바닥에 가라앉는 액센트 */
+  /* ── 정지 상태가 기본이다 ──
+     멎어 있을 땐 평범한 색면이다. 액체는 옮겨 가는 동안의 표현이지 상태가
+     아니다. 아무 일도 없는데 계속 반짝이면 시선이 거기 묶이고, 굴절 렌즈
+     (backdrop-filter)와 환경 반사(background-position)가 매 프레임 돈다.
+     애플의 탭바도 이동 중에만 액체고, 멈추면 그냥 색이다. */
   .tabbar-pill .bead {
     position: absolute;
     inset: 0 6px;
     /* 모양은 squircle(사용자 지시) — 큰 반경의 초타원이라 원에 가깝게
-       둥글면서 알약처럼 늘어지지 않는다. 정지 상태의 애니메이션은 없다 */
+       둥글면서 알약처럼 늘어지지 않는다 */
     border-radius: 24px;
     corner-shape: squircle;
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+    box-shadow:
+      0 1px 3px -1px color-mix(in srgb, var(--accent) 22%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    /* 유리 ↔ 색면 전환. 이동이 끝나는 순간 뚝 끊기면 다른 물건으로 보인다 */
+    transition:
+      background 0.3s var(--ease-out-soft, ease),
+      box-shadow 0.3s var(--ease-out-soft, ease),
+      backdrop-filter 0.3s var(--ease-out-soft, ease);
+    will-change: transform;
+  }
+
+  /* ── 흐르는 동안에만 액체 ── */
+  .tabbar.is-moving .tabbar-pill .bead {
+    /* 유리로 바뀌는 건 빨라야 한다. 이동이 0.3초대인데 전환도 0.3초면
+       유리가 다 켜지기 전에 도착해 버린다. 되돌아갈 때만 천천히 */
+    transition-duration: 0.14s;
     background:
       radial-gradient(
         70% 46% at 32% 16%,
@@ -1009,7 +1040,6 @@ small,
       0 3px 9px -2px color-mix(in srgb, var(--accent) 30%, transparent),
       inset 0 1px 0 rgba(255, 255, 255, 0.85),
       inset 0 -1px 0 rgba(255, 255, 255, 0.25);
-    will-change: transform;
   }
   /* 가장자리 굴절 테 — 탭바 테두리와 같은 xor 마스크 문법. 위가 밝고
      아래로 액센트가 스치면 알의 두께가 읽힌다 */
@@ -1017,6 +1047,9 @@ small,
     content: "";
     position: absolute;
     inset: 0;
+    /* 색분산 프린지는 유리의 성질이다 — 멎으면 같이 사라진다 */
+    opacity: 0;
+    transition: opacity 0.3s var(--ease-out-soft, ease);
     border-radius: inherit;
     /* corner-shape는 border-radius: inherit로 안 따라온다 — 테두리(빛반사
        프린지)도 몸과 같은 squircle 곡률이어야 한 물체로 읽힌다 */
@@ -1067,13 +1100,70 @@ small,
     );
     background-size: 320% 100%;
     background-position: calc(50% + var(--envx, 0) * -30%) 50%;
-    opacity: 0.32;
+    /* 환경 반사도 이동 중에만. 고정된 환경을 "훑는" 표현이라 멈추면 의미가
+       없고, background-position이 매 프레임 다시 칠해지는 비용만 남는다 */
+    opacity: 0;
+    transition: opacity 0.3s var(--ease-out-soft, ease);
     mix-blend-mode: soft-light;
     pointer-events: none;
+  }
+  .tabbar.is-moving .tabbar-pill .bead::before {
+    opacity: 1;
+  }
+  .tabbar.is-moving .tabbar-pill .bead::after {
+    opacity: 0.32;
   }
   /* 탭에 없는 화면(글 상세 등)에서는 유리알이 갈 곳이 없다 — 소리 없이 사라진다 */
   .tabbar-pill.is-off {
     opacity: 0;
+  }
+
+  /* ── 탭을 바꿀 때 판 전체가 한 번 숨을 쉰다 ──
+
+     유리알만 움직이면 알 하나가 판 위를 미끄러지는 것으로 끝난다. 판이
+     아주 조금 부풀었다 돌아오면, 누른 힘이 판까지 전달된 것으로 읽힌다.
+
+     1.012는 일부러 작다. 탄력을 키우면 화면 하단이 출렁여서 손이 아니라
+     화면이 흔들린 것처럼 보인다(사용자 지시: 너무 탄력이 과하면 안 됨).
+     오버슈트는 마지막 되돌아오는 구간에만 아주 얕게 둔다.
+
+     transform은 합성 스레드에서 도는 속성이라 이 연출은 프레임을 먹지
+     않는다 — 같은 이유로 크기·여백을 건드리는 방식은 쓰지 않았다. */
+  .tabbar {
+    transform-origin: 50% 100%;
+  }
+  .tabbar.is-moving {
+    transform: scale(1.012);
+  }
+
+  /* 림라이트 — 옮겨 가는 동안 판 가장자리에 액센트 빛이 얕게 돈다.
+     ::before는 xor 마스크로 1px 링만 남기는 요소라 거기에 그림자를 얹으면
+     링에 잘린다. 판 본체의 그림자 목록에 두 겹을 더하는 방식으로 간다.
+     기존 층을 그대로 다시 적으므로, 위 규칙이 바뀌면 여기도 같이 봐야 한다.
+
+     transition은 여기서 다시 선언하지 않는다. 아래 `.tabbar` 규칙(오버레이가
+     뜰 때 물러나는 연출)이 같은 속성을 이미 잡고 있어서, 두 벌을 두면 나중
+     것이 앞 것을 통째로 덮는다. 필요한 항목은 그쪽 목록에 넣었다. */
+  .tabbar.is-moving {
+    /* 켜질 땐 빠르게, 꺼질 땐 여운. 하나의 지속시간으로 두면 유리알이 이미
+       도착했는데 빛은 이제 차오르는 중이라, 최대치를 못 보고 되돌아간다 */
+    transition-duration: 0.22s, 0.42s, 0.14s, 0s;
+    box-shadow:
+      0 8px 28px -6px rgba(16, 24, 40, 0.18),
+      0 2px 8px -2px rgba(16, 24, 40, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.28),
+      /* 여기부터가 림라이트 — 안쪽 테와 바깥 번짐 한 겹씩 */
+        inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
+      0 0 18px -6px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tabbar,
+    .tabbar.is-moving {
+      transform: none;
+      transition: none;
+    }
   }
 
   .tabbar li {
@@ -1104,15 +1194,24 @@ small,
        셈이다. 사라진 뒤에는 렌더에서 아예 뺀다 */
     visibility: hidden;
   }
+  /* transform이 두 가지 일을 겸한다 — 물러날 때의 translateY와 탭을 바꿀
+     때의 scale. 그래서 지속시간을 하나로 정해야 하는데, 물러나는 쪽(0.22s)에
+     맞추면 탄력이 급해 보인다. 탄력 쪽(0.42s)에 맞추고 물러나는 연출은
+     0.22s를 유지하도록 아래에서 다시 잡는다. */
   .tabbar {
     transition:
       opacity 0.22s ease,
-      transform 0.22s var(--ease-out-soft),
+      transform 0.42s cubic-bezier(0.22, 1.2, 0.36, 1),
+      box-shadow 0.34s var(--ease-out-soft),
       visibility 0s linear 0.22s;
   }
   body:has(.modalwrap) .tabbar,
   body:has(.pdrawer.is-open) .tabbar,
   body:has(.evpop) .tabbar {
+    transition:
+      opacity 0.22s ease,
+      transform 0.22s var(--ease-out-soft),
+      visibility 0s linear 0.22s;
     transition-delay: 0s, 0s, 0.22s;
   }
 
@@ -3024,6 +3123,39 @@ select:focus-visible,
   /* 상담 폼 옆 칸도 아래로 */
   .formactions {
     flex-wrap: wrap;
+  }
+}
+
+/* 제출 줄 — 안내 위, 버튼 아래. 좌우로 벌려 두면 좁은 화면에서 줄바꿈
+   지점에 따라 버튼이 옮겨 다닌다. 버튼은 폭을 고정해 글자가 "전송 중…"으로
+   짧아져도 자리가 밀리지 않게 한다. */
+.formsubmit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.formsubmit-note {
+  font-size: 12px;
+  color: var(--ink-4);
+  line-height: 1.5;
+}
+.formsubmit-btn {
+  width: 100%;
+  min-height: 46px;
+  font-size: 14.5px;
+}
+@media (min-width: 641px) {
+  /* 넓은 화면에서는 한 줄로. 여기서도 버튼 폭은 글자에 따라 흔들리지 않는다 */
+  .formsubmit {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .formsubmit-btn {
+    width: auto;
+    min-width: 168px;
+    flex-shrink: 0;
   }
 }
 
@@ -12197,7 +12329,16 @@ select.in {
   box-shadow:
     0 6px 16px -6px rgba(139, 92, 246, 0.65),
     0 2px 8px rgba(103, 232, 249, 0.35);
-  animation: aiav-morph 6.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  /* 애니메이션은 기본이 꺼짐이다. 아래 .is-think / .is-live에서만 켠다.
+
+     이유는 측정에서 나왔다. 이 아바타 하나가 매 프레임 세 가지를 시킨다 —
+     8값 border-radius 재페인트, conic-gradient 재래스터(--aiv-spin이
+     그라디언트 안에 있다), 그 위에 blur(5px) 재적용. 그런데 챗봇은 봇
+     메시지마다 아바타를 붙여서, 대화가 길어질수록 이게 선형으로 늘어난다.
+     화면에 4개일 때 136.8fps → 37.3fps였다(CPU 4배 스로틀, 390x844).
+
+     말하고 있는 하나만 살아 있으면 된다. 나머지는 지나간 말이라 움직일
+     이유가 없고, 움직여도 아무도 보지 않는다. */
 }
 /* 회전 블롭 — 파스텔 다색 코닉을 블러로 뭉갠다 */
 .aiav::before {
@@ -12213,10 +12354,23 @@ select.in {
     #a78bfa
   );
   filter: blur(5px) saturate(1.15);
+  /* 여기도 기본은 정지. 멈춰 있어도 코닉 그라디언트에 블러가 얹힌 그림은
+     그대로라 겉보기는 거의 같다 — 도는 것만 멈춘다 */
+  z-index: 0;
+}
+
+/* ── 살아 움직이는 아바타 ──
+   .is-think = 지금 말하는 중(스트리밍), .is-live = 상시로 둬야 하는 한 개
+   (플로팅 진입점). 이 둘만 애니메이션을 얻는다. */
+.aiav.is-think,
+.aiav.is-live {
+  animation: aiav-morph 6.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.aiav.is-think::before,
+.aiav.is-live::before {
   animation:
     aiav-spin 8s linear infinite,
     aiav-slosh 4.2s ease-in-out infinite;
-  z-index: 0;
 }
 /* 3D 층 — 은은한 스펙큘러 + 옅은 하단 음영 */
 .aiav::after {
@@ -14482,22 +14636,14 @@ select.in {
   align-items: flex-end;
   gap: 10px;
 }
-/* 한 번에 패널 하나.
+/* 한 번에 패널 하나 — 단, 버튼은 둘 다 남는다.
 
-   두 fab이 나란히 서고 패널은 그 위로 펼쳐진다. 둘이 동시에 열리면 서로를
-   덮고, 어느 쪽에 대고 말하는 중인지도 흐려진다. 그래서 한쪽이 열리면
-   다른 쪽 fab은 물러난다.
+   예전엔 여기서 상대 fab을 display:none으로 지웠다. 그러면 한쪽을 여는
+   순간 다른 쪽으로 가는 길이 화면에서 사라진다. 닫고, 없어진 자리를 찾고,
+   다시 눌러야 한다. 겹치지 말아야 하는 건 펼쳐진 판이지 버튼이 아니다.
 
-   양방향이어야 한다. 한쪽만 걸면 그쪽에서 열 때는 정리되는데 반대로 열면
-   그대로 겹친다.
-
-   코치 말풍선(.guide-coach)은 여기서 뺀다. 그건 패널이 아니라 가이드 fab
-   왼쪽에 붙는 안내 한 줄이고, 첫 진입에 바로 뜬다 — 이것까지 걸면 페이지를
-   열자마자 상담 버튼이 사라진다. */
-body:has(.dwpanel) .chatwidget,
-body:has(.chatpanel) .demowidget {
-  display: none;
-}
+   그래서 이 규칙은 JS로 옮겼다 — announcePanel()이 알리면 상대 패널이
+   스스로 접힌다(lib/demo/progress.ts). CSS로는 아무것도 숨기지 않는다. */
 
 /* 아바타 자체가 버튼이다. 배경·그림자는 .aiav가 이미 갖고 있다 */
 .chatfab {
@@ -16732,19 +16878,16 @@ body:has(.pdrawer) {
     min-height: 40px;
   }
 
-  /* 이벤트가 열리면 팝업만, 패널이 열리면 그 패널만 보여준다. */
-  body:has(.evpop) .demowidget,
-  body:has(.evpop) .chatwidget,
+  /* 화면 전체를 덮는 것들(모달·드로어·스텝업)이 떠 있는 동안에만 물러난다.
+     그건 "지금은 이것부터 처리하라"는 화면이라 fab이 그 위에 떠 있으면
+     안 된다. 반면 두 fab 사이의 상호배제는 여기서 하지 않는다 — 그건
+     JS가 상대 패널만 접는다(위 주석 참고). */
   body:has(.modalwrap) .demowidget,
   body:has(.modalwrap) .chatwidget,
   body:has(.stepup-ov) .demowidget,
   body:has(.stepup-ov) .chatwidget,
   body:has(.pdrawer) .demowidget,
   body:has(.pdrawer) .chatwidget {
-    display: none;
-  }
-  body:has(.chatpanel) .demowidget,
-  body:has(.dwpanel) .chatwidget {
     display: none;
   }
   .demowidget {
@@ -16755,11 +16898,12 @@ body:has(.pdrawer) {
   .chatwidget {
     right: max(12px, var(--safe-r));
   }
-  /* 패널이 열리면 가이드 fab이 숨으므로(아래 has 규칙) 56px 리프트를
-     내려 패널이 세로 공간을 온전히 쓴다 */
-  .chatwidget:has(.chatpanel) {
-    right: max(12px, var(--safe-r));
-    bottom: var(--dock-b);
+  /* 이벤트 팝업이 하단 전폭을 쓰는 동안 두 fab을 그 위로 올린다. 예전엔
+     아예 숨겼는데, 그러면 팝업을 닫기 전까지 상담으로 가는 길이 없다.
+     .demowidget은 위쪽(7175 부근)에서 같은 값으로 올라간다 */
+  body:has(.evpop) .chatwidget {
+    bottom: calc(248px + var(--dock-b));
+    transition: bottom var(--duration-base) var(--ease-out-soft);
   }
   .chatpanel {
     width: min(

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Select } from "./ds/Select";
+import { toast } from "./ds/Toaster";
 
 /**
  * 자주 오는 분야.
@@ -86,26 +87,9 @@ export function ContactForm() {
   const [custom, setCustom] = useState("");
   const [message, setMessage] = useState("");
 
-  if (sent) {
-    return (
-      <div className="formcard">
-        <h2
-          style={{
-            fontSize: 20,
-            fontWeight: 850,
-            letterSpacing: "-.03em",
-            marginBottom: 6,
-          }}
-        >
-          요청이 접수되었어요.
-        </h2>
-        <p style={{ fontSize: "13.5px", color: "var(--ink-3)" }}>
-          1영업일 안에 연락드릴게요.
-        </p>
-      </div>
-    );
-  }
-
+  /* 접수 뒤에도 폼은 그대로 둔다. 카드를 통째로 갈아끼우면 방금 무엇을
+     보냈는지가 화면에서 사라지고, 한 건 더 보내려면 새로고침해야 한다.
+     끝났다는 사실은 토스트로 알리고, 폼은 잠가서 두 번 눌리지 않게 한다. */
   return (
     <form
       className="formcard"
@@ -133,8 +117,15 @@ export function ContactForm() {
           };
           if (!data.ok) throw new Error(data.error ?? "접수하지 못했어요.");
           setSent(true);
+          toast("상담 요청이 접수됐어요, 1영업일 안에 연락드릴게요", {
+            tone: "success",
+          });
         } catch (err) {
-          setError(err instanceof Error ? err.message : "접수하지 못했어요.");
+          const reason =
+            err instanceof Error ? err.message : "접수하지 못했어요.";
+          setError(reason);
+          // 폼이 화면 밖에 있을 수도 있다. 실패는 특히 놓치면 안 된다
+          toast(reason, { tone: "error" });
         } finally {
           setSending(false);
         }
@@ -268,15 +259,20 @@ export function ContactForm() {
         </div>
       ) : null}
 
-      <div
-        className="formactions"
-        style={{ alignItems: "center", justifyContent: "space-between" }}
-      >
-        <span style={{ fontSize: 12, color: "var(--ink-4)" }}>
+      {/* 안내를 위, 버튼을 아래 한 줄로. 좌우로 벌려 두면 좁은 화면에서
+          줄바꿈이 어디서 일어날지에 따라 버튼이 이리저리 옮겨 다닌다.
+          버튼 글자가 "전송 중…"으로 짧아질 때 폭이 줄어 자리가 밀리던 것도
+          같은 이유다 — 폭을 고정한다. */}
+      <div className="formsubmit">
+        <span className="formsubmit-note">
           이 요청은 실제로 접수돼요, 1영업일 내 연락드려요
         </span>
-        <button className="btn primary" type="submit" disabled={sending}>
-          {sending ? "전송 중…" : "상담 요청 보내기"}
+        <button
+          className="btn primary formsubmit-btn"
+          type="submit"
+          disabled={sending || sent}
+        >
+          {sending ? "전송 중…" : sent ? "접수됐어요" : "상담 요청 보내기"}
         </button>
       </div>
     </form>

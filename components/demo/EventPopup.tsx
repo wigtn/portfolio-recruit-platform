@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { loadState } from "@/lib/admin/overlay";
-import { useRole } from "@/lib/demo/role";
 import { Icon } from "../Icon";
 
 /**
@@ -20,7 +19,6 @@ import { Icon } from "../Icon";
 const DISMISS_KEY = "wigtn-demo-event-popup-v1";
 
 export function EventPopup() {
-  const { role } = useRole();
   const [banner, setBanner] = useState<string | null>(null);
   const [closed, setClosed] = useState(true);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
@@ -90,8 +88,16 @@ export function EventPopup() {
     dragRef.current = null;
   };
 
-  // 가입 권유는 게스트에게만 — 이미 로그인한 회원·운영자에게 "가입하면"은 결례다
-  if (role !== "guest" || closed || !banner) return null;
+  /* 역할로 감추지 않는다.
+
+     예전엔 게스트에게만 띄웠다. 기본 시드 배너가 "가입하면 …"이라 회원에게는
+     결례라고 봤기 때문이다. 그런데 이 문구는 운영자가 큐레이션에서 정하는
+     값이고, 배너가 늘 가입 권유인 것도 아니다. 그 결과 첫 화면에서 역할을
+     고르는 순간 관계없는 광고가 같이 사라졌다 — 방문자에겐 버그로 읽힌다.
+
+     문구가 대상에 맞는지는 운영자가 큐레이션에서 판단할 일이지, 이 컴포넌트가
+     역할을 보고 통째로 감출 일이 아니다. */
+  if (closed || !banner) return null;
 
   return (
     <div

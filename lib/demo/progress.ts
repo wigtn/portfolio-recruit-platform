@@ -3,6 +3,23 @@
 export const DEMO_PROGRESS_EVENT = "wigtn-demo-progress";
 /** 가이드에서 챗봇 항목을 누르면 이 이벤트로 패널을 연다(챗봇은 라우트가 없다). */
 export const DEMO_OPEN_CHAT_EVENT = "wigtn-demo-open-chat";
+
+/**
+ * 우측 하단 패널이 열렸음을 알린다. `detail.owner`가 자기가 아니면 닫는다.
+ *
+ * 예전엔 CSS로 상대 **버튼**을 숨겼다. 그러면 한쪽을 여는 순간 다른 쪽으로
+ * 가는 길이 화면에서 사라진다 — 닫고, 없어진 자리를 찾고, 다시 눌러야 한다.
+ * 겹치지 말아야 하는 건 펼쳐진 패널이지 버튼이 아니다.
+ */
+export const DEMO_PANEL_OPEN_EVENT = "wigtn-demo-panel-open";
+export type DemoPanelOwner = "chat" | "guide";
+
+/** 패널을 열 때 부른다. 나머지 패널은 이 신호를 받고 스스로 닫는다. */
+export function announcePanel(owner: DemoPanelOwner) {
+  window.dispatchEvent(
+    new CustomEvent(DEMO_PANEL_OPEN_EVENT, { detail: { owner } }),
+  );
+}
 const KEY = "wigtn-demo-progress-v1";
 const THEME_KEY = "wigtn-demo-theme-v1";
 

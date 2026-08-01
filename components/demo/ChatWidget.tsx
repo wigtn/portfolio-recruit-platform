@@ -15,8 +15,10 @@ import {
   type ChatIntent,
 } from "@/lib/demo/chat";
 import {
+  announcePanel,
   DEMO_FEATURES,
   DEMO_OPEN_CHAT_EVENT,
+  DEMO_PANEL_OPEN_EVENT,
   loadProgress,
   markProgress,
   resetDemoExperience,
@@ -506,6 +508,17 @@ export function ChatWidget() {
     return () => window.removeEventListener(DEMO_OPEN_CHAT_EVENT, onOpen);
   }, []);
 
+  /* 다른 패널이 열리면 물러난다. 겹치지 말아야 하는 건 펼쳐진 판이지
+     버튼이 아니라서, 상대 fab을 숨기는 대신 이쪽이 접힌다. */
+  useEffect(() => {
+    const onPanel = (event: Event) => {
+      const owner = (event as CustomEvent<{ owner: string }>).detail?.owner;
+      if (owner !== "chat") setOpen(false);
+    };
+    window.addEventListener(DEMO_PANEL_OPEN_EVENT, onPanel);
+    return () => window.removeEventListener(DEMO_PANEL_OPEN_EVENT, onPanel);
+  }, []);
+
   const push = useCallback((msg: Omit<Msg, "id">) => {
     const id = seq.current++;
     setMsgs((prev) => [...prev, { ...msg, id }]);
@@ -640,6 +653,8 @@ export function ChatWidget() {
   function openPanel() {
     setOpen(true);
     setBeckon(false);
+    // 가이드 패널이 열려 있으면 스스로 물러난다. 버튼은 양쪽 다 남는다
+    announcePanel("chat");
     window.localStorage.setItem(OPEN_KEY, "1");
     // 처음 열 때만 자동 재생. 닫고 다시 열 때마다 처음부터 돌면 대화가 사라진다
     if (!played.current) {
@@ -1831,8 +1846,9 @@ export function ChatWidget() {
         {open ? (
           <Icon name="x" />
         ) : (
-          /* AI 답변과 같은 얼굴. 일반 말풍선이면 그냥 고객센터 위젯으로 읽힌다 */
-          <AiAvatar size="lg" spark={beckon} />
+          /* AI 답변과 같은 얼굴. 일반 말풍선이면 그냥 고객센터 위젯으로 읽힌다.
+             진입점은 화면에 하나뿐이고 눈에 띄어야 하므로 여기만 상시 움직인다 */
+          <AiAvatar size="lg" spark={beckon} live />
         )}
       </button>
     </aside>

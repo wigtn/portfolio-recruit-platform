@@ -15,12 +15,24 @@ import { Icon } from "./Icon";
 export function AiAvatar({
   size = "md",
   thinking,
+  live,
   spark,
   className,
 }: {
   size?: "sm" | "md" | "lg";
   /** 생성 중. 모프와 회전이 빨라진다 */
   thinking?: boolean;
+  /**
+   * 말하고 있지 않아도 계속 움직여야 하는 자리인가.
+   *
+   * 기본은 정지다. 챗봇은 봇 메시지마다 이 아바타를 붙이므로, 전부 움직이면
+   * 대화가 길어질수록 프레임이 선형으로 무너진다(4개일 때 136.8→37.3fps).
+   * 지나간 말의 아바타가 도는 걸 보는 사람은 없다.
+   *
+   * 그래서 켜는 자리는 둘뿐이다 — 지금 말하는 중(thinking)과, 화면에 하나만
+   * 존재하면서 시선을 끌어야 하는 진입점(live).
+   */
+  live?: boolean;
   /** 착지 스파클. 한 번 떠올랐다 사라진다 */
   spark?: boolean;
   className?: string;
@@ -31,6 +43,7 @@ export function AiAvatar({
         "aiav",
         size === "sm" ? "sm" : size === "lg" ? "lg" : "",
         thinking ? "is-think" : "",
+        live ? "is-live" : "",
         className ?? "",
       ]
         .filter(Boolean)

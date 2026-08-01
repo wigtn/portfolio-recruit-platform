@@ -112,6 +112,21 @@ export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
   const receivedAt = new Date().toISOString();
 
+  /* 어느 포트폴리오에서 온 요청인지.
+
+     이 라우트는 포폴마다 그대로 복사돼 간다. 받는 메일함과 슬랙 채널은
+     하나인데 보내는 사이트는 여럿이라, 출처가 없으면 "어느 화면을 보고
+     연락했는지"를 첫 회신에서 되물어야 한다. 그게 상담의 첫인상이 된다.
+
+     사이트별로 CONTACT_SITE만 바꾸면 된다. 배포 주소는 Vercel이 넣어주는
+     값을 그대로 쓴다 — 사람이 손으로 맞추면 언젠가 어긋난다. */
+  const site = process.env.CONTACT_SITE ?? "W 세일즈 (채용 포트폴리오)";
+  const siteUrl =
+    process.env.CONTACT_SITE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : null);
+
   const withTimeout = async (
     run: (signal: AbortSignal) => Promise<Response>,
   ) => {
@@ -139,6 +154,8 @@ export async function POST(request: Request) {
      둘 다 느린 날 16초를 기다리게 된다. */
   const lead = {
     receivedAt,
+    site,
+    siteUrl,
     name: body.name,
     contact: body.contact,
     company: body.company,
@@ -182,6 +199,14 @@ export async function POST(request: Request) {
       ["연락처", link(body.contact)],
       ["회사, 직책", escape(body.company || "-")],
       ["관심 분야", escape(body.domain || "-")],
+      /* 출처는 맨 아래. 답장할 때 먼저 보는 건 사람 정보고, 이건 "어느
+         화면을 보고 왔나"를 확인하는 값이라 순서가 뒤다 */
+      [
+        "요청 출처",
+        siteUrl
+          ? `<a href="${escape(siteUrl)}" style="color:#7c3aed;text-decoration:none">${escape(site)}</a>`
+          : escape(site),
+      ],
     ]
       .map(
         ([label, value]) =>
@@ -199,7 +224,7 @@ export async function POST(request: Request) {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,.08)">
 
       <tr><td style="padding:20px 26px;background:#1b1e28">
-        <div style="color:#a78bfa;font-size:11px;font-weight:800;letter-spacing:.08em">WEB AGENCY</div>
+        <div style="color:#a78bfa;font-size:11px;font-weight:800;letter-spacing:.08em">WEB AGENCY · ${escape(site)}</div>
         <div style="color:#ffffff;font-size:18px;font-weight:800;letter-spacing:-.02em;margin-top:4px">상담 요청이 들어왔어요</div>
       </td></tr>
 
@@ -255,7 +280,9 @@ export async function POST(request: Request) {
             ...(replyTo ? { reply_to: replyTo } : {}),
             /* 접두사는 고정이다. 받는 쪽에서 라벨과 필터를 이것으로 건다.
                발신 주소로 거는 것보다 안 바뀐다 */
-            subject: `[Web-Agency] 상담 요청, ${body.name}${body.company ? ` (${body.company})` : ""}`,
+            /* 접두사 뒤에 사이트 이름을 붙인다. 포폴이 여럿이면 받는 쪽에서
+               제목만 보고 어느 화면 이야기인지 알아야 한다 */
+            subject: `[Web-Agency·${site}] 상담 요청, ${body.name}${body.company ? ` (${body.company})` : ""}`,
             html,
           }),
           signal,
@@ -296,12 +323,23 @@ export async function POST(request: Request) {
 
     const payload = toSlack
       ? {
-          // 알림 목록과 미리보기에 뜨는 한 줄. blocks만 있으면 여기가 빈다
-          text: `상담 요청, ${body.name}${body.company ? ` (${body.company})` : ""}`,
+          /* 알림 목록과 미리보기에 뜨는 한 줄. blocks만 있으면 여기가 빈다.
+             채널 하나로 여러 포폴의 요청이 모이므로 사이트 이름이 이 한 줄에
+             있어야 한다 — 열어보기 전에 어느 건인지 알아야 하니까 */
+          text: `[${site}] 상담 요청, ${body.name}${body.company ? ` (${body.company})` : ""}`,
           blocks: [
             {
               type: "header",
               text: { type: "plain_text", text: "상담 요청이 들어왔어요" },
+            },
+            {
+              type: "context",
+              elements: [
+                {
+                  type: "mrkdwn",
+                  text: siteUrl ? `<${siteUrl}|${site}>` : site,
+                },
+              ],
             },
             {
               type: "section",
