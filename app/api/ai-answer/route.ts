@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { ALL_POSTS } from "@/lib/seed/posts";
+import { LLM_MODEL, completionParams } from "@/lib/demo/llm";
+import { clientIp } from "@/lib/demo/anon";
 
 /**
  * AI 참고 답변 실생성 — OpenAI 스트리밍 프록시.
@@ -26,7 +28,8 @@ const ipHits = new Map<string, number[]>();
 let daily = { day: "", count: 0 };
 
 function allow(ip: string, now: number) {
-  const today = new Date(now).toISOString().slice(0, 10);
+  // 일일 리셋은 KST(UTC+9) 자정 기준(/api/chat과 통일)
+  const today = new Date(now + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
   if (daily.day !== today) daily = { day: today, count: 0 };
   if (daily.count >= DAILY_MAX) return { ok: false as const, why: "daily" };
 
@@ -69,10 +72,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ fallback: true });
   }
 
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  /* IP는 신뢰할 수 있는 첫 홉만 본다(clientIp). 챗봇과 달리 세션 쿠키 축은
+     붙이지 않는다 — 여기 상한(시간당 10, 하루 200)이 이미 더 보수적이라
+     한 축으로 충분하다. 쿠키 발급 부수효과 없이 단순하게 둔다. */
+  const ip = clientIp(request);
   const gate = allow(ip, Date.now());
   if (!gate.ok) {
+    /* 챗봇(/api/chat)은 한도 초과 시 200 + fallback으로 대화를 잇지만, 여기는
+       글 상세의 일회성 생성이라 429로 끊고 클라가 시드 초안 연출로 넘긴다.
+       계약이 다른 건 두 기능의 UX가 달라서다(의도된 차이). */
     return NextResponse.json(
       {
         ok: false,
@@ -104,10 +112,10 @@ export async function POST(request: Request) {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: LLM_MODEL,
         stream: true,
-        temperature: 0.7,
-        max_tokens: 240,
+        ...completionParams(240),
+        prompt_cache_key: "wigtn-ai-answer",
         messages: [
           {
             role: "system",

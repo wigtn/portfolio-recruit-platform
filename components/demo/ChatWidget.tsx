@@ -1141,7 +1141,12 @@ export function ChatWidget() {
          그보다 넉넉히 뒤에 선다. 여기가 먼저 끊으면 정상 응답을 죽인다. */
       write.startStep(WRAP_STEP);
       const next = await askServer(
-        { turns: [{ role: "user", content: question }], trace },
+        {
+          turns: [{ role: "user", content: question }],
+          trace,
+          // 지금 역할을 함께 보낸다. 서버가 역할에 맞는 도구만 노출하고 검문한다
+          role: roleNow.current,
+        },
         controller.signal,
       );
       write.dropStep();
@@ -1356,7 +1361,10 @@ export function ChatWidget() {
     abort.current = controller;
 
     try {
-      const response = await askServer({ turns }, controller.signal);
+      const response = await askServer(
+        { turns, role: roleNow.current },
+        controller.signal,
+      );
       if (!response) {
         /* 응답이 시작조차 못 했다. 준비된 답변으로 대신하되 그 사실을 밝힌다.
            같은 질문에 다른 답이 나온 이유를 모르면 챗봇을 못 믿게 된다 */
