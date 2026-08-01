@@ -983,7 +983,18 @@ small,
     will-change: transform;
   }
 
-  /* ── 흐르는 동안에만 액체 ── */
+  /* ── 흐르는 동안에만 액체 ──
+
+     여기서 backdrop-filter를 켜지 않는다.
+
+     탭을 바꾸는 그 순간은 라우팅이 메인 스레드를 잡고 있는 구간이다(실측:
+     라우팅만으로 최악 프레임 333ms). 하필 그때 blur를 새로 켜면 합성 레이어가
+     다시 만들어지면서 10fps를 더 깎는다 — 연출이 가장 잘 보여야 할 순간에
+     화면이 가장 끊긴다.
+
+     유리 느낌은 뒤를 흐리지 않고도 낸다. 밝은 하이라이트와 색분산 테,
+     그리고 살짝 비치는 반투명이면 눈은 유리로 읽는다. 실제로 뒤를 흐리는
+     것과의 차이는 움직이는 0.3초 동안 알아채기 어렵다. */
   .tabbar.is-moving .tabbar-pill .bead {
     /* 유리로 바뀌는 건 빨라야 한다. 이동이 0.3초대인데 전환도 0.3초면
        유리가 다 켜지기 전에 도착해 버린다. 되돌아갈 때만 천천히 */
@@ -1000,11 +1011,6 @@ small,
         rgba(255, 255, 255, 0.07) 46%,
         color-mix(in srgb, var(--accent) 15%, transparent)
       );
-    /* 굴절 렌즈 — 채도·대비를 올려 뒤에 깔린 색(콘텐츠·배너)이 알 안에
-       실제로 고이게 한다. 주변이 바뀌면 알 색도 따라 바뀐다 */
-    backdrop-filter: blur(7px) saturate(1.9) contrast(1.08) brightness(1.05);
-    -webkit-backdrop-filter: blur(7px) saturate(1.9) contrast(1.08)
-      brightness(1.05);
     box-shadow:
       0 3px 9px -2px color-mix(in srgb, var(--accent) 30%, transparent),
       inset 0 1px 0 rgba(255, 255, 255, 0.85),
@@ -1079,9 +1085,9 @@ small,
   .tabbar.is-moving .tabbar-pill .bead::before {
     opacity: 1;
   }
-  .tabbar.is-moving .tabbar-pill .bead::after {
-    opacity: 0.32;
-  }
+  /* 환경 반사(::after)는 켜지 않는다. --envx가 매 프레임 background-position을
+     바꾸는데, 그건 합성으로 못 넘어가는 페인트 속성이다. 라우팅이 이미
+     메인 스레드를 잡고 있는 구간에서 한 겹 더 얹을 이유가 없다. */
   /* 탭에 없는 화면(글 상세 등)에서는 유리알이 갈 곳이 없다 — 소리 없이 사라진다 */
   .tabbar-pill.is-off {
     opacity: 0;
@@ -3164,6 +3170,17 @@ select:focus-visible,
   min-width: 640px;
   table-layout: auto;
 }
+/* 끝까지 밀었을 때 마지막 열이 벽에 붙지 않게.
+
+   좁은 화면에서 오른쪽 끝으로 스크롤하면 마지막 열이 컨테이너 모서리에
+   딱 붙어 잘린 것처럼 보였다. 스크롤이 끝났는지 더 있는지도 구분이 안 된다.
+   양끝에 셀 하나 몫의 숨 쉴 자리를 준다 — 끝에 닿았다는 신호가 된다. */
+.tablecard .dtable > * > tr > *:last-child {
+  padding-right: 18px;
+}
+.tablecard .dtable > * > tr > *:first-child {
+  padding-left: 14px;
+}
 
 @media (max-width: 700px) {
   /* CTA 띠 — 40px 패딩이 좁은 화면에선 내용을 밀어낸다 */
@@ -3210,6 +3227,12 @@ select:focus-visible,
   line-height: 1.5;
 }
 .formsubmit-btn {
+  display: inline-flex;
+  align-items: center;
+  /* 버튼이 전폭이라 글자가 왼쪽에 붙어 보였다. .btn이 기본으로 가운데를
+     잡아 주지 않는 경우가 있어 여기서 못 박는다 */
+  justify-content: center;
+  text-align: center;
   width: 100%;
   min-height: 46px;
   font-size: 14.5px;
@@ -12732,17 +12755,26 @@ select.in {
     #818cf8 76%,
     #a78bfa
   );
-  filter: blur(5px) saturate(1.15);
+  filter: blur(4px) saturate(1.15);
   /* 여기도 기본은 정지. 멈춰 있어도 코닉 그라디언트에 블러가 얹힌 그림은
      그대로라 겉보기는 거의 같다 — 도는 것만 멈춘다 */
   z-index: 0;
-  /* 자기도 둥글게 잘린다.
+  /* 자기를 원으로 자른다.
 
      부모의 overflow: hidden에만 기대면 안 된다. filter가 걸린 자식은 새
-     합성 레이어로 올라가는데, 사파리는 그때 부모의 둥근 클립을 사각으로
-     떨어뜨린다 — 블롭이어야 할 아바타가 그라데이션 사각형으로 보인다.
-     자기 radius를 물려받아 두면 부모가 실패해도 모양이 남는다. */
-  border-radius: inherit;
+     합성 레이어로 올라가고, 그때 부모의 둥근 클립이 사각으로 떨어지는
+     브라우저가 있다 — 블롭이어야 할 아바타 뒤로 그라데이션 사각형이
+     드러난다(실기기에서 확인).
+
+     border-radius: inherit로는 부족했다. 부모의 8값 %를 자기 크기(부모보다
+     30% 큰 상자) 기준으로 다시 계산해서 모양이 어긋나고, 모서리가 남는다.
+     원이면 어느 크기에서도 모서리가 없다. 블러가 얹혀 있어 블롭 안에서는
+     원인지 블롭인지 구분되지 않는다.
+
+     번짐 여유도 줄인다. -30%로 크게 잡고 5px로 흐리면 부모 밖으로 새는
+     양이 커서, 클립이 한 번 실패하면 그만큼 크게 드러난다. */
+  inset: -18%;
+  border-radius: 50%;
 }
 
 /* ── 살아 움직이는 아바타 ──
@@ -14806,7 +14838,6 @@ select.in {
    아이콘 상자를 첫 줄 높이에 맞춰 두면 어느 폰트 크기에서도 따라온다. */
 .titem .tic {
   align-self: flex-start;
-  height: 20px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
