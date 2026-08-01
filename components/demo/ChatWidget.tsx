@@ -300,30 +300,41 @@ function splitSettled(text: string): [string, string] {
 }
 
 /**
- * 흐르는 본문.
+ * 흐르는 본문 — 단어가 하나씩 올라와 자리를 잡는다.
  *
- * AI 참고 답변(AiAnswerCard)이 쓰는 질감을 그대로 가져온다. 글자가 통짜로
- * 튀어나오면 "이미 있던 문자열을 잘라 보여주는 것"으로 읽힌다. 꼬리 열두
- * 글자만 블러에서 선명해지며 붙어야 방금 만들어지는 것처럼 보인다.
+ * 예전에는 쓰는 중인 문장 위로 보라 띠가 좌에서 우로 끝없이 지나갔다.
+ * 두 가지가 걸렸다. 눈으로는, 읽으려는 글자가 계속 흔들려서 다 나올 때까지
+ * 기다리게 된다 — 스트리밍의 목적이 "기다리지 않고 읽는 것"인데 그걸
+ * 방해한다. 값으로는, background-position 애니메이션이라 매 프레임 본문을
+ * 다시 칠한다(측정에서 메인 스레드를 붙잡는 셋 중 하나였다).
  *
- * 그라데이션은 **아직 쓰는 중인 문장에만** 건다. 끝난 문장은 바로 선명해진다.
+ * 지금은 새로 붙은 단어만 아래에서 한 번 떠오른다. 움직임이 글자가 도착하는
+ * 그 순간에만 있고, 도착한 뒤에는 조용하다. 그라데이션은 AI 답변 카드와 같은
+ * 색을 정적으로 입혀 "아직 쓰는 중인 구간"을 색으로만 구분한다.
  *
- * key에 길이를 물리는 게 핵심이다. 글자가 늘 때마다 React가 새 노드로 보고
- * 애니메이션을 다시 재생한다. 같은 key면 한 번 재생하고 끝난다.
+ * 단어 단위로 자르고 key를 인덱스로 주는 게 핵심이다. 앞 단어들은 그대로
+ * 유지되고 새로 생긴 것만 마운트되므로 애니메이션이 한 번씩만 돈다. 글자
+ * 단위로 자르면 조사 하나에 낱글자가 따로 떠올라 산만하다.
  */
 function StreamText({ text, streaming }: { text: string; streaming: boolean }) {
   if (!streaming || text.length === 0) return <>{text}</>;
   const [settled, pending] = splitSettled(text);
   if (!pending) return <>{settled}</>;
-  const cut = Math.max(0, pending.length - TAIL);
+  /* 공백을 버리지 않고 조각으로 남긴다 — 없애면 줄바꿈 위치가 원문과 달라진다 */
+  const parts = pending.split(/(\s+)/);
   return (
     <>
       {settled}
       <span className="chatstream">
-        {pending.slice(0, cut)}
-        <i className="tk" key={text.length}>
-          {pending.slice(cut)}
-        </i>
+        {parts.map((part, index) =>
+          /^\s+$/.test(part) || !part ? (
+            part
+          ) : (
+            <i className="tw" key={index}>
+              {part}
+            </i>
+          ),
+        )}
       </span>
     </>
   );

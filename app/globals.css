@@ -15291,21 +15291,39 @@ select.in {
 
       띠는 **끝나지 않은 문장에만** 건다(범위는 StreamText가 가른다). 다 나온
       문장까지 물들여 두면 읽으려는 눈앞에서 글자가 계속 흔들린다. */
+/* 아직 쓰는 중인 구간 — 색으로만 구분한다.
+
+   띠가 좌우로 훑는 무한 애니메이션이었다. 읽으려는 글자가 계속 흔들려서
+   다 나올 때까지 기다리게 됐고(스트리밍의 목적과 반대다), background-position
+   애니메이션이라 매 프레임 본문을 다시 칠했다. 그라데이션은 남기되 세운다. */
 .chatbody .bub .chatstream {
-  background-color: color-mix(in srgb, var(--ink-2) 55%, transparent);
-  background-image: linear-gradient(
-    90deg,
-    transparent 38%,
-    #7c3aed 46%,
-    #d946ef 54%,
-    transparent 62%
-  );
-  background-size: 250% 100%;
-  background-repeat: no-repeat;
+  background-image: linear-gradient(100deg, #7c3aed, #d946ef 52%, #6366f1);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: aflive-sweep 1.8s linear infinite;
+}
+/* 새로 붙은 단어 — 아래에서 한 번 떠오른다.
+
+   inline-block인 이유는 transform이 인라인 상자에 안 먹기 때문이다. 다만
+   그러면 단어가 통째로 줄바꿈 단위가 되는데, 원래 단어 경계에서 끊기므로
+   결과는 같다.
+
+   blur는 넣지 않는다. filter는 스택 컨텍스트를 새로 만들어서, 부모의
+   background-clip: text로 입힌 그라데이션이 이 단어에서 끊긴다. */
+.chatbody .bub .chatstream .tw {
+  display: inline-block;
+  font-style: normal;
+  animation: tw-rise 0.34s var(--ease-out-soft) backwards;
+}
+@keyframes tw-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.34em);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .chatbody .bub p .tk {
   font-style: normal;
@@ -15318,6 +15336,7 @@ select.in {
     color: var(--ink-2);
     animation: none;
   }
+  .chatbody .bub .chatstream .tw,
   .chatbody .bub p .tk,
   .chatbody .bubrow,
   .chatchips button {
@@ -16324,6 +16343,14 @@ select.in {
 .chatbody .bub.bot.is-answering::after {
   /* 살아 있다는 신호면 충분하다 — 눈에 띄자고 진해지면 글을 읽는 데 든다 */
   opacity: 0.55;
+}
+/* 도는 건 아직 글자가 없을 때뿐이다.
+
+   생각 중에는 화면에 아무 움직임이 없어서 얼룩이 "살아 있다"를 맡는다.
+   그런데 글자가 나오기 시작하면 단어가 떠오르는 움직임이 이미 그 일을
+   한다. 둘이 겹치면 읽는 자리 뒤에서 배경이 계속 흘러 글이 흔들려 보이고,
+   background-position 애니메이션이라 매 프레임 다시 칠하는 값도 든다. */
+.chatbody .bub.bot.is-thinking::after {
   animation-play-state: running;
 }
 @keyframes aurora-spin {
