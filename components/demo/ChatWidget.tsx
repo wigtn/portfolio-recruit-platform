@@ -354,6 +354,10 @@ export function ChatWidget() {
   const { role, setRole } = useRole();
   const [open, setOpen] = useState(false);
   const [beckon, setBeckon] = useState(false);
+  /* 패널 등장이 끝났는가. 유리(backdrop-filter)는 이 뒤에 켠다.
+     이름이 glassOn인 이유는 settled가 이미 "화면이 자리 잡을 때까지
+     기다린다"는 함수라서다 — 같은 이름을 쓰면 그것을 가린다. */
+  const [glassOn, setGlassOn] = useState(false);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   /* 지금 돌고 있는 도구 이름. 실행 중에만 채워진다.
@@ -527,6 +531,16 @@ export function ChatWidget() {
     window.addEventListener(DEMO_OPEN_CHAT_EVENT, onOpen);
     return () => window.removeEventListener(DEMO_OPEN_CHAT_EVENT, onOpen);
   }, []);
+
+  useEffect(() => {
+    if (!open) {
+      setGlassOn(false);
+      return;
+    }
+    // 등장 애니메이션(0.28s)보다 한 박자 뒤
+    const timer = window.setTimeout(() => setGlassOn(true), 320);
+    return () => window.clearTimeout(timer);
+  }, [open]);
 
   /* 다른 패널이 열리면 물러난다. 겹치지 말아야 하는 건 펼쳐진 판이지
      버튼이 아니라서, 상대 fab을 숨기는 대신 이쪽이 접힌다. */
@@ -1578,6 +1592,14 @@ export function ChatWidget() {
         <div
           className={[
             "chatpanel",
+            /* 등장이 끝난 뒤에야 유리를 켠다.
+
+               패널은 화면 세로의 절반을 덮는다. 그 크기의 backdrop-filter를
+               들고 스케일 애니메이션을 하면, 매 프레임 그만한 면적을 다시
+               칠하고 다시 흐린다 — 열리는 0.3초가 가장 끊긴다.
+
+               애플이 쓰는 순서와 같다: 움직이는 동안은 싸게, 멈추면 제대로. */
+            glassOn ? "is-settled" : "",
             busy ? "is-thinking" : "",
             operating ? "is-operating" : "",
           ]

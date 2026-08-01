@@ -756,6 +756,39 @@ small,
   --dock-b: calc(var(--dock-base) + var(--tabbar-h) + var(--tabbar-gap));
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   움직이는 동안에는 싸게 — 애플 리퀴드 글래스가 쓰는 전략
+
+   애플은 흐린 배경을 캐시해 두고, 배경이 안 움직이면 다시 계산하지 않는다.
+   저해상도로 흐린 뒤 확대해 쓰기도 한다. 브라우저는 둘 다 우리에게 열어
+   주지 않는다 — CSS의 backdrop-filter는 요소가 움직이거나 그 뒤가 바뀌면
+   해당 영역을 전체 해상도로 다시 칠하고 다시 흐린다.
+
+   캐시를 못 만들면 값을 낮추는 수밖에 없다. 스크롤이 도는 동안 반경을
+   줄이고 손을 떼면 되돌린다. 움직이는 화면에서 흐림의 정도를 알아보는 눈은
+   없다 — 그건 멈춘 화면에서만 보인다.
+
+   is-moving-view는 MotionState가 문서 루트에 붙인다.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .is-moving-view .tabbar {
+    backdrop-filter: blur(4px) saturate(1.5);
+    -webkit-backdrop-filter: blur(4px) saturate(1.5);
+  }
+}
+/* 정착한 뒤의 유리 */
+.chatpanel.is-settled {
+  backdrop-filter: blur(10px) saturate(1.4);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+}
+
+/* 스크롤 중에는 챗 패널의 유리도 얇게. 패널은 화면 세로의 절반을 덮어서
+   반경 하나가 제일 크게 든다(실측 187,200px²) */
+.is-moving-view .chatpanel.is-settled {
+  backdrop-filter: blur(4px) saturate(1.3);
+  -webkit-backdrop-filter: blur(4px) saturate(1.3);
+}
+
 /* 탭바가 서는 폭. 헤더 주 메뉴가 두 행으로 접히는 지점과 같이 간다.
 
    폭만 보고 자리를 비우면 안 된다. 백오피스에는 탭바가 아예 렌더되지
@@ -836,6 +869,9 @@ small,
        뒤가 뭉개져 유리로 읽히고, saturate가 색을 살려 주는 몫이 더 크다. */
     backdrop-filter: blur(12px) saturate(1.8) contrast(1.04);
     -webkit-backdrop-filter: blur(12px) saturate(1.8) contrast(1.04);
+    /* 흐림만 바꾼다. 다른 속성까지 전환에 넣으면 스크롤 시작·끝마다
+       색과 그림자가 같이 흔들린다 */
+    transition: backdrop-filter 0.18s ease, -webkit-backdrop-filter 0.18s ease;
     box-shadow:
       /* 떠 있다는 것을 말하는 그림자 */
       0 8px 28px -6px rgba(16, 24, 40, 0.18),
@@ -15235,9 +15271,13 @@ select.in {
      스크롤은 그 안에서만 돈다 */
   height: min(560px, calc(100dvh - 150px));
   background: color-mix(in srgb, var(--card) 82%, transparent);
-  /* 14 → 10. 패널은 세로의 절반을 덮어서 반경 하나가 크게 든다 */
-  backdrop-filter: blur(10px) saturate(1.4);
-  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  /* 유리는 등장이 끝난 뒤에 켠다(.is-settled). 이 크기의 backdrop-filter를
+     들고 스케일 애니메이션을 하면 매 프레임 그만한 면적을 다시 칠하고 다시
+     흐린다 — 열리는 0.3초가 가장 끊긴다. 애플이 쓰는 순서와 같다:
+     움직이는 동안은 싸게, 멈추면 제대로. */
+  transition:
+    backdrop-filter 0.24s ease,
+    -webkit-backdrop-filter 0.24s ease;
   border: 1px solid color-mix(in srgb, var(--line-2) 70%, transparent);
   border-radius: 20px;
   corner-shape: squircle;
