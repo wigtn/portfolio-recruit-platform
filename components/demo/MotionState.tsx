@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 /**
  * 화면이 지금 움직이는 중인가를 문서에 표시한다.
@@ -24,6 +25,28 @@ import { useEffect } from "react";
 const IDLE_MS = 140;
 
 export function MotionState() {
+  const pathname = usePathname();
+
+  /* 화면을 옮기는 순간도 "움직이는 중"이다.
+
+     탭을 눌러 페이지가 갈릴 때 최악 프레임이 333ms까지 튄다(실측). 그
+     구간은 스타일 재계산과 재조정이 메인 스레드를 잡고 있는데, 하필
+     그때 화면에 고정된 판들이 전체 해상도로 다시 흐려진다.
+
+     스크롤과 같은 처방을 쓴다 — 전환이 끝날 때까지만 흐림을 얇게. */
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("is-moving-view");
+    const timer = window.setTimeout(
+      () => root.classList.remove("is-moving-view"),
+      420,
+    );
+    return () => {
+      window.clearTimeout(timer);
+      root.classList.remove("is-moving-view");
+    };
+  }, [pathname]);
+
   useEffect(() => {
     const root = document.documentElement;
     let timer = 0;
