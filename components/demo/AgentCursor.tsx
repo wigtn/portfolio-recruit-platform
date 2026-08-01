@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AiAvatar } from "@/components/AiFace";
 import {
   AGENT_DONE_EVENT,
   AGENT_EVENT,
@@ -57,17 +58,43 @@ export function AgentCursor() {
       }
     };
 
+    /** 커서·테두리·문구를 한꺼번에 거둔다 */
+    const clear = () => {
+      setRing(null);
+      setLabel("");
+      setPos(null);
+      last.current = null;
+    };
+
     const run = async (event: Event) => {
       const step = (event as CustomEvent<AgentStep>).detail;
       window.clearTimeout(hideTimer);
 
       const target = await find(step.selector);
-      if (!target || !alive) return;
+      /* 못 찾으면 거두고 끝낸다.
 
-      // 화면 밖이면 먼저 데려온다. 커서만 움직이면 빈 곳을 짚는다
+         예전에는 그냥 return이었다. 그런데 바로 위에서 hideTimer를 껐으므로,
+         이전 단계의 커서와 테두리가 지울 사람 없이 화면에 남았다 — "가이드가
+         끝났는데 커서가 그대로"의 정체다. 대상이 없으면 안내할 것도 없다. */
+      if (!target) {
+        clear();
+        return;
+      }
+      if (!alive) return;
+
+      /* 화면 밖이면 먼저 데려온다. 커서만 움직이면 빈 곳을 짚는다.
+
+         가로도 본다. 좁은 화면에서는 표나 탭이 옆으로 넘쳐서, 세로만 맞추면
+         커서가 화면 오른쪽 밖을 가리키고 테두리도 잘린다. */
       const before = target.getBoundingClientRect();
-      if (before.top < 80 || before.bottom > window.innerHeight - 80) {
-        target.scrollIntoView({ block: "center", behavior: "smooth" });
+      const offV = before.top < 80 || before.bottom > window.innerHeight - 80;
+      const offH = before.left < 8 || before.right > window.innerWidth - 8;
+      if (offV || offH) {
+        target.scrollIntoView({
+          block: "center",
+          inline: "nearest",
+          behavior: "smooth",
+        });
         await sleep(560);
       }
       if (!alive) return;
@@ -95,14 +122,21 @@ export function AgentCursor() {
       await sleep(TRAVEL_MS);
       if (!alive) return;
 
-      // 도착. 이제 짚는다
+      /* 도착. 이제 짚는다.
+
+         테두리를 뷰포트 안으로 자른다. 대상이 화면보다 넓거나(가로 스크롤
+         표) 한쪽 끝에 붙어 있으면, 대상 rect를 그대로 쓴 테두리가 화면 밖으로
+         나가 한쪽 변이 보이지 않는다. 잘린 테두리는 무엇을 가리키는지 못
+         알려 준다. */
       const pad = 8;
       const now = target.getBoundingClientRect();
+      const left = Math.max(4, now.left - pad);
+      const top = Math.max(4, now.top - pad);
       setRing({
-        top: now.top - pad,
-        left: now.left - pad,
-        width: now.width + pad * 2,
-        height: now.height + pad * 2,
+        top,
+        left,
+        width: Math.min(now.width + pad * 2, window.innerWidth - left - 4),
+        height: Math.min(now.height + pad * 2, window.innerHeight - top - 4),
       });
       setLabel(step.note ?? "");
       await sleep(SETTLE_MS);
@@ -122,11 +156,7 @@ export function AgentCursor() {
          고정 시간으로 어림하면 화면이 느린 날 설명이 먼저 나온다 */
       window.dispatchEvent(new CustomEvent(AGENT_DONE_EVENT));
 
-      hideTimer = window.setTimeout(() => {
-        setRing(null);
-        setLabel("");
-        setPos(null);
-      }, step.hold ?? 2600);
+      hideTimer = window.setTimeout(clear, step.hold ?? 2600);
     };
 
     window.addEventListener(AGENT_EVENT, run);
@@ -155,6 +185,9 @@ export function AgentCursor() {
         />
       ) : null}
 
+      {/* 말하는 주체가 보여야 한다. 화면 어딘가에 문구만 떠 있으면 그게
+          시스템 안내인지 챗봇이 하는 말인지 알 수 없다 — 챗봇 말풍선과 같은
+          얼굴을 달아 두면 "아까 그 챗봇이 지금 여기를 짚고 있다"로 읽힌다 */}
       {ring && label ? (
         <span
           className={below ? "agc-note" : "agc-note is-up"}
@@ -163,7 +196,8 @@ export function AgentCursor() {
             left: Math.max(12, Math.min(ring.left, window.innerWidth - 300)),
           }}
         >
-          {label}
+          <AiAvatar size="sm" live />
+          <b>{label}</b>
         </span>
       ) : null}
 

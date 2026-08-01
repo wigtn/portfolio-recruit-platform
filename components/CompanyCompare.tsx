@@ -101,17 +101,17 @@ function Picker({
             value: c.slug,
             label: c.name,
             sub: `${c.industry}, ${c.region}`,
+            // 이름이 ◇◇·▓▓처럼 비슷해 글자만으로는 매번 읽어야 한다
+            media: c.logo,
           }))}
         />
       </span>
       <small>
         {value.industry}, {value.region}
       </small>
-      {/* 어포던스 — 이름이 곧 셀렉트라는 걸 모르는 사람을 위한 한 줄 */}
-      <span className="cmp-pickhint">
-        <Icon name="swap" />
-        눌러서 회사 바꾸기
-      </span>
+      {/* "눌러서 회사 바꾸기" 한 줄은 뺐다(사용자 지시). 셀렉트에 이미 화살표가
+          있어 누를 수 있다는 건 그것으로 전해지고, 두 칸에 같은 안내가 나란히
+          붙으면 비교표보다 안내가 먼저 읽힌다. */}
     </div>
   );
 }

@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@/components/Icon";
 
@@ -17,6 +23,14 @@ export type SelectOption = {
   value: string;
   label: string;
   sub?: string;
+  /**
+   * 항목 왼쪽에 붙는 그림 주소(회사 로고 등).
+   *
+   * 글자만 늘어놓으면 ◇◇테크·▓▓상사처럼 형태가 비슷한 이름을 고를 때
+   * 매번 읽어야 한다. 로고는 읽지 않고 알아보는 표식이라, 목록에서 찾는
+   * 속도가 달라진다.
+   */
+  media?: string;
 };
 
 export function Select({
@@ -127,6 +141,28 @@ export function Select({
       ?.scrollIntoView({ block: "nearest" });
   }, [active, open]);
 
+  /* 열린 뒤 실제 폭으로 위치를 고쳐 잡는다.
+
+     place()는 목록을 그리기 전에 위치를 정하므로 폭을 짐작할 수밖에 없다
+     (트리거 폭과 180px 중 큰 값). 그런데 항목에 로고와 업종 줄이 들어가면
+     실제로는 그보다 넓어진다 — 390px 화면에서 left 198에 272px짜리가 서서
+     오른쪽 80px이 화면 밖으로 나갔다.
+
+     짐작을 정교하게 만드는 대신, 그려진 뒤 한 번 재서 넘친 만큼 되민다.
+     내용이 무엇이든 맞는 방법이다. */
+  useLayoutEffect(() => {
+    if (!open) return;
+    const el = listRef.current;
+    if (!el) return;
+    /* offsetWidth를 쓴다. 이 드롭다운은 스프링 스케일로 등장하는데,
+       getBoundingClientRect는 그 transform이 반영된 "지금 보이는" 크기라
+       등장 도중에 재면 실제보다 좁게 나온다. offsetWidth는 레이아웃 폭이라
+       애니메이션과 무관하다. */
+    const left = parseFloat(el.style.left) || 0;
+    const over = left + el.offsetWidth - (window.innerWidth - 12);
+    if (over > 0) el.style.left = `${Math.max(12, left - over)}px`;
+  }, [open, needle]);
+
   const onKeyDown = (event: React.KeyboardEvent) => {
     if (!open) {
       if (["Enter", " ", "ArrowDown", "ArrowUp"].includes(event.key)) {
@@ -180,10 +216,20 @@ export function Select({
               role="listbox"
               aria-label={ariaLabel}
               style={{
-                left: Math.min(pos.x, window.innerWidth - pos.width - 12),
+                /* 양쪽 다 잡는다.
+                   min만 있으면 오른쪽 넘침은 막아도 왼쪽으로 밀려 나가는 건
+                   못 막는다 — 좁은 화면에서 트리거가 왼쪽에 붙어 있고 목록이
+                   더 넓으면 계산 결과가 음수가 된다. */
+                left: Math.max(
+                  12,
+                  Math.min(pos.x, window.innerWidth - pos.width - 12),
+                ),
                 top: pos.up ? undefined : pos.y,
                 bottom: pos.up ? window.innerHeight - pos.y : undefined,
                 minWidth: pos.width,
+                /* minWidth만 두면 내용이 길 때(로고+이름+업종) 그만큼 늘어나
+                   화면 밖으로 나간다. 넘어갈 자리에 상한을 둔다. */
+                maxWidth: "calc(100vw - 24px)",
               }}
             >
               {searchable ? (
@@ -225,6 +271,11 @@ export function Select({
                     btnRef.current?.focus();
                   }}
                 >
+                  {option.media ? (
+                    <span className="ds-opt-media" aria-hidden>
+                      <img src={option.media} alt="" />
+                    </span>
+                  ) : null}
                   <span className="ds-opt-main">
                     {option.label}
                     {option.sub ? <small>{option.sub}</small> : null}

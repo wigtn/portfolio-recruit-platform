@@ -8,8 +8,10 @@ import { Icon } from "@/components/Icon";
 import { useRole } from "@/lib/demo/role";
 import { resetDemoExperience } from "@/lib/demo/progress";
 import {
+  announcePanel,
   DEMO_FEATURES,
   DEMO_OPEN_CHAT_EVENT,
+  DEMO_PANEL_OPEN_EVENT,
   DEMO_PROGRESS_EVENT,
   loadDemoTheme,
   loadProgress,
@@ -86,7 +88,17 @@ export function DemoGuideWidget() {
 
     const sync = () => setProgress(loadProgress());
     window.addEventListener(DEMO_PROGRESS_EVENT, sync);
-    return () => window.removeEventListener(DEMO_PROGRESS_EVENT, sync);
+    /* 챗봇이 열리면 이쪽이 접힌다. 버튼은 양쪽 다 자리를 지킨다 — 한쪽을
+       여는 순간 다른 쪽으로 가는 길이 사라지면 안 된다 */
+    const onPanel = (event: Event) => {
+      const owner = (event as CustomEvent<{ owner: string }>).detail?.owner;
+      if (owner !== "guide") setOpen(false);
+    };
+    window.addEventListener(DEMO_PANEL_OPEN_EVENT, onPanel);
+    return () => {
+      window.removeEventListener(DEMO_PROGRESS_EVENT, sync);
+      window.removeEventListener(DEMO_PANEL_OPEN_EVENT, onPanel);
+    };
   }, []);
 
   useEffect(() => {
@@ -155,7 +167,7 @@ export function DemoGuideWidget() {
             >
               <b>{FEATURES.length}가지를 전부 직접 확인하셨네요</b>
               <span>
-                같은 모듈로 당신의 업종에 맞게 만들어 드립니다
+                여기까지 동작하는 상태로 만들어 드려요
                 <Icon name="arrow" />
               </span>
             </Link>
@@ -307,7 +319,11 @@ export function DemoGuideWidget() {
         aria-expanded={open}
         aria-label={open ? "핵심 기능 가이드 닫기" : "핵심 기능 가이드 열기"}
         onClick={() => {
-          setOpen((value) => !value);
+          setOpen((value) => {
+            // 열 때만 알린다. 닫을 때 알리면 챗봇이 괜히 한 번 더 닫힌다
+            if (!value) announcePanel("guide");
+            return !value;
+          });
           setCoach(false);
           window.localStorage.setItem("wigtn-demo-coach-guide", "1");
         }}

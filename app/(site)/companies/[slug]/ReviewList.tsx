@@ -28,7 +28,7 @@ export function ReviewList({
   const guest = role === "guest";
 
   const [first, ...rest] = reviews;
-  const { count, sentinelRef, more, done } = useInfiniteCount(rest.length, {
+  const { count, sentinelRef, more, done, pending } = useInfiniteCount(rest.length, {
     step: 8,
     initial: 8,
   });
@@ -58,6 +58,8 @@ export function ReviewList({
           label="리뷰"
           sentinelRef={sentinelRef}
           onMore={more}
+
+          pending={pending}
         />
       ) : null}
     </>

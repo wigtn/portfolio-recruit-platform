@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
 import { TAB_NAV, isActive } from "@/lib/demo/nav";
 
@@ -22,6 +22,14 @@ import { TAB_NAV, isActive } from "@/lib/demo/nav";
  */
 export function TabBar() {
   const pathname = usePathname();
+  /* 유리알이 흐르는 동안에만 참. 액체 표현(굴절 렌즈·색분산 테·환경 반사)과
+     탭바의 탄력·림라이트가 이 값에 걸린다.
+
+     멈춰 있을 때까지 유리로 두면 두 가지가 나빠진다. 눈에는, 아무 일도
+     없는데 계속 반짝이는 판이 남아 시선을 끈다. 성능에는, backdrop-filter와
+     background-position 애니메이션이 매 프레임 돈다. 애플의 탭바도 이동
+     중에만 액체고 멈추면 평범한 색이다. */
+  const [moving, setMoving] = useState(false);
 
   /* 백오피스에는 세우지 않는다. 이미 사이드바와 버거 메뉴가 있어서 같은
      목적지가 두 벌이 되고, 탭 다섯 칸으로 담을 수 있는 구조도 아니다 */
@@ -35,7 +43,10 @@ export function TabBar() {
   );
 
   return (
-    <nav className="tabbar" aria-label="주요 화면">
+    <nav
+      className={moving ? "tabbar is-moving" : "tabbar"}
+      aria-label="주요 화면"
+    >
       <ul
         style={
           {
@@ -44,7 +55,7 @@ export function TabBar() {
           } as React.CSSProperties
         }
       >
-        <LiquidPill activeIndex={activeIndex} />
+        <LiquidPill activeIndex={activeIndex} onMoving={setMoving} />
         {TAB_NAV.map((item) => {
           const on = isActive(pathname, item.match);
           return (
@@ -74,7 +85,14 @@ export function TabBar() {
  * 앞으로 쏠린다(마찰). 감쇠는 임계 근처라 도착하면 조용히 멎는다 —
  * 멈춘 뒤 반복해 흔들리는 잔진동은 두지 않는다(사용자 지시).
  */
-function LiquidPill({ activeIndex }: { activeIndex: number }) {
+function LiquidPill({
+  activeIndex,
+  onMoving,
+}: {
+  activeIndex: number;
+  /** 흐르는 동안만 true. 액체 표현과 탭바 탄력이 여기 걸린다 */
+  onMoving: (moving: boolean) => void;
+}) {
   const pillRef = useRef<HTMLLIElement>(null);
   const beadRef = useRef<HTMLElement>(null);
   const sim = useRef({ x: -1, v: 0, raf: 0 });
@@ -95,6 +113,7 @@ function LiquidPill({ activeIndex }: { activeIndex: number }) {
       pill.style.transform = `translateX(${target * 100}%)`;
       bead.style.transform = "";
       bead.style.setProperty("--envx", String(target));
+      onMoving(false);
     };
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
       still();
@@ -107,6 +126,7 @@ function LiquidPill({ activeIndex }: { activeIndex: number }) {
     }
 
     cancelAnimationFrame(s.raf);
+    onMoving(true);
     let last = performance.now();
     const tick = (now: number) => {
       // 프레임이 밀려도 폭주하지 않게 dt 상한 — 물리 적분의 기본 안전장치
@@ -133,8 +153,13 @@ function LiquidPill({ activeIndex }: { activeIndex: number }) {
       s.raf = requestAnimationFrame(tick);
     };
     s.raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(s.raf);
-  }, [activeIndex]);
+    /* 도중에 언마운트되면 still()이 못 돌아 is-moving이 남는다 — 유리와
+       탄력이 켜진 채로 굳는다. 정리 시점에 반드시 내린다 */
+    return () => {
+      cancelAnimationFrame(s.raf);
+      onMoving(false);
+    };
+  }, [activeIndex, onMoving]);
 
   return (
     <li
