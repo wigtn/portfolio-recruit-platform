@@ -77,7 +77,9 @@ test("헤더 통합 검색은 추천어와 검색 결과를 패널에서 탐색�
   const trigger = page.getByRole("button", { name: "회사, 글 검색 열기" });
   await trigger.click();
 
-  const dialog = page.getByRole("dialog", { name: "무엇을 찾고 계신가요?" });
+  /* 넓은 화면에서는 헤더 안에서 자라는 입력칸이다(모달이 아니다). 제목
+     블록은 좁은 화면 시트에만 있어서, 여기서는 요소의 aria-label로 잡는다. */
+  const dialog = page.getByRole("dialog", { name: "통합 검색" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("추천 검색어")).toBeVisible();
 

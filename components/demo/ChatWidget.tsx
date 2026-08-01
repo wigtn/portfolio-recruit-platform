@@ -263,6 +263,15 @@ const MAX_STEPS = 6;
    라우트가 도구 판단 12초, 답변 시작 15초를 스스로 재므로 그 뒤에 선다.
    여기가 먼저 끊으면 멀쩡한 응답을 죽인다. */
 const FIRST_BYTE_MS = 30000;
+
+/**
+ * 한 턴이 끝나야 하는 시각.
+ *
+ * FIRST_BYTE_MS는 응답이 시작되는지만 본다. 시작된 뒤 스트림이 안 닫히거나
+ * 에이전트 루프가 한 걸음에서 멈추면 아무도 끊지 않아 로딩이 영원히 돈다.
+ * 도구를 여러 번 부르는 턴도 있어서 넉넉히 두되, 상한은 반드시 있어야 한다.
+ */
+const TURN_MS = 90000;
 /** 답을 기다리는 동안 세워 두는 걸음. 실제 도구가 아니라 표시용이다 */
 const WRAP_STEP = "__wrap";
 
@@ -345,6 +354,10 @@ export function ChatWidget() {
   const { role, setRole } = useRole();
   const [open, setOpen] = useState(false);
   const [beckon, setBeckon] = useState(false);
+  /* 패널 등장이 끝났는가. 유리(backdrop-filter)는 이 뒤에 켠다.
+     이름이 glassOn인 이유는 settled가 이미 "화면이 자리 잡을 때까지
+     기다린다"는 함수라서다 — 같은 이름을 쓰면 그것을 가린다. */
+  const [glassOn, setGlassOn] = useState(false);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   /* 지금 돌고 있는 도구 이름. 실행 중에만 채워진다.
@@ -518,6 +531,16 @@ export function ChatWidget() {
     window.addEventListener(DEMO_OPEN_CHAT_EVENT, onOpen);
     return () => window.removeEventListener(DEMO_OPEN_CHAT_EVENT, onOpen);
   }, []);
+
+  useEffect(() => {
+    if (!open) {
+      setGlassOn(false);
+      return;
+    }
+    // 등장 애니메이션(0.28s)보다 한 박자 뒤
+    const timer = window.setTimeout(() => setGlassOn(true), 320);
+    return () => window.clearTimeout(timer);
+  }, [open]);
 
   /* 다른 패널이 열리면 물러난다. 겹치지 말아야 하는 건 펼쳐진 판이지
      버튼이 아니라서, 상대 fab을 숨기는 대신 이쪽이 접힌다. */
@@ -1386,6 +1409,21 @@ export function ChatWidget() {
     const controller = new AbortController();
     abort.current = controller;
 
+    /* 턴 전체에 상한을 건다.
+
+       askServer의 데드라인은 **첫 응답까지만** 본다. 헤더가 도착하면
+       타이머를 지우므로, 그 뒤 본문 스트림이 안 닫히거나 에이전트 루프가
+       한 걸음에서 멈추면 아무도 끊지 않는다 — 로딩이 영원히 돈다. 실제로
+       거절 답변 뒤에 그 상태로 남는 걸 봤다.
+
+       무엇이 원인이든 여기서 끝난다. 사용자에게 "멈춘 화면"을 남기는 것보다
+       "오래 걸려서 멈췄다"고 말하는 편이 낫다. */
+    let timedOut = false;
+    const turnGuard = window.setTimeout(() => {
+      timedOut = true;
+      if (abort.current === controller) controller.abort();
+    }, TURN_MS);
+
     try {
       const response = await askServer(
         { turns, role: roleNow.current },
@@ -1496,6 +1534,15 @@ export function ChatWidget() {
       if (controller.signal.aborted) {
         write.put(acc);
         write.seal({ stopped: true });
+        /* 사용자가 멈춘 것과 시간이 다 된 것은 다르다. 눌러서 멈춘 건
+           본인이 아니까 조용히 끝내고, 시간이 다 된 건 왜 끊겼는지 말한다 */
+        if (timedOut) {
+          push({
+            role: "bot",
+            text: "답이 오래 걸려서 여기서 멈췄어요. 다시 물어봐 주세요.",
+            notice: "timeout",
+          });
+        }
         return;
       }
 
@@ -1505,11 +1552,21 @@ export function ChatWidget() {
       }
       write.seal();
     } catch {
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted) {
+        if (timedOut) {
+          push({
+            role: "bot",
+            text: "답이 오래 걸려서 여기서 멈췄어요. 다시 물어봐 주세요.",
+            notice: "timeout",
+          });
+        }
+        return;
+      }
       await scripted();
     } finally {
       /* 어떤 길로 끝나든 흐르던 말풍선은 여기서 닫힌다. 위쪽 분기가 하나
          빠져도 로더가 남지 않는 유일한 지점이다 */
+      window.clearTimeout(turnGuard);
       write.seal();
       setRunning(null);
       if (abort.current === controller) abort.current = null;
@@ -1535,6 +1592,14 @@ export function ChatWidget() {
         <div
           className={[
             "chatpanel",
+            /* 등장이 끝난 뒤에야 유리를 켠다.
+
+               패널은 화면 세로의 절반을 덮는다. 그 크기의 backdrop-filter를
+               들고 스케일 애니메이션을 하면, 매 프레임 그만한 면적을 다시
+               칠하고 다시 흐린다 — 열리는 0.3초가 가장 끊긴다.
+
+               애플이 쓰는 순서와 같다: 움직이는 동안은 싸게, 멈추면 제대로. */
+            glassOn ? "is-settled" : "",
             busy ? "is-thinking" : "",
             operating ? "is-operating" : "",
           ]
@@ -1542,7 +1607,11 @@ export function ChatWidget() {
             .join(" ")}
         >
           <div className="chathead">
-            <AiAvatar size="sm" thinking={playing} />
+            {/* 머리 줄 아바타는 정적이다. 생각 중이라는 사실은 본문의
+                '읽고 있어요' 줄이 이미 말한다 — 같은 화면에서 아바타 둘이
+                동시에 돌면 값만 두 배로 든다(측정에서 .aiav.sm 2개가
+                동시에 도는 것으로 잡혔다) */}
+            <AiAvatar size="sm" />
             <div className="ct">
               <b>상담 챗봇</b>
               <span>

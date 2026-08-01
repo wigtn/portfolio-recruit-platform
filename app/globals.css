@@ -756,6 +756,49 @@ small,
   --dock-b: calc(var(--dock-base) + var(--tabbar-h) + var(--tabbar-gap));
 }
 
+/* 화면 밖 요소를 content-visibility: auto로 건너뛰는 길을 시도했다가 걷어냈다.
+
+   Paint는 확실히 줄었다(597 → 257ms). 그런데 UpdateLayoutTree가 그만큼
+   늘었다(902 → 1068ms) — 요소가 뷰포트를 드나들 때마다 스타일을 다시
+   계산하기 때문이다. 탭 전환 fps는 23.7 → 21.0으로 오히려 내려갔다.
+
+   목록이 수백 개라면 이야기가 달랐겠지만 여기는 수십 개다. 건너뛰어
+   버는 것보다 드나드는 값이 크다. 기록으로 남긴다 — 목록이 훨씬 길어지면
+   다시 볼 만하다. */
+
+/* ═══════════════════════════════════════════════════════════════════════
+   움직이는 동안에는 싸게 — 애플 리퀴드 글래스가 쓰는 전략
+
+   애플은 흐린 배경을 캐시해 두고, 배경이 안 움직이면 다시 계산하지 않는다.
+   저해상도로 흐린 뒤 확대해 쓰기도 한다. 브라우저는 둘 다 우리에게 열어
+   주지 않는다 — CSS의 backdrop-filter는 요소가 움직이거나 그 뒤가 바뀌면
+   해당 영역을 전체 해상도로 다시 칠하고 다시 흐린다.
+
+   캐시를 못 만들면 값을 낮추는 수밖에 없다. 스크롤이 도는 동안 반경을
+   줄이고 손을 떼면 되돌린다. 움직이는 화면에서 흐림의 정도를 알아보는 눈은
+   없다 — 그건 멈춘 화면에서만 보인다.
+
+   is-moving-view는 MotionState가 문서 루트에 붙인다.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .is-moving-view .tabbar {
+    backdrop-filter: blur(4px) saturate(1.5);
+    -webkit-backdrop-filter: blur(4px) saturate(1.5);
+  }
+}
+/* 정착한 뒤의 유리 */
+.chatpanel.is-settled {
+  backdrop-filter: blur(10px) saturate(1.4);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+}
+
+/* 스크롤 중에는 챗 패널의 유리도 얇게. 패널은 화면 세로의 절반을 덮어서
+   반경 하나가 제일 크게 든다(실측 187,200px²) */
+.is-moving-view .chatpanel.is-settled {
+  backdrop-filter: blur(4px) saturate(1.3);
+  -webkit-backdrop-filter: blur(4px) saturate(1.3);
+}
+
 /* 탭바가 서는 폭. 헤더 주 메뉴가 두 행으로 접히는 지점과 같이 간다.
 
    폭만 보고 자리를 비우면 안 된다. 백오피스에는 탭바가 아예 렌더되지
@@ -831,8 +874,14 @@ small,
     background: color-mix(in srgb, var(--card) 62%, transparent);
     /* 유리알과 같은 굴절 문법 — 대비까지 올려 뒤를 지나는 콘텐츠 색이
        판 위에 실제로 고인다. 주변이 바뀌면 판 색도 따라 바뀐다 */
-    backdrop-filter: blur(20px) saturate(1.95) contrast(1.06);
-    -webkit-backdrop-filter: blur(20px) saturate(1.95) contrast(1.06);
+    /* 반경을 20 → 12로 낮췄다. backdrop-filter 비용은 반경에 거의 비례하는데,
+       이 판은 화면 폭을 다 쓰는 데다 아래에 콘텐츠가 계속 흐른다. 12px에서도
+       뒤가 뭉개져 유리로 읽히고, saturate가 색을 살려 주는 몫이 더 크다. */
+    backdrop-filter: blur(12px) saturate(1.8) contrast(1.04);
+    -webkit-backdrop-filter: blur(12px) saturate(1.8) contrast(1.04);
+    /* 흐림만 바꾼다. 다른 속성까지 전환에 넣으면 스크롤 시작·끝마다
+       색과 그림자가 같이 흔들린다 */
+    transition: backdrop-filter 0.18s ease, -webkit-backdrop-filter 0.18s ease;
     box-shadow:
       /* 떠 있다는 것을 말하는 그림자 */
       0 8px 28px -6px rgba(16, 24, 40, 0.18),
@@ -843,52 +892,18 @@ small,
       inset 0 -1px 0 rgba(255, 255, 255, 0.28);
   }
 
-  /* 환경 반사 — 판 표면을 스치는 주변색 띠(보라·시안·핑크). 판은 고정돼
-     있지만 환경(콘텐츠)은 스크롤로 움직인다 — 그만큼 반사도 흘러야 물리가
-     맞는다. 스크롤 진행도가 곧 반사 위치다(지원 밖 브라우저는 정지 반사) */
-  .tabbar::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    corner-shape: squircle;
-    background: linear-gradient(
-      104deg,
-      transparent 4%,
-      rgba(255, 255, 255, 0.34) 12%,
-      color-mix(in srgb, var(--accent) 30%, transparent) 20%,
-      transparent 32%,
-      rgba(103, 232, 249, 0.22) 55%,
-      transparent 63%,
-      rgba(240, 171, 252, 0.2) 82%,
-      rgba(255, 255, 255, 0.25) 90%,
-      transparent 96%
-    );
-    background-size: 260% 100%;
-    background-position: 30% 50%;
-    opacity: 0.5;
-    mix-blend-mode: soft-light;
-    pointer-events: none;
-  }
-  @supports (animation-timeline: scroll()) {
-    .tabbar::after {
-      animation: tabbar-sheen linear both;
-      animation-timeline: scroll(root);
-    }
-  }
-  @keyframes tabbar-sheen {
-    from {
-      background-position: 0% 50%;
-    }
-    to {
-      background-position: 100% 50%;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .tabbar::after {
-      animation: none;
-    }
-  }
+  /* 환경 반사 띠(::after)는 걷어냈다.
+
+     스크롤에 따라 판 위를 흐르는 색띠였다. 예뻤지만 값이 컸다 — 판 전체를
+     덮는 레이어에 mix-blend-mode: soft-light가 걸려 있어서, 블렌드가 그
+     아래(backdrop-filter로 이미 흐려진 배경)를 매번 다시 읽는다.
+
+     background-position을 transform으로 바꿔 페인트를 줄여 보려 했는데
+     되레 나빠졌다. 요소를 260%로 키워야 해서 블렌드 면적이 2.6배가 됐다.
+     측정에서 이것 하나 끄는 것이 +7.3fps로 단일 최대였다(6배 스로틀).
+
+     탭바에는 이미 유리 판(backdrop-filter), 굴절 테두리(::before), 그리고
+     옮겨 다니는 유리알이 있다. 넷째 층까지 둘 이유가 없다. */
 
   /* 가장자리 굴절. 테두리 자체가 위아래로 밝기가 달라야 두께가 읽힌다 */
   .tabbar::before {
@@ -1014,7 +1029,18 @@ small,
     will-change: transform;
   }
 
-  /* ── 흐르는 동안에만 액체 ── */
+  /* ── 흐르는 동안에만 액체 ──
+
+     여기서 backdrop-filter를 켜지 않는다.
+
+     탭을 바꾸는 그 순간은 라우팅이 메인 스레드를 잡고 있는 구간이다(실측:
+     라우팅만으로 최악 프레임 333ms). 하필 그때 blur를 새로 켜면 합성 레이어가
+     다시 만들어지면서 10fps를 더 깎는다 — 연출이 가장 잘 보여야 할 순간에
+     화면이 가장 끊긴다.
+
+     유리 느낌은 뒤를 흐리지 않고도 낸다. 밝은 하이라이트와 색분산 테,
+     그리고 살짝 비치는 반투명이면 눈은 유리로 읽는다. 실제로 뒤를 흐리는
+     것과의 차이는 움직이는 0.3초 동안 알아채기 어렵다. */
   .tabbar.is-moving .tabbar-pill .bead {
     /* 유리로 바뀌는 건 빨라야 한다. 이동이 0.3초대인데 전환도 0.3초면
        유리가 다 켜지기 전에 도착해 버린다. 되돌아갈 때만 천천히 */
@@ -1031,11 +1057,6 @@ small,
         rgba(255, 255, 255, 0.07) 46%,
         color-mix(in srgb, var(--accent) 15%, transparent)
       );
-    /* 굴절 렌즈 — 채도·대비를 올려 뒤에 깔린 색(콘텐츠·배너)이 알 안에
-       실제로 고이게 한다. 주변이 바뀌면 알 색도 따라 바뀐다 */
-    backdrop-filter: blur(7px) saturate(1.9) contrast(1.08) brightness(1.05);
-    -webkit-backdrop-filter: blur(7px) saturate(1.9) contrast(1.08)
-      brightness(1.05);
     box-shadow:
       0 3px 9px -2px color-mix(in srgb, var(--accent) 30%, transparent),
       inset 0 1px 0 rgba(255, 255, 255, 0.85),
@@ -1110,9 +1131,9 @@ small,
   .tabbar.is-moving .tabbar-pill .bead::before {
     opacity: 1;
   }
-  .tabbar.is-moving .tabbar-pill .bead::after {
-    opacity: 0.32;
-  }
+  /* 환경 반사(::after)는 켜지 않는다. --envx가 매 프레임 background-position을
+     바꾸는데, 그건 합성으로 못 넘어가는 페인트 속성이다. 라우팅이 이미
+     메인 스레드를 잡고 있는 구간에서 한 겹 더 얹을 이유가 없다. */
   /* 탭에 없는 화면(글 상세 등)에서는 유리알이 갈 곳이 없다 — 소리 없이 사라진다 */
   .tabbar-pill.is-off {
     opacity: 0;
@@ -1326,11 +1347,9 @@ small,
   }
 }
 @media (max-width: 560px) {
-  .footer .ftop {
-    grid-template-columns: 1fr;
-    /* 접힌 상태에서는 제목 세 줄이라 간격이 넓으면 허전하다 */
-    gap: 2px;
-  }
+  /* 열 수와 간격은 여기서 정하지 않는다. 같은 폭 조건의 블록이 파일
+     뒤쪽(10700 부근)에도 있어서, 여기서 잡아 봐야 그쪽이 덮는다.
+     실제로 그렇게 2열로 되돌아가 깨져 있었다 — 정본은 뒤쪽 하나로 둔다. */
 
   /* ── 여기서만 접힌다 ──
      셋이 다 펼쳐지면 푸터가 화면 두 개 분량이다. 여기까지 내려온 사람이
@@ -1343,7 +1362,13 @@ small,
     padding: 2px 0 12px;
   }
   .fcol[open] > .flinks {
+    /* 방향을 반드시 같이 준다.
+
+       display: flex만 주면 기본이 row라 링크가 한 줄로 다 붙는다 —
+       "커뮤니티회사 리뷰회사 비교채용공고실적 인증"으로 보였다. 원래 이
+       목록은 세로였는데, 접기를 넣으면서 display만 되살리고 방향을 잃었다. */
     display: flex;
+    flex-direction: column;
   }
   .fcol > summary {
     display: flex;
@@ -3191,6 +3216,17 @@ select:focus-visible,
   min-width: 640px;
   table-layout: auto;
 }
+/* 끝까지 밀었을 때 마지막 열이 벽에 붙지 않게.
+
+   좁은 화면에서 오른쪽 끝으로 스크롤하면 마지막 열이 컨테이너 모서리에
+   딱 붙어 잘린 것처럼 보였다. 스크롤이 끝났는지 더 있는지도 구분이 안 된다.
+   양끝에 셀 하나 몫의 숨 쉴 자리를 준다 — 끝에 닿았다는 신호가 된다. */
+.tablecard .dtable > * > tr > *:last-child {
+  padding-right: 18px;
+}
+.tablecard .dtable > * > tr > *:first-child {
+  padding-left: 14px;
+}
 
 @media (max-width: 700px) {
   /* CTA 띠 — 40px 패딩이 좁은 화면에선 내용을 밀어낸다 */
@@ -3215,6 +3251,14 @@ select:focus-visible,
   }
 }
 
+/* 폼 안의 셀렉트는 옆 칸들과 폭을 맞춘다.
+
+   .ds-select는 inline-flex라 내용만큼만 넓어진다. 이름·연락처·회사는
+   전폭 입력칸인데 관심 분야만 짧아서, 그 줄만 들여쓴 것처럼 보였다. */
+.formcard .ds-select {
+  width: 100%;
+}
+
 /* 제출 줄 — 안내 위, 버튼 아래. 좌우로 벌려 두면 좁은 화면에서 줄바꿈
    지점에 따라 버튼이 옮겨 다닌다. 버튼은 폭을 고정해 글자가 "전송 중…"으로
    짧아져도 자리가 밀리지 않게 한다. */
@@ -3229,6 +3273,12 @@ select:focus-visible,
   line-height: 1.5;
 }
 .formsubmit-btn {
+  display: inline-flex;
+  align-items: center;
+  /* 버튼이 전폭이라 글자가 왼쪽에 붙어 보였다. .btn이 기본으로 가운데를
+     잡아 주지 않는 경우가 있어 여기서 못 박는다 */
+  justify-content: center;
+  text-align: center;
   width: 100%;
   min-height: 46px;
   font-size: 14.5px;
@@ -3263,36 +3313,64 @@ select:focus-visible,
    통합 검색 모달 — 헤더 아이콘 버튼과 히어로 인라인 검색의 역할을 분리한다.
    ═══════════════════════════════════════════════════════════════════════ */
 /* ═══════════════════════════════════════════════════════════════════════
-   통합 검색 — 헤더에서 자란다
+   통합 검색 — 폭에 따라 다른 물건이 된다
 
-   모달이었다. 화면 가운데를 덮고 뒤를 어둡게 했다. 검색 하나에 그만한
-   무게를 두면 "보던 화면에서 벗어났다"는 신호가 되는데, 검색은 보던 것을
-   두고 잠깐 들르는 일이다. 그래서 아이콘 자리에서 입력칸이 옆으로 자란다.
+   넓은 화면에서는 헤더 안에서 자란다. 돋보기가 왼쪽으로 밀리고 그 오른쪽으로
+   입력칸이 열린다. 검색 하나에 화면 전체를 덮으면 "보던 것에서 벗어났다"는
+   신호가 되는데, 검색은 보던 화면을 두고 잠깐 들르는 일이다.
 
-   좁은 화면은 사정이 다르다. 입력에 포커스가 가면 키패드가 아래 절반을
-   먹는데, 가운데 정렬이면 그 아래로 밀려 정작 입력칸이 가린다. 위에 붙인다.
+   좁은 화면에서는 인라인으로 열 폭이 안 나온다. 그렇다고 가운데 모달로 두면
+   키패드가 아래 절반을 먹으면서 입력칸이 그 아래로 밀려 가린다. 위에 붙인다.
    ═══════════════════════════════════════════════════════════════════════ */
 .gsearch-shell {
   position: relative;
   display: flex;
   align-items: center;
 }
-/* 펼쳐지면 버튼은 모습을 감추되 **자리는 지킨다.**
 
-   display: none으로 지웠더니 패널 좌표를 잡을 기준이 사라졌다 — 버튼 rect가
-   0이 되면서 패널이 화면 왼쪽 밖(x=-420)으로 나갔다. 헤더 배치도 같이
-   흔들린다. visibility면 자리와 크기가 남아 앵커 계산이 계속 맞는다. */
+/* ── 넓은 화면: 헤더 안에서 자라는 입력칸 ── */
+.gsearch-inline {
+  display: flex;
+  align-items: center;
+  /* 아이콘 자리에서 시작해 오른쪽으로 뻗는다. absolute라 헤더의 다른
+     요소를 밀지 않는다 — 열 때마다 로고와 알림이 흔들리면 그게 더 거슬린다 */
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 70;
+  animation: gsearch-open 0.26s var(--ease-out-soft);
+  transform-origin: 100% 50%;
+}
+/* 열려 있는 동안 돋보기 버튼은 자리를 지킨 채 숨는다. 입력칸 안에 같은
+   돋보기가 있어서, 둘이 같이 보이면 아이콘이 두 개가 된다 */
 .gsearch-shell.is-open .gsearch {
   visibility: hidden;
 }
-/* 패널은 body로 포털된다(헤더의 backdrop-filter가 fixed 기준을 바꾼다).
-   좌표는 JS가 트리거 rect로 잡아 인라인으로 준다 */
-.gsearch-panel.is-anchored {
-  position: fixed;
-  z-index: 70;
+@keyframes gsearch-open {
+  from {
+    opacity: 0;
+    /* 폭만 접었다 편다. 아이콘이 있던 44px 자리에서 뻗어 나오는 비율 */
+    transform: translateY(-50%) scaleX(0.16);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scaleX(1);
+  }
 }
-.gsearch-inner {
-  width: min(420px, calc(100vw - 40px));
+.gsearch-inline .search-modal-input {
+  width: 300px;
+  margin: 0;
+}
+/* 결과는 입력칸 아래로 떨어진다 */
+.gsearch-drop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 380px;
+  max-height: min(60vh, 460px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid color-mix(in oklab, var(--line) 65%, #fff);
   border-radius: 14px;
   corner-shape: squircle;
@@ -3300,37 +3378,73 @@ select:focus-visible,
   box-shadow:
     0 18px 48px rgba(19, 23, 38, 0.18),
     0 2px 8px rgba(19, 23, 38, 0.07);
-  overflow: hidden;
-  /* 폭이 자라는 연출. 오른쪽 끝을 고정해 두고 왼쪽으로 늘어난다 —
-     아이콘이 있던 자리가 오른쪽 끝이라 거기서 뻗어 나오는 것으로 보인다 */
-  animation: gsearch-grow 0.22s var(--ease-out-soft);
-  transform-origin: 100% 50%;
+  animation: gsearch-drop-in 0.2s var(--ease-out-soft);
 }
-@keyframes gsearch-grow {
+@keyframes gsearch-drop-in {
   from {
     opacity: 0;
-    transform: scaleX(0.12);
-  }
-  to {
-    opacity: 1;
-    transform: scaleX(1);
+    transform: translateY(-6px);
   }
 }
-/* 넓은 화면에서는 제목 블록을 뺀다. 헤더에 붙은 작은 패널인데 제목·설명이
-   입력칸보다 크면 주객이 바뀐다 */
-@media (min-width: 721px) {
-  .gsearch-panel .search-modal-head {
-    display: none;
-  }
-  .gsearch-inner .search-modal-input {
-    margin: 10px;
+
+/* ── 좁은 화면: 위에 붙는 시트 ── */
+.gsearch-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: flex-start;
+  padding: max(8px, env(safe-area-inset-top)) 10px 0;
+  background: rgba(18, 21, 31, 0.45);
+}
+.gsearch-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* dvh로 잡는다. vh는 주소창이 접히기 전 값이라 키패드가 뜬 상태에서
+     실제보다 크고, 그만큼 아래가 잘린다 */
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top));
+  border: 1px solid color-mix(in oklab, var(--line) 65%, #fff);
+  border-radius: 14px;
+  corner-shape: squircle;
+  background: var(--card);
+  box-shadow: 0 18px 48px rgba(19, 23, 38, 0.18);
+  overflow: hidden;
+  animation: gsearch-sheet-in 0.2s var(--ease-out-soft);
+}
+@keyframes gsearch-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
 }
+.gsearch-inner .search-modal-head {
+  padding: 14px 16px 8px;
+}
+.gsearch-inner .search-modal-head h2 {
+  font-size: 16px;
+}
+.gsearch-inner .search-modal-head p {
+  display: none;
+}
+.gsearch-inner .search-modal-input {
+  margin: 0 14px 12px;
+}
+/* 결과만 스크롤한다 — 입력칸은 위에 남아 있어야 고쳐 칠 수 있다 */
+.gsearch-inner .sresults,
+.gsearch-inner .search-start {
+  overflow-y: auto;
+  min-height: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .gsearch-inline,
+  .gsearch-drop,
   .gsearch-inner {
     animation: none;
   }
 }
+
 /* 계정 전환·역할 모달도 마찬가지다. nav가 z40에 머무르면 모달의 z60은
    nav 안에서만 통해서, 이벤트 팝업(z45)이 딤 위로 올라와 버린다. */
 .nav:has(.modalwrap) {
@@ -3393,7 +3507,7 @@ select:focus-visible,
   width: 15px;
   height: 15px;
 }
-.search-modal .search-modal-input {
+.gsearch-body .search-modal-input {
   max-width: none;
   margin: 0 24px;
   padding: 13px 14px;
@@ -3405,7 +3519,7 @@ select:focus-visible,
   min-width: 0;
   font-size: 14px;
 }
-.search-modal kbd {
+.gsearch-body kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3427,14 +3541,21 @@ select:focus-visible,
   border-radius: 50%;
   background: var(--bg);
 }
-.search-modal .sresults {
+.gsearch-body .sresults {
   max-height: min(52vh, 470px);
   margin-top: 18px;
   border-top: 1px solid var(--line);
   overflow-y: auto;
 }
+/* 넓은 화면 드롭다운에는 입력칸이 없다(그건 위 헤더 안에 있다). 입력칸과
+   결과를 가르던 선과 여백이 그대로 남으면 맨 위에 빈 줄 하나가 생긴다 */
+.gsearch-drop .sresults,
+.gsearch-drop .search-start {
+  margin-top: 0;
+  border-top: 0;
+}
 .search-result-summary,
-.search-modal .sgroup {
+.gsearch-body .sgroup {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3447,14 +3568,14 @@ select:focus-visible,
 .search-result-summary b {
   color: var(--ink-2);
 }
-.search-modal .sresults section {
+.gsearch-body .sresults section {
   padding: 0 14px 8px;
 }
-.search-modal .sgroup {
+.gsearch-body .sgroup {
   padding: 10px 10px 6px;
   letter-spacing: 0.02em;
 }
-.search-modal .sr {
+.gsearch-body .sr {
   display: flex;
   align-items: center;
   gap: 11px;
@@ -3468,8 +3589,8 @@ select:focus-visible,
   font-family: inherit;
   text-align: left;
 }
-.search-modal .sr:hover,
-.search-modal .sr:focus-visible {
+.gsearch-body .sr:hover,
+.gsearch-body .sr:focus-visible {
   background: var(--bg);
   outline: 0;
 }
@@ -3511,7 +3632,7 @@ select:focus-visible,
   flex-direction: column;
   gap: 3px;
 }
-.search-modal .sr > .ic {
+.gsearch-body .sr > .ic {
   width: 14px;
   height: 14px;
   color: var(--ink-4);
@@ -3520,15 +3641,15 @@ select:focus-visible,
     opacity var(--duration-fast) var(--ease-out-soft),
     transform var(--duration-fast) var(--ease-out-soft);
 }
-.search-modal .sr:hover > .ic,
-.search-modal .sr:focus-visible > .ic {
+.gsearch-body .sr:hover > .ic,
+.gsearch-body .sr:focus-visible > .ic {
   opacity: 1;
   transform: translateX(2px);
 }
-.search-modal .sr .nm {
+.gsearch-body .sr .nm {
   flex: none;
 }
-.search-modal .sr .meta {
+.gsearch-body .sr .meta {
   flex-shrink: 1;
 }
 .search-empty {
@@ -3665,7 +3786,7 @@ select:focus-visible,
   .search-modal-head h2 {
     font-size: 18px;
   }
-  .search-modal .search-modal-input {
+  .gsearch-body .search-modal-input {
     margin: 0 18px;
   }
   .search-start,
@@ -3673,10 +3794,10 @@ select:focus-visible,
     padding-right: 18px;
     padding-left: 18px;
   }
-  .search-modal .sresults {
+  .gsearch-body .sresults {
     max-height: 58vh;
   }
-  .search-modal .sresults section {
+  .gsearch-body .sresults section {
     padding-right: 8px;
     padding-left: 8px;
   }
@@ -5104,9 +5225,21 @@ a.post:hover .thumb img {
      아이콘, 이름, 숫자를 3단으로 쌓으면 칸이 길쭉해지고 무엇이 이름이고
      무엇이 개수인지 한눈에 안 갈린다. 개수는 이름에 딸린 표시지 별도의
      줄이 아니다. 모서리에 띄워서 상자 선에 살짝 걸치게 둔다. */
+  /* 뱃지가 상자 위로 걸치므로 그만큼 자리를 비워 둔다.
+
+     스크롤 탭 규칙(.tabs)에 overflow-x: auto가 붙으면서 세로도 같이
+     잘리게 됐다 — CSS는 한 축만 visible로 둘 수 없어서, x를 auto로
+     만드는 순간 y는 자동으로 잘린다. 그래서 -7px로 튀어나온 뱃지의
+     윗부분이 사라졌다.
+
+     스크롤은 지켜야 하니 overflow를 되돌릴 수는 없다. 대신 컨테이너
+     안쪽에 뱃지 높이만큼 여백을 두고, 뱃지를 그 여백 안에 앉힌다. */
+  .tabs.home-feed-tabs {
+    padding-top: 12px;
+  }
   .home-feed-tabs .ct {
     position: absolute;
-    top: -7px;
+    top: -5px;
     right: calc(50% - 30px);
     min-width: 17px;
     height: 17px;
@@ -6871,6 +7004,18 @@ a.adcard:hover,
     width: auto;
     max-width: none;
   }
+  /* 둘 중 하나만 말한다.
+
+     코치 말풍선("여기 10가지, 전부 실제로 동작해요")은 가이드 fab 왼쪽에
+     붙는데, 이벤트 팝업도 같은 자리를 노린다. 겹치면 글자가 포개져 둘 다
+     안 읽힌다(실제로 그렇게 겹쳐 있었다).
+
+     팝업이 떠 있는 동안은 코치를 접는다. 코치는 팝업을 닫으면 다시 나온다 —
+     안내는 사라져도 되지만 광고는 방문자가 닫아야 사라지기 때문이다. */
+  body:has(.evpop) .guide-coach {
+    display: none;
+  }
+
   /* 광고가 화면을 덜 먹게 — 그림 층은 좁은 화면에서 뺀다 */
   .evpop-art {
     display: none;
@@ -7142,6 +7287,7 @@ a.adcard:hover,
 @media (min-width: 561px) {
   .fcol > .flinks {
     display: flex;
+    flex-direction: column;
     content-visibility: visible;
   }
   .fcol > summary {
@@ -9521,8 +9667,6 @@ select.in {
 /* P1 GlassBubble: 다크 톤 + blur/saturate + 3중 그림자 + 상단 스펙큘러 */
 .coach {
   background: rgba(28, 28, 32, 0.62);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  backdrop-filter: blur(16px) saturate(180%);
   border-radius: 14px;
   box-shadow:
     0 12px 32px -12px rgba(0, 0, 0, 0.45),
@@ -9547,8 +9691,6 @@ select.in {
   height: 8px;
   transform: none;
   background: rgba(28, 28, 32, 0.62);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  backdrop-filter: blur(16px) saturate(180%);
   clip-path: polygon(50% 0, 0 100%, 100% 100%);
 }
 .coach.up::before {
@@ -9717,19 +9859,37 @@ select.in {
   opacity: 0.85;
 }
 /* 코치가 떠 있는 동안 — 크기 고정, 글로우 링만 퍼진다 */
+/* 퍼지는 링 — box-shadow가 아니라 실제 원을 키운다.
+
+   box-shadow spread를 애니메이션하면 매 프레임 그림자를 다시 그린다.
+   합성으로 못 넘기는 페인트 속성이라, 화면 구석에서 조용히 도는 링 하나가
+   프레임을 계속 갉는다(측정에서 메인 스레드를 붙잡는 여섯 중 하나였다).
+
+   같은 그림을 transform·opacity로 만들면 합성 스레드에서 돈다 — 메인
+   스레드는 한 번도 깨지 않는다. */
 @keyframes fab-beckon {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 45%, transparent);
+    transform: scale(1);
+    opacity: 0.45;
   }
   70% {
-    box-shadow: 0 0 0 12px transparent;
+    transform: scale(1.55);
+    opacity: 0;
   }
   100% {
-    box-shadow: 0 0 0 0 transparent;
+    transform: scale(1.55);
+    opacity: 0;
   }
 }
-.demowidget .fab.is-beckon {
+.demowidget .fab.is-beckon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in oklab, var(--accent) 45%, transparent);
   animation: fab-beckon 2.2s ease-out infinite;
+  pointer-events: none;
+  z-index: -1;
 }
 @media (prefers-reduced-motion: reduce) {
   .demowidget .fab.is-beckon {
@@ -10041,8 +10201,18 @@ select.in {
   font-weight: 700;
   color: var(--ink);
 }
+/* 본문이 남는 폭을 다 갖는다.
+
+   .ds-opt가 space-between이라, 로고를 왼쪽에 넣자 이름이 반대편 끝으로
+   밀렸다(로고는 왼쪽 벽, 이름은 오른쪽 벽). 가운데가 비어서 어느 로고가
+   어느 이름인지 눈으로 이어 붙여야 했다.
+
+   본문에 flex: 1을 주면 이름이 로고 바로 옆에서 시작하고, 체크 표시만
+   오른쪽 끝에 남는다 — 원래 의도한 배치다. */
 .ds-opt-main {
+  flex: 1;
   min-width: 0;
+  text-align: left;
 }
 .ds-opt-main small {
   display: block;
@@ -10457,8 +10627,6 @@ select.in {
   letter-spacing: -0.01em;
   color: #fff;
   background: rgba(28, 28, 32, 0.62);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
     0 12px 32px -12px rgba(0, 0, 0, 0.45),
@@ -10690,19 +10858,31 @@ select.in {
   .footer .ftop {
     gap: 22px 28px;
   }
-  .footer .ftop > div:first-child {
+  .footer .ft-brand-block {
     grid-column: 1 / -1;
     padding-bottom: 4px;
     border-bottom: 1px solid var(--line);
   }
 }
 @media (max-width: 560px) {
+  /* 링크 묶음이 접히는 아코디언이 되면서 2열이 성립하지 않게 됐다.
+
+     예전에는 제목+목록이 늘 펼쳐져 있어 2열이 스크롤을 줄여 줬다. 지금은
+     제목만 한 줄로 있다가 눌러야 펼쳐진다. 그 상태에서 2열로 두면 셋 중
+     하나가 홀로 남아 빈 칸이 생기고, 하나를 펼치면 옆 칸이 따라 늘어나
+     경계가 어긋난다. 접히는 목록은 세로 한 줄이 정석이다.
+
+     이 규칙이 위쪽(1328 부근) 블록보다 뒤에 있어서, 거기서 1열로 잡아도
+     여기서 2열로 되돌아가고 있었다 — 실제로 그렇게 깨져 있었다. */
   .footer .ftop {
-    grid-template-columns: 1fr 1fr; /* 링크 그룹은 2열 유지 — 1열 나열은 과도한 스크롤 */
-    gap: 20px 18px;
+    grid-template-columns: 1fr;
+    gap: 0;
   }
-  .footer .ftop > div:first-child {
+  /* 브랜드 블록은 클래스로 짚는다. `> div:first-child`는 링크 묶음이
+     <details>로 바뀌면서 무엇을 가리키는지 불분명해졌다 */
+  .footer .ft-brand-block {
     grid-column: 1 / -1;
+    padding-bottom: 8px;
   }
   .footer .flinks a {
     padding: 6px 0; /* 터치 타깃 확보 */
@@ -12621,10 +12801,26 @@ select.in {
     #818cf8 76%,
     #a78bfa
   );
-  filter: blur(5px) saturate(1.15);
+  filter: blur(4px) saturate(1.15);
   /* 여기도 기본은 정지. 멈춰 있어도 코닉 그라디언트에 블러가 얹힌 그림은
      그대로라 겉보기는 거의 같다 — 도는 것만 멈춘다 */
   z-index: 0;
+  /* 자기를 원으로 자른다.
+
+     부모의 overflow: hidden에만 기대면 안 된다. filter가 걸린 자식은 새
+     합성 레이어로 올라가고, 그때 부모의 둥근 클립이 사각으로 떨어지는
+     브라우저가 있다 — 블롭이어야 할 아바타 뒤로 그라데이션 사각형이
+     드러난다(실기기에서 확인).
+
+     border-radius: inherit로는 부족했다. 부모의 8값 %를 자기 크기(부모보다
+     30% 큰 상자) 기준으로 다시 계산해서 모양이 어긋나고, 모서리가 남는다.
+     원이면 어느 크기에서도 모서리가 없다. 블러가 얹혀 있어 블롭 안에서는
+     원인지 블롭인지 구분되지 않는다.
+
+     번짐 여유도 줄인다. -30%로 크게 잡고 5px로 흐리면 부모 밖으로 새는
+     양이 커서, 클립이 한 번 실패하면 그만큼 크게 드러난다. */
+  inset: -18%;
+  border-radius: 50%;
 }
 
 /* ── 살아 움직이는 아바타 ──
@@ -13184,8 +13380,6 @@ select.in {
   line-height: 1.5;
   color: #fff;
   background: rgba(28, 28, 32, 0.62);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
     0 12px 32px -12px rgba(0, 0, 0, 0.45),
@@ -13395,8 +13589,6 @@ select.in {
       스펙큘러 + 진짜 삼각형 꼬리 + 스프링 팝으로 통일한다. ── */
 .demo-control .demotip {
   background: rgba(28, 28, 32, 0.62);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  backdrop-filter: blur(16px) saturate(180%);
   border-radius: 14px;
   box-shadow:
     0 12px 32px -12px rgba(0, 0, 0, 0.45),
@@ -13424,8 +13616,6 @@ select.in {
   height: 8px;
   transform: none;
   background: rgba(28, 28, 32, 0.62);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  backdrop-filter: blur(16px) saturate(180%);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
 /* 글래스 판 위 대비 보정 — 반투명이라 회색 본문이 묻힌다 */
@@ -14694,7 +14884,6 @@ select.in {
    아이콘 상자를 첫 줄 높이에 맞춰 두면 어느 폰트 크기에서도 따라온다. */
 .titem .tic {
   align-self: flex-start;
-  height: 20px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -15044,17 +15233,30 @@ select.in {
   height: 20px;
 }
 /* 한 번도 안 열어본 방문자에게만 — 크기 변화 없이 글로우만(가이드 fab과 같은 문법) */
+/* 가이드 fab과 같은 문법 — box-shadow가 아니라 실제 원을 키운다.
+   페인트 속성을 애니메이션하면 합성으로 못 넘어가 매 프레임 메인 스레드가 붙는다 */
 .chatfab.is-beckon {
-  animation: chat-beckon 2.4s ease-in-out infinite;
   border-radius: 50%;
+}
+.chatfab.is-beckon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.45);
+  animation: chat-beckon 2.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
 }
 @keyframes chat-beckon {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.45);
+    transform: scale(1);
+    opacity: 0.45;
   }
   50% {
-    box-shadow: 0 0 0 12px rgba(139, 92, 246, 0);
+    transform: scale(1.55);
+    opacity: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -15079,8 +15281,13 @@ select.in {
      스크롤은 그 안에서만 돈다 */
   height: min(560px, calc(100dvh - 150px));
   background: color-mix(in srgb, var(--card) 82%, transparent);
-  backdrop-filter: blur(14px) saturate(1.4);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  /* 유리는 등장이 끝난 뒤에 켠다(.is-settled). 이 크기의 backdrop-filter를
+     들고 스케일 애니메이션을 하면 매 프레임 그만한 면적을 다시 칠하고 다시
+     흐린다 — 열리는 0.3초가 가장 끊긴다. 애플이 쓰는 순서와 같다:
+     움직이는 동안은 싸게, 멈추면 제대로. */
+  transition:
+    backdrop-filter 0.24s ease,
+    -webkit-backdrop-filter 0.24s ease;
   border: 1px solid color-mix(in srgb, var(--line-2) 70%, transparent);
   border-radius: 20px;
   corner-shape: squircle;
@@ -15130,8 +15337,9 @@ select.in {
   background: color-mix(in srgb, var(--card) 38%, transparent);
   /* 판이 얇아진 만큼 흐림을 올린다. 안 그러면 뒤 글자와 앞 글자가 겹쳐
      읽혀서 둘 다 안 읽힌다 */
-  backdrop-filter: blur(22px) saturate(1.7);
-  -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  /* 접힌 상태(머리 줄만)라 넓은 반경이 할 일이 없다 */
+  backdrop-filter: blur(12px) saturate(1.7);
+  -webkit-backdrop-filter: blur(12px) saturate(1.7);
   border-color: color-mix(in srgb, var(--line-2) 40%, transparent);
   box-shadow:
     0 18px 44px rgba(16, 24, 40, 0.1),
@@ -15300,6 +15508,18 @@ select.in {
   margin: 0;
 }
 
+/* ── 유리는 판 하나에만 ──
+
+   패널·말풍선·입력칸·칩이 저마다 backdrop-filter를 들고 있었다. 합치면
+   blur가 화면의 84%를 덮는다(실측 276,272px² / 329,160px²). backdrop-filter는
+   겹칠 때마다 그 아래를 다시 합성하므로, 겹친 넓이가 곧 값이다.
+
+   유리 느낌은 제일 바깥 판 하나로 충분하다. 그 위에 놓인 것들은 이미 판을
+   통과한 배경 위에 있어서, 각자 또 흐려도 눈에 띄는 차이가 없다.
+   말풍선·입력칸·칩에서 걷어낸다 — 판(.chatpanel)만 남긴다. */
+/* (선언 자리에서 직접 지웠다. 여기서 none으로 덮으려 했더니 파일 앞쪽이라
+   뒤에 오는 원래 선언이 이겼다 — 실측에서 blur가 그대로 남아 있었다.) */
+
 /* ── 흐르는 본문 ──
       AI 참고 답변(.aflive)이 쓰는 질감을 그대로 가져온다. 같은 제품 안에서
       AI가 말하는 자리가 두 가지 모양이면 조립품이라는 주장이 약해진다.
@@ -15314,11 +15534,18 @@ select.in {
    띠가 좌우로 훑는 무한 애니메이션이었다. 읽으려는 글자가 계속 흔들려서
    다 나올 때까지 기다리게 됐고(스트리밍의 목적과 반대다), background-position
    애니메이션이라 매 프레임 본문을 다시 칠했다. 그라데이션은 남기되 세운다. */
+/* 클립은 **단어마다** 건다.
+
+   부모에 걸었더니 글자가 사라졌다. 자식 .tw에 transform이 붙는 순간 새
+   스택 컨텍스트가 생겨 부모의 background-clip: text 대상에서 빠지는데,
+   color: transparent만 상속되니 색 없는 글자만 남는다 — 스트리밍 중
+   본문이 통째로 안 보였다.
+
+   그래서 색을 입히는 주체와 움직이는 주체를 같은 요소로 맞춘다. 문장
+   전체를 가로지르는 한 줄 그라데이션은 포기하지만, 단어가 짧아 색 차이가
+   크지 않아 문단으로 보면 같은 톤으로 읽힌다. 보이는 것이 먼저다. */
 .chatbody .bub .chatstream {
-  background-image: linear-gradient(100deg, #7c3aed, #d946ef 52%, #6366f1);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--ink-2);
 }
 /* 새로 붙은 단어 — 아래에서 한 번 떠오른다.
 
@@ -15326,12 +15553,23 @@ select.in {
    그러면 단어가 통째로 줄바꿈 단위가 되는데, 원래 단어 경계에서 끊기므로
    결과는 같다.
 
-   blur는 넣지 않는다. filter는 스택 컨텍스트를 새로 만들어서, 부모의
-   background-clip: text로 입힌 그라데이션이 이 단어에서 끊긴다. */
+   그라데이션을 여기서 직접 입는다. 자기 배경이라 transform이 만드는
+   스택 컨텍스트와 무관하게 항상 보인다. */
 .chatbody .bub .chatstream .tw {
   display: inline-block;
   font-style: normal;
+  background-image: linear-gradient(100deg, #7c3aed, #d946ef 60%, #6366f1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   animation: tw-rise 0.34s var(--ease-out-soft) backwards;
+}
+/* 클립을 못 쓰는 환경에서는 글자가 통째로 사라진다. 색부터 세워 두고
+   지원될 때만 투명으로 바꾼다 — 안 보이는 것보다 그라데이션이 없는 편이 낫다 */
+@supports not ((background-clip: text) or (-webkit-background-clip: text)) {
+  .chatbody .bub .chatstream .tw {
+    color: var(--ink-2);
+  }
 }
 @keyframes tw-rise {
   from {
@@ -15425,8 +15663,6 @@ select.in {
 }
 .chatbody .bub.bot {
   background: color-mix(in srgb, var(--card-2) 76%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
   color: var(--ink-2);
   border-bottom-left-radius: 6px;
@@ -15436,8 +15672,6 @@ select.in {
    내가 한 말은 또렷해야 대화 흐름이 읽힌다 */
 .chatbody .bub.user {
   background: color-mix(in srgb, var(--accent) 92%, transparent);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   color: #fff;
   border-bottom-right-radius: 6px;
   box-shadow: 0 4px 14px -8px color-mix(in srgb, var(--accent) 70%, transparent);
@@ -15678,8 +15912,6 @@ select.in {
   font-family: inherit;
   font-size: 13px;
   background: color-mix(in srgb, var(--card) 62%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   color: var(--ink);
   outline: 0;
   transition:
@@ -16419,9 +16651,14 @@ body:has(.agc-ring) .evpop {
    그런데 글자가 나오기 시작하면 단어가 떠오르는 움직임이 이미 그 일을
    한다. 둘이 겹치면 읽는 자리 뒤에서 배경이 계속 흘러 글이 흔들려 보이고,
    background-position 애니메이션이라 매 프레임 다시 칠하는 값도 든다. */
-.chatbody .bub.bot.is-thinking::after {
-  animation-play-state: running;
-}
+/* 얼룩은 이제 돌지 않는다.
+
+   background-position 애니메이션이라 매 프레임 말풍선을 다시 칠하고,
+   그 아래 판의 backdrop-filter까지 같이 다시 계산된다. 측정에서 메인
+   스레드를 붙잡는 셋 중 하나로 남아 있었다.
+
+   생각 중이라는 사실은 '질문을 읽고 있어요' 줄과 아바타가 이미 말한다.
+   배경 얼룩까지 흐를 이유가 없다 — 색만 옅게 깔아 두면 충분하다. */
 @keyframes aurora-spin {
   to {
     --aur: 360deg;
@@ -16837,60 +17074,9 @@ body:has(.pdrawer) {
   .nav .links {
     display: none;
   }
-  /* ── 좁은 화면: 위에 붙는 시트 ──
-
-     키패드가 아래에서 올라와 화면 절반을 먹는다. 가운데 정렬이면 그 아래로
-     밀려 정작 입력칸이 가려서, 무엇을 치고 있는지 안 보인다. 위에 못 박고
-     결과만 아래로 흐르게 한다.
-
-     높이는 dvh로 잡는다. vh는 주소창이 접히기 전 값이라 키패드가 뜬 상태에서
-     실제보다 크고, 그만큼 아래가 잘린다. */
-  .gsearch-panel {
-    position: fixed;
-    inset: 0;
-    padding: max(8px, env(safe-area-inset-top)) 10px 0;
-    align-items: flex-start;
-    background: rgba(18, 21, 31, 0.45);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    /* 딤은 화면 전체지만 시트는 위에만 — 아래를 눌러 닫을 수 있게 둔다 */
-    height: 100dvh;
-    z-index: 90;
-    animation: none;
-  }
-  .gsearch-inner {
-    width: 100%;
-    max-height: calc(100dvh - 24px - env(safe-area-inset-top));
-    display: flex;
-    flex-direction: column;
-    animation: gsearch-drop 0.2s var(--ease-out-soft);
-    transform-origin: 50% 0;
-  }
-  @keyframes gsearch-drop {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  .gsearch-inner .search-modal-head {
-    padding: 14px 16px 8px;
-  }
-  .gsearch-inner .search-modal-head h2 {
-    font-size: 16px;
-  }
-  .gsearch-inner .search-modal-head p {
-    display: none;
-  }
-  /* 결과만 스크롤한다 — 입력칸은 위에 남아 있어야 고쳐 칠 수 있다 */
-  .gsearch-inner .sresults,
-  .gsearch-inner .search-start {
-    overflow-y: auto;
-    min-height: 0;
-  }
+  /* 좁은 화면 시트 규칙은 위쪽(.gsearch-sheet)으로 모았다. 폭 조건이
+     아니라 껍데기 자체가 달라서 JS가 어느 쪽을 그릴지 정한다 — CSS를
+     두 군데 두면 어느 쪽이 사는지 순서에 걸린다. */
 
   /* ── 헤더 도구는 아이콘만 ──
 
@@ -16932,7 +17118,8 @@ body:has(.pdrawer) {
   .dtabs,
   .wtabs,
   .cotabs,
-  .poltabs {
+  .poltabs,
+  .seg {
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
@@ -16965,12 +17152,18 @@ body:has(.pdrawer) {
   }
   /* 칸 안에서도 가운데. 칸 폭은 균등한데 글자만 왼쪽에 붙으면 칸 경계와
      글자 위치가 어긋나 보인다 — 특히 글자 수가 다른 탭이 섞이면 계단처럼
-     읽힌다 */
+     읽힌다.
+
+     `.seg`를 같이 넣는다. 탭처럼 생기고 탭처럼 쓰이는데 클래스가 달라서
+     앞선 정리에서 빠져 있었다(채용공고의 고용형태, 회사 목록의 정렬 등).
+     쓰이는 곳을 전수로 훑어 남은 것이 이것뿐임을 확인했다 — paging과
+     pagehead-facts도 걸리지만 그건 탭이 아니라 쪽번호와 지표 줄이다. */
   .tabs > *,
   .dtabs > *,
   .wtabs > *,
   .cotabs > *,
-  .poltabs > * {
+  .poltabs > *,
+  .seg > * {
     justify-content: center;
     text-align: center;
     flex-shrink: 0;
@@ -17435,20 +17628,21 @@ body:has(.pdrawer) {
      그래서 도구가 도는 동안에는 높이를 머리 줄만 남기고 접는다. 닫지는
      않는다. 닫아 버리면 무슨 작업이 도는 중인지 알 수 없고, 끝난 뒤 다시
      열어야 한다. 머리 줄에는 지금 무엇을 하는지가 적혀 있다. */
+  /* 높이를 박지 않는다.
+
+     56px을 박았더니 레이아웃이 깨졌다. 머리 줄이 실제로 63px이라 그 안에
+     들어가지 못하고, 패널이 flex column이라 남은 자식들까지 눌려 뭉갰다.
+     "머리만 남긴다"는 의도를 픽셀로 옮기려다 실측을 안 맞춘 것이다.
+
+     내용을 빼면 높이는 알아서 머리 줄이 된다. display: none이라 접히는
+     동작은 안 보이지만, 어긋난 높이로 뭉개지는 것보다 낫다. */
   .chatpanel.is-operating {
-    height: 56px;
+    height: auto;
     min-height: 0;
-    overflow: hidden;
-    transition:
-      height 0.34s var(--ease-out-soft),
-      background-color 0.32s ease,
-      backdrop-filter 0.32s ease;
   }
   .chatpanel.is-operating .chatbody,
   .chatpanel.is-operating .chatform {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.16s ease;
+    display: none;
   }
   /* 여기에 있던 `body:has(.evpop) .chatwidget` 리프트도 뺐다. 팝업이 fab
      자리를 비켜서므로 겹치지 않고, 올리면 챗 패널이 화면 위로 넘친다. */
