@@ -14250,13 +14250,56 @@ select.in {
   margin-bottom: 14px;
 }
 @media (max-width: 900px) {
+  /* ── 좁은 화면에서는 세로 한 줄 ──
+
+     2×2로 접었더니 순서가 사라졌다. 1·2가 윗줄, 3·4가 아랫줄이면 읽는 눈은
+     오른쪽으로 갔다가 다시 왼쪽 아래로 꺾여야 하는데, 그 꺾임을 알려 줄
+     레일마저 "2×2에선 성립하지 않는다"며 없앴다. 남은 건 순서 없는 네 칸이다.
+
+     세로로 세우면 순서가 곧 위치다. 레일도 세로로 돌려 되살린다 — 진행
+     과정에서 지금 어디인지는 이 선이 말한다. */
   .cflow {
-    grid-template-columns: repeat(2, 1fr);
-    row-gap: 16px;
+    grid-template-columns: 1fr;
+    row-gap: 0;
   }
-  /* 2×2에선 한 줄 레일이 성립하지 않는다 — 길은 접고 노드 상태만 남긴다 */
   .cflow-rail {
-    display: none;
+    /* 노드 원의 중심(세로)을 잇는 선. 첫 노드 중심에서 끝 노드 중심까지 */
+    left: 19.5px;
+    right: auto;
+    top: calc(100% / 8);
+    bottom: calc(100% / 8);
+    width: 3px;
+    height: auto;
+  }
+  .cflow-rail .fill {
+    inset: 0 0 auto 0;
+    width: 100%;
+    height: calc(var(--i) / 3 * 100%);
+    transition: height 0.7s var(--ease-spring);
+  }
+  .cflow-rail .dot {
+    top: calc(var(--i) / 3 * 100%);
+    left: 50%;
+  }
+  /* 노드를 왼쪽으로 보내고 글은 오른쪽에 세운다.
+
+     세로로만 세우고 노드를 가운데 둔 채로는 레일과 노드가 만나지 않는다 —
+     선은 왼쪽 끝에, 원은 한가운데에 떠 있었다. 세로 타임라인은 축이 하나여야
+     성립한다: 원들이 한 줄로 꿰이고 그 줄이 곧 진행 방향이다.
+
+     아이콘 칸을 40px로 박고 레일을 그 중심(19.5px)에 맞춘다. */
+  .cfstep {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: center;
+    text-align: left;
+    padding: 9px 0;
+  }
+  /* 아이콘은 두 줄(제목·설명)을 세로로 가로지른다 */
+  .cfstep > :first-child {
+    grid-row: span 2;
+    justify-self: center;
   }
 }
 
@@ -14625,6 +14668,19 @@ select.in {
 
 /* 레일용 압축 — 행 높이는 SeenCard의 ROW_H와 한 쌍이다. 여기를 바꾸면
    스켈레톤 높이도 같이 바꾼다. 안 그러면 로딩이 끝날 때 화면이 밀린다 */
+/* 아이콘은 첫 줄 글자와 눈높이를 맞춘다.
+
+   align-items: flex-start라 아이콘 상자(20px)와 글자 블록이 각자 위에
+   붙는데, 글자 첫 줄의 line-height가 20px이 아니면 중심이 어긋난다.
+   실측에서 아이콘이 1px 낮게 앉아 행마다 미세하게 흔들려 보였다.
+   아이콘 상자를 첫 줄 높이에 맞춰 두면 어느 폰트 크기에서도 따라온다. */
+.titem .tic {
+  align-self: flex-start;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
 .seen-compact .titem {
   padding-top: 6px;
   padding-bottom: 6px;
