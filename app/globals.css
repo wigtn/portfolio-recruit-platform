@@ -6856,13 +6856,34 @@ a.adcard:hover,
 }
 
 @media (max-width: 620px) {
+  /* 하단 전폭을 쓰지 않는다.
+
+     예전에는 left/right 12px으로 폭을 다 먹었다. 그러니 오른쪽 fab 두 개와
+     겹쳐서, 팝업이 떠 있는 동안 fab을 248px 밀어 올려야 했다. 그런데 챗
+     패널은 fab을 기준으로 위로 펼쳐지므로 그만큼 같이 올라가 화면 위로
+     넘쳤다(실측 y=-66). 광고 하나 때문에 정작 쓸 것이 잘린 셈이다.
+
+     fab이 쓰는 자리(12 + 44 + 8 + 44 = 108px)를 비켜 두면 밀어 올릴 이유가
+     없어진다. 폭은 좁아지지만 이 팝업이 하는 일은 한 줄 알림이라 충분하다. */
   .evpop {
     left: 12px;
-    right: 12px;
-    /* bottom은 기본 규칙(max(20px, var(--dock-b)))을 그대로 쓴다. 여기서
-       12px을 다시 박으면 탭바 아래로 내려가 탭이 가려진다 */
+    right: 116px;
     width: auto;
     max-width: none;
+  }
+  /* 광고가 화면을 덜 먹게 — 그림 층은 좁은 화면에서 뺀다 */
+  .evpop-art {
+    display: none;
+  }
+  .evpop-sub {
+    display: none;
+  }
+  .evpop-body {
+    padding: 12px 14px 6px;
+  }
+  .evpop-title {
+    font-size: 13.5px;
+    line-height: 1.45;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -7530,14 +7551,11 @@ a.adcard:hover,
   color: var(--accent-ink);
 }
 
-/* 모바일: 이벤트 팝업이 하단 전폭을 쓰는 동안 위젯을 그 위로 올린다 —
-   코치 말풍선이 팝업 CTA를 덮어 첫 행동 버튼이 눌리지 않던 문제 */
-@media (max-width: 620px) {
-  body:has(.evpop) .demowidget {
-    bottom: calc(248px + var(--dock-b));
-    transition: bottom var(--duration-base) var(--ease-out-soft);
-  }
-}
+/* 이벤트 팝업 때문에 위젯을 밀어 올리던 규칙은 없앴다.
+
+   팝업이 하단 전폭을 쓰던 시절의 대응이었다. 이제 팝업이 fab 자리를 비켜
+   서므로 겹치지 않고, 밀어 올릴 이유도 없다. 오히려 그 리프트가 챗 패널을
+   같이 끌어올려 화면 위로 넘치게 했다. */
 
 /* 히어로 검색 — 빈 결과 안내 */
 .hs-empty {
@@ -17432,13 +17450,8 @@ body:has(.pdrawer) {
     pointer-events: none;
     transition: opacity 0.16s ease;
   }
-  /* 이벤트 팝업이 하단 전폭을 쓰는 동안 두 fab을 그 위로 올린다. 예전엔
-     아예 숨겼는데, 그러면 팝업을 닫기 전까지 상담으로 가는 길이 없다.
-     .demowidget은 위쪽(7175 부근)에서 같은 값으로 올라간다 */
-  body:has(.evpop) .chatwidget {
-    bottom: calc(248px + var(--dock-b));
-    transition: bottom var(--duration-base) var(--ease-out-soft);
-  }
+  /* 여기에 있던 `body:has(.evpop) .chatwidget` 리프트도 뺐다. 팝업이 fab
+     자리를 비켜서므로 겹치지 않고, 올리면 챗 패널이 화면 위로 넘친다. */
   .chatpanel {
     width: min(
       360px,

@@ -26,6 +26,7 @@ export function EventPopup() {
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (window.sessionStorage.getItem(DISMISS_KEY)) return;
     const until = window.localStorage.getItem(DISMISS_KEY);
     if (until && Number(until) > Date.now()) return;
     const name = loadState().curation.banners[0]?.name ?? null;
@@ -35,12 +36,21 @@ export function EventPopup() {
   }, []);
 
   const close = (hideToday = false) => {
+    /* 그냥 닫아도 다시 안 뜬다.
+
+       예전에는 "오늘 하루 보지 않기"만 기억하고 닫기는 안 기억했다. 그래서
+       화면을 옮길 때마다 같은 광고가 다시 올라왔다 — 닫았는데 또 나오면
+       닫기 버튼이 일을 안 하는 것으로 읽힌다.
+
+       둘의 차이는 기간만 남긴다. 닫기는 이 방문 동안(sessionStorage),
+       오늘 하루 보지 않기는 24시간(localStorage). */
     if (hideToday) {
-      // 데모라 하루가 아니라 이 브라우저 세션 기준으로 24시간
       window.localStorage.setItem(
         DISMISS_KEY,
         String(Date.now() + 24 * 60 * 60 * 1000),
       );
+    } else {
+      window.sessionStorage.setItem(DISMISS_KEY, "1");
     }
     setClosed(true);
   };
