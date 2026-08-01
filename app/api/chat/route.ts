@@ -4,9 +4,10 @@ import {
   TOOL_SPECS,
   toolsForRole,
   normalizeRole,
+  repairArgs,
   type Role,
 } from "@/lib/demo/chat-tools";
-import { guard } from "@/lib/demo/chat-guard";
+import { guard, MAX_CALLS_PER_TURN, type GuardedArgs } from "@/lib/demo/chat-guard";
 import { LLM_MODEL, completionParams } from "@/lib/demo/llm";
 import { anon, clientIp } from "@/lib/demo/anon";
 
@@ -49,7 +50,9 @@ function windowCount(key: string, now: number): number {
  * 두 축 모두에 자국을 남긴다. 어느 축이 걸렸는지(why)는 폴백 신호로 돌려준다.
  */
 function allow(axes: Axis[], now: number) {
-  const today = new Date(now).toISOString().slice(0, 10);
+  // 일일 리셋은 KST(UTC+9) 자정 기준. 한국 데모라 UTC 자정(=KST 오전 9시)에
+  // 끊기면 어색하다. now에 9시간을 더해 KST 달력 날짜를 만든다
+  const today = new Date(now + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
   if (daily.day !== today) daily = { day: today, count: 0 };
   if (daily.count >= DAILY_MAX) return { ok: false as const, why: "daily" };
 
@@ -297,6 +300,10 @@ export async function POST(request: Request) {
 
   const gate = allow(axes, Date.now());
   if (!gate.ok) {
+    /* 한도 초과 응답 계약이 /api/ai-answer(429)와 **의도적으로** 다르다.
+       챗봇은 대화가 끊기면 안 되므로 200 + { fallback, rateLimited }를 주고
+       클라가 스크립트 답변으로 매끄럽게 이어간다. ai-answer는 글 상세의 일회성
+       생성이라 429로 끊고 시드 초안 연출로 넘긴다. 둘의 UX가 달라 계약도 다르다. */
     return finalize(
       NextResponse.json({
         fallback: true,
@@ -470,14 +477,26 @@ export async function POST(request: Request) {
            사용자 발화를 근거로 준다. used는 클라가 턴 전체에 걸쳐 세는 값이라
            서버 한 번의 응답으로는 알 수 없다. 호출 수 상한의 최종 집행은
            클라에 두고 여기서는 0으로 둔다. */
-        const tools = parsed.filter(
-          (call) =>
-            guard(call.name, call.args, TOOL_SPECS[call.name], {
-              question: lastUser,
-              role,
-              used: 0,
-            }).ok,
-        );
+        /* 클라 실행부와 **같은 순서**로 검문한다: repairArgs로 자리를 접고 →
+           guard. 클라가 repairArgs를 먼저 하므로(ChatWidget), 서버가 그 단계를
+           빼면 서버가 더 엄격해져 교정 가능한 호출(open_screen 근사값)을 억울하게
+           떨군다. 통과분은 guard가 정제한 args로 넘긴다 — 원본 대신 정제본을
+           보내면 클라에 닿기 전에 한 번 걸러진 값이 간다(클라가 다시 검문).
+           used를 이 응답 안에서 세어, 응답당 호출 수도 서버가 상한 처리한다.
+           턴 전체 누적 상한의 최종 집행은 여전히 클라다. */
+        const tools: Array<{ id: string; name: string; args: GuardedArgs }> = [];
+        for (const call of parsed) {
+          const verdict = guard(
+            call.name,
+            repairArgs(call.name, call.args),
+            TOOL_SPECS[call.name],
+            { question: lastUser, role, used: tools.length },
+          );
+          if (verdict.ok) {
+            tools.push({ id: call.id, name: call.name, args: verdict.args });
+          }
+          if (tools.length >= MAX_CALLS_PER_TURN) break;
+        }
 
         // 다 떨어졌으면 답변 콜로 내려가 말로 답한다(빈 도구를 보내지 않는다)
         if (tools.length) {
