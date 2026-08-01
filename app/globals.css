@@ -1310,7 +1310,13 @@ small,
     padding: 2px 0 12px;
   }
   .fcol[open] > .flinks {
+    /* 방향을 반드시 같이 준다.
+
+       display: flex만 주면 기본이 row라 링크가 한 줄로 다 붙는다 —
+       "커뮤니티회사 리뷰회사 비교채용공고실적 인증"으로 보였다. 원래 이
+       목록은 세로였는데, 접기를 넣으면서 display만 되살리고 방향을 잃었다. */
     display: flex;
+    flex-direction: column;
   }
   .fcol > summary {
     display: flex;
@@ -3180,6 +3186,14 @@ select:focus-visible,
   .formactions {
     flex-wrap: wrap;
   }
+}
+
+/* 폼 안의 셀렉트는 옆 칸들과 폭을 맞춘다.
+
+   .ds-select는 inline-flex라 내용만큼만 넓어진다. 이름·연락처·회사는
+   전폭 입력칸인데 관심 분야만 짧아서, 그 줄만 들여쓴 것처럼 보였다. */
+.formcard .ds-select {
+  width: 100%;
 }
 
 /* 제출 줄 — 안내 위, 버튼 아래. 좌우로 벌려 두면 좁은 화면에서 줄바꿈
@@ -5142,9 +5156,21 @@ a.post:hover .thumb img {
      아이콘, 이름, 숫자를 3단으로 쌓으면 칸이 길쭉해지고 무엇이 이름이고
      무엇이 개수인지 한눈에 안 갈린다. 개수는 이름에 딸린 표시지 별도의
      줄이 아니다. 모서리에 띄워서 상자 선에 살짝 걸치게 둔다. */
+  /* 뱃지가 상자 위로 걸치므로 그만큼 자리를 비워 둔다.
+
+     스크롤 탭 규칙(.tabs)에 overflow-x: auto가 붙으면서 세로도 같이
+     잘리게 됐다 — CSS는 한 축만 visible로 둘 수 없어서, x를 auto로
+     만드는 순간 y는 자동으로 잘린다. 그래서 -7px로 튀어나온 뱃지의
+     윗부분이 사라졌다.
+
+     스크롤은 지켜야 하니 overflow를 되돌릴 수는 없다. 대신 컨테이너
+     안쪽에 뱃지 높이만큼 여백을 두고, 뱃지를 그 여백 안에 앉힌다. */
+  .tabs.home-feed-tabs {
+    padding-top: 12px;
+  }
   .home-feed-tabs .ct {
     position: absolute;
-    top: -7px;
+    top: -5px;
     right: calc(50% - 30px);
     min-width: 17px;
     height: 17px;
@@ -7192,6 +7218,7 @@ a.adcard:hover,
 @media (min-width: 561px) {
   .fcol > .flinks {
     display: flex;
+    flex-direction: column;
     content-visibility: visible;
   }
   .fcol > summary {
@@ -10105,8 +10132,18 @@ select.in {
   font-weight: 700;
   color: var(--ink);
 }
+/* 본문이 남는 폭을 다 갖는다.
+
+   .ds-opt가 space-between이라, 로고를 왼쪽에 넣자 이름이 반대편 끝으로
+   밀렸다(로고는 왼쪽 벽, 이름은 오른쪽 벽). 가운데가 비어서 어느 로고가
+   어느 이름인지 눈으로 이어 붙여야 했다.
+
+   본문에 flex: 1을 주면 이름이 로고 바로 옆에서 시작하고, 체크 표시만
+   오른쪽 끝에 남는다 — 원래 의도한 배치다. */
 .ds-opt-main {
+  flex: 1;
   min-width: 0;
+  text-align: left;
 }
 .ds-opt-main small {
   display: block;

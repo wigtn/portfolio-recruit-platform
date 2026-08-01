@@ -185,6 +185,8 @@ export function ContactForm() {
           목록에 없다고 못 적으면 그 문의는 "기타"로 뭉개진다. */}
       <div className="field">
         <label>관심 분야</label>
+        {/* 폭을 옆 칸들과 맞춘다. .ds-select는 inline-flex라 내용만큼만
+            넓어지는데, 위아래 입력칸은 전폭이라 이 줄만 짧아 보였다 */}
         <Select
           value={domain}
           onChange={setDomain}
