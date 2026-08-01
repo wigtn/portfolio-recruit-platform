@@ -236,10 +236,32 @@ test("모바일 탭·페이지네이션·푸터·채용 필터가 좁은 폭에 
   expect(searchBox!.width).toBeGreaterThan(260);
   expect(searchBox!.x).toBeGreaterThanOrEqual(toolsBox!.x - 1);
 
+  /* 푸터 계약이 바뀌었다.
+
+     2열을 검증하고 있었다. 그때는 제목과 목록이 늘 펼쳐져 있어서 2열이
+     스크롤을 줄여 줬다. 지금은 접히는 아코디언이라 세로 한 줄이 맞다 —
+     2열이면 셋 중 하나가 홀로 남아 빈 칸이 생기고, 하나를 펼치면 옆 칸이
+     따라 늘어나 경계가 어긋난다.
+
+     열 수 대신 지켜야 할 것을 본다: 한 줄로 서고, 접힌 상태로 시작하고,
+     눌러서 펼칠 수 있다. */
   const footerColumns = await page
     .locator(".footer .ftop")
     .evaluate((node) => getComputedStyle(node).gridTemplateColumns);
-  expect(footerColumns.trim().split(/\s+/)).toHaveLength(2);
+  expect(footerColumns.trim().split(/\s+/)).toHaveLength(1);
+
+  const groups = page.locator(".footer .fcol");
+  await expect(groups).toHaveCount(3);
+  // 접힌 채로 시작한다 — 셋이 다 펼쳐지면 푸터가 화면 두 개 분량이다
+  expect(await groups.first().evaluate((n: HTMLDetailsElement) => n.open)).toBe(
+    false,
+  );
+  await groups.first().locator("summary").click();
+  expect(await groups.first().evaluate((n: HTMLDetailsElement) => n.open)).toBe(
+    true,
+  );
+  await expect(groups.first().locator(".flinks a").first()).toBeVisible();
+
   await expect(page.locator(".ft-brand")).toBeVisible();
   await expectNoDocumentOverflow(page);
 });

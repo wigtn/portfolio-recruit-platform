@@ -95,7 +95,26 @@ export function AgentCursor() {
           inline: "nearest",
           behavior: "smooth",
         });
-        await sleep(560);
+        /* 스크롤이 멈출 때까지 기다린다.
+
+           560ms를 세는 방식이었다. 부드러운 스크롤은 거리와 기기에 따라
+           그보다 오래 걸리는데, 그러면 아직 흐르는 중인 좌표로 커서를
+           보내고 테두리는 또 다른 시점의 좌표로 그린다 — 커서와 테두리가
+           따로 노는 것으로 보인다.
+
+           시간이 아니라 상태를 본다. 대상의 위치가 두 프레임 연속 같으면
+           멈춘 것이다. 상한(1.2초)은 스크롤이 끝나지 않는 경우의 안전장치다. */
+        const until = Date.now() + 1200;
+        // 이름은 lastY다. 바깥에 커서 좌표를 들고 있는 ref `last`가 있어서
+        // 같은 이름을 쓰면 그것을 가린다
+        let lastY = Number.NaN;
+        for (;;) {
+          const y = target.getBoundingClientRect().top;
+          if (Math.abs(y - lastY) < 0.5) break;
+          if (Date.now() > until) break;
+          lastY = y;
+          await sleep(80);
+        }
       }
       if (!alive) return;
 
