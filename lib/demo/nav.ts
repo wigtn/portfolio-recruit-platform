@@ -32,17 +32,17 @@ export const MAIN_NAV: NavItem[] = [
   },
   {
     label: "회사 리뷰",
-    short: "회사",
+    short: "회사리뷰",
     href: "/companies",
     match: "/companies",
     icon: "building",
   },
   {
     label: "채용공고",
-    short: "채용",
+    short: "채용공고",
     href: "/jobs",
     match: "/jobs",
-    icon: "trending",
+    icon: "briefcase",
   },
   {
     label: "공지",
@@ -64,7 +64,7 @@ export const MAIN_NAV: NavItem[] = [
  * - 홈을 넣은 이유는 모바일에서 홈으로 돌아갈 길이 헤더 로고 하나뿐이라서다.
  */
 export const TAB_NAV: NavItem[] = [
-  { label: "홈", short: "홈", href: "/", match: "/", icon: "layout" },
+  { label: "홈", short: "홈", href: "/", match: "/", icon: "home" },
   MAIN_NAV[0],
   MAIN_NAV[1],
   MAIN_NAV[2],

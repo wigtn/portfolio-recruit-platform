@@ -137,6 +137,19 @@ export function IconSprite() {
         <rect x="2" y="4" width="20" height="16" rx="2" />
         <path d="m22 7-10 5L2 7" />
       </symbol>
+      {/* 집. 하단 탭바의 홈 자리에 쓴다. layout(칸 나뉜 사각형)을 쓰고
+          있었는데 그건 대시보드로 읽힌다 */}
+      <symbol id="i-home" viewBox="0 0 24 24">
+        <path d="M3 10.5 12 3l9 7.5" />
+        <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
+        <path d="M9.5 21v-6h5v6" />
+      </symbol>
+      {/* 서류 가방. 채용공고 자리. trending(우상향 화살표)은 지표로 읽힌다 */}
+      <symbol id="i-briefcase" viewBox="0 0 24 24">
+        <rect x="2.5" y="7.5" width="19" height="12.5" rx="2" />
+        <path d="M9 7.5V5.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5.5v2" />
+        <path d="M2.5 12.5h19" />
+      </symbol>
       <symbol id="i-layout" viewBox="0 0 24 24">
         <rect x="3" y="3" width="18" height="18" rx="2" />
         <line x1="3" y1="9" x2="21" y2="9" />

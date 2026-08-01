@@ -48,9 +48,14 @@ small,
 }
 
 /* 실제 앱에서는 목업 프레임이 아니라 viewport에 상주한다. */
+/* 두 fab은 우하단에 나란히 선다. 챗봇이 오른쪽 끝, 가이드가 그 왼쪽.
+   세로로 쌓으면 위아래로 서로를 가리고, 양 끝으로 갈라 두면 시선이 두 곳을
+   오간다. 나란히 두고 **한쪽 패널이 열리면 다른 쪽은 숨는다** — 화면에
+   패널은 하나만 있으면 된다 */
 .demowidget {
   position: fixed;
-  right: max(18px, var(--safe-r));
+  /* 챗봇 fab(44px) + 간격 12px 만큼 왼쪽으로 */
+  right: calc(max(18px, var(--safe-r)) + 56px);
   bottom: var(--dock-b);
   /* 체험 가이드는 화면 안 안내(검색 패널 60·빈검색 툴팁 46)보다 항상 위 —
      사용자 지시. 진짜 모달(85+)과 딤에만 양보한다. */
@@ -300,7 +305,7 @@ small,
 
 @media (max-width: 640px) {
   .demowidget {
-    right: 12px;
+    right: calc(max(12px, var(--safe-r)) + 56px);
     /* bottom을 여기서 따로 정하지 않는다. 예전에는 12px이 박혀 있어서
        탭바가 서도 그 아래에 그대로 남아 탭 두 칸을 덮었다. 아래에 붙는
        것들의 기준선은 --dock-b 하나여야 한다 */
@@ -930,9 +935,9 @@ small,
     height: 100%;
     /* 라벨이 두 줄로 접히면 칸 높이가 흔들린다 */
     white-space: nowrap;
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.04em;
     line-height: 1;
     color: var(--ink-3);
     text-decoration: none;
@@ -1094,11 +1099,48 @@ small,
     opacity: 0;
     transform: translateY(12px);
     pointer-events: none;
+    /* opacity: 0만으로는 계속 그린다. backdrop-filter를 단 요소는 보이지
+       않아도 뒤 배경을 매 프레임 다시 흐린다. 안 보이는 물건이 값을 내는
+       셈이다. 사라진 뒤에는 렌더에서 아예 뺀다 */
+    visibility: hidden;
   }
   .tabbar {
     transition:
       opacity 0.22s ease,
-      transform 0.22s var(--ease-out-soft);
+      transform 0.22s var(--ease-out-soft),
+      visibility 0s linear 0.22s;
+  }
+  body:has(.modalwrap) .tabbar,
+  body:has(.pdrawer.is-open) .tabbar,
+  body:has(.evpop) .tabbar {
+    transition-delay: 0s, 0s, 0.22s;
+  }
+
+  /* ── 챗봇과 함께 뜰 때 ──
+     챗 패널이 열리면 유리 두 장이 겹친다. 패널도 탭바도 뒤 배경을 흐리는데,
+     겹친 자리는 두 번 흐려야 한다. 게다가 말풍선의 오로라와 도는 테두리가
+     매 프레임 다시 칠해지면서 그 아래 두 장을 같이 끌고 간다.
+
+     탭바의 흐림을 줄인다. 챗 패널이 이미 화면 대부분을 덮고 있어서 탭바
+     뒤에 비칠 것도 별로 없다. 유리 느낌은 테두리와 반사가 만들고 있으므로
+     흐림만 낮춰도 인상은 거의 그대로다. */
+  body:has(.chatpanel) .tabbar {
+    backdrop-filter: blur(8px) saturate(1.2);
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+  }
+
+  /* 도는 테두리는 요소 전체를 매 프레임 다시 칠한다. 좁은 화면에서는
+     그 값이 특히 크다. 생각 중이라는 신호는 오브와 문구가 이미 하고 있다 */
+  .chatbody .bub.is-thinking::before {
+    animation: none;
+    background: linear-gradient(120deg, var(--accent), #a855f7);
+    opacity: 0.55;
+  }
+
+  /* 그리는 범위를 상자 안으로 가둔다. 대화가 길어져도 바깥 레이아웃을
+     다시 계산하지 않는다 */
+  .chatbody {
+    contain: layout paint;
   }
 }
 
@@ -13621,6 +13663,73 @@ select.in {
   font-size: 12.5px;
   color: var(--ink-4);
 }
+
+/* 회사 정보 — 본문 마지막 블록. 항목이 넷이라 두 줄 두 칸이 제일 안정적이다.
+   좁아지면 한 칸으로 접는다(320px에서 dt/dd가 붙으면 값이 잘린다) */
+.jobdoc-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  corner-shape: squircle;
+  background: var(--line);
+  overflow: hidden;
+}
+.jobdoc-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--bg);
+}
+.jobdoc-facts dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-4);
+}
+.jobdoc-facts dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.jobdoc-facts dd small {
+  margin-left: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-4);
+}
+.jobdoc-cotags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.jobdoc-cotags span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.jobdoc-colink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.jobdoc-colink svg {
+  width: 14px;
+  height: 14px;
+}
+@media (max-width: 520px) {
+  .jobdoc-facts {
+    grid-template-columns: 1fr;
+  }
+}
 /* 지원 카드 — 사이드 sticky(wside가 이미 sticky) */
 .jobapply {
   border-color: color-mix(in srgb, var(--accent) 25%, var(--line));
@@ -14364,21 +14473,29 @@ select.in {
    ═══════════════════════════════════════════════════════════════════════ */
 .chatwidget {
   position: fixed;
-  /* 가이드 fab과 한 세로열 — 같은 오른쪽 기준선에 서고, 가이드 fab(44px)
-     + 간격 12px 만큼 위로 올라간다(사용자 지시: 버튼들 세로 정렬) */
+  /* 오른쪽 끝. 가이드가 왼쪽에 있으므로 위로 비켜설 이유가 없다 */
   right: max(18px, var(--safe-r));
-  bottom: calc(var(--dock-b) + 56px);
+  bottom: var(--dock-b);
   z-index: 80;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 10px;
 }
-/* 가이드 코치 말풍선·가이드 패널은 fab 위로 펼쳐진다 — 세로열에선 그 자리가
-   곧 챗봇 fab 자리다. 열려 있는 동안 챗봇이 비켜선다(코치는 한 번 닫으면
-   다시 안 뜬다). 예전 가로배치 시절엔 모바일만 걸던 규칙을 전 폭으로 올렸다 */
+/* 한 번에 패널 하나.
+
+   두 fab이 나란히 서고 패널은 그 위로 펼쳐진다. 둘이 동시에 열리면 서로를
+   덮고, 어느 쪽에 대고 말하는 중인지도 흐려진다. 그래서 한쪽이 열리면
+   다른 쪽 fab은 물러난다.
+
+   양방향이어야 한다. 한쪽만 걸면 그쪽에서 열 때는 정리되는데 반대로 열면
+   그대로 겹친다.
+
+   코치 말풍선(.guide-coach)은 여기서 뺀다. 그건 패널이 아니라 가이드 fab
+   왼쪽에 붙는 안내 한 줄이고, 첫 진입에 바로 뜬다 — 이것까지 걸면 페이지를
+   열자마자 상담 버튼이 사라진다. */
 body:has(.dwpanel) .chatwidget,
-body:has(.guide-coach) .chatwidget {
+body:has(.chatpanel) .demowidget {
   display: none;
 }
 
@@ -15960,17 +16077,33 @@ button.titem {
   font-weight: 800;
   letter-spacing: -0.03em;
 }
+/* 헤더의 .brand .mark와 같은 마크다. 한 화면에 로고가 두 벌 있으면
+   어느 쪽이 진짜인지 흐려진다 — 크기만 다르고 형태는 같아야 한다 */
 .ft-mark {
+  position: relative;
   display: grid;
   place-items: center;
   width: 27px;
   height: 27px;
   border-radius: 7px;
-  background: var(--accent);
+  corner-shape: squircle;
+  background: #1b1e28;
   color: #fff;
   font-size: 14px;
   font-weight: 800;
+  letter-spacing: -0.04em;
+  padding-right: 4px;
   flex-shrink: 0;
+}
+.ft-mark::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  bottom: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 99px;
+  background: #9b51e0;
 }
 .ft-desc {
   max-width: 26ch;
@@ -16190,12 +16323,19 @@ body:has(.pdrawer) {
     height: 3px;
   }
 
-  /* iOS Safari는 16px 미만 입력에 포커스하면 화면을 확대한다. */
+  /* iOS Safari는 16px 미만 입력에 포커스하면 화면을 확대한다.
+
+     맨 앞의 `textarea`만으로는 안 된다. `.chatform textarea`가 13px을
+     들고 있고 그쪽이 더 구체적이라 이긴다. 챗봇 입력만 계속 확대되던
+     이유다. 구체적인 선택자는 여기서도 구체적으로 적어야 한다. */
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
   textarea,
   select,
   .in,
-  .chatform input {
+  .chatform input,
+  .chatform textarea,
+  .gsearch input,
+  .search input {
     font-size: 16px;
   }
 }
@@ -16604,18 +16744,15 @@ body:has(.pdrawer) {
     display: none;
   }
   body:has(.chatpanel) .demowidget,
-  body:has(.dwpanel) .chatwidget,
-  body:has(.guide-coach) .chatwidget {
+  body:has(.dwpanel) .chatwidget {
     display: none;
   }
   .demowidget {
-    right: max(12px, var(--safe-r));
+    right: calc(max(12px, var(--safe-r)) + 56px);
     /* bottom은 기준선(--dock-b)을 그대로 쓴다. 여기서 다시 박으면 탭바
        아래로 내려가 탭이 가려진다 */
   }
   .chatwidget {
-    /* 세로열 배치 — 가이드 fab과 같은 오른쪽 기준선. 위로 56px 올라가는
-       bottom은 기본 규칙을 그대로 물려받는다 */
     right: max(12px, var(--safe-r));
   }
   /* 패널이 열리면 가이드 fab이 숨으므로(아래 has 규칙) 56px 리프트를
@@ -16632,13 +16769,19 @@ body:has(.pdrawer) {
           max(24px, env(safe-area-inset-left) + env(safe-area-inset-right))
       )
     );
-    /* 상한이 아니라 고정 — 내용이 적어도 이 높이를 지킨다 */
+    /* 상한이 아니라 고정 — 내용이 적어도 이 높이를 지킨다.
+
+       예전에는 640px에서 24px과 56px만 뺐다. 그런데 패널은 바닥이 아니라
+       --dock-b 위에 선다(탭바 높이 58 + 간격 14 + 여백 16 = 88). 그만큼을
+       안 빼서 아래가 잘렸다. 게다가 iOS는 주소 표시줄이 나타나면 dvh가
+       더 줄어든다.
+
+       기준선을 그대로 빼고, 상한도 520으로 낮춘다. 모바일에서 640은
+       화면을 거의 다 덮는데, 대화 몇 줄 보자고 화면을 다 가릴 이유가 없다. */
     height: min(
-      640px,
+      520px,
       calc(
-        100dvh -
-          max(24px, env(safe-area-inset-top) + env(safe-area-inset-bottom)) -
-          56px
+        100dvh - var(--dock-b) - max(20px, env(safe-area-inset-top)) - 56px
       )
     );
   }
@@ -16689,4 +16832,69 @@ body:has(.pdrawer) {
   .promobar .rbtn {
     padding-inline: 9px;
   }
+}
+
+/* ── 문의 내용 작성 틀 ──
+      빈 칸을 마주하면 무엇을 적어야 할지 몰라 한 줄로 끝내거나 그냥 닫는다.
+      누르면 뼈대가 들어가는 버튼을 위에 둔다. 필수 항목을 늘리지 않고
+      문턱만 낮추는 방법이다. */
+.msgtips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.msgtip {
+  padding: 6px 11px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    color 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+.msgtip:hover {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--card));
+}
+.msgtip:active {
+  transform: scale(0.97);
+}
+
+/* ── 헤더 로고 ──
+      글자만 있던 자리에 마크를 넣는다. 마크는 검은 사각에 흰 W와 보라 점이라
+      배경색을 따라가지 않는다. 그래서 이미지가 아니라 요소로 그린다 —
+      테마를 바꿔도 마크는 마크로 남고, 화면 배율에 따라 흐려지지 않는다. */
+.brand .mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  corner-shape: squircle;
+  background: #1b1e28;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  /* W가 상자 안에서 왼쪽으로 붙는다. 오른쪽 아래 점 자리를 비워야 한다 */
+  padding-right: 5px;
+  flex-shrink: 0;
+}
+.brand .mark::after {
+  content: "";
+  position: absolute;
+  right: 5px;
+  bottom: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: #9b51e0;
 }

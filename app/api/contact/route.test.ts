@@ -62,7 +62,7 @@ describe("문의 API", () => {
         name: "테스터",
         contact: "tester@example.com",
         company: "WIGTN",
-        modules: ["채용", "채용"],
+        domain: "채용, 커리어",
         message: "<script>alert(1)</script>",
       }),
     );
@@ -73,7 +73,7 @@ describe("문의 API", () => {
     expect(response.status).toBe(200);
     expect(result).toMatchObject({ ok: true });
     expect(result.requestId).toEqual(expect.any(String));
-    expect(forwarded.lead.modules).toEqual(["채용"]);
+    expect(forwarded.lead.domain).toBe("채용, 커리어");
     expect(forwarded.lead.message).toContain("&lt;script&gt;");
     expect(forwarded.lead.message).not.toContain("<script>");
   });
@@ -121,6 +121,56 @@ describe("문의 API", () => {
     expect(mail.reply_to).toBe("tester@example.com");
     // 살균: 태그가 이스케이프돼 발송된다
     expect(mail.html).not.toContain("<b>안녕하세요</b>");
+  });
+
+  /* 연락처는 메일 HTML에서 유일하게 href 속성 안으로 들어가는 값이다.
+     꺾쇠만 막고 따옴표를 두면 속성을 닫고 나와 <a>에 임의 속성을 붙일 수
+     있다 — 본문이 아니라 링크가 통로다. */
+  it("따옴표가 섞인 연락처가 링크 속성을 깨고 나오지 못한다", async () => {
+    process.env.WIGTN_RESEND_API_KEY = "unit-test-key";
+    delete process.env.CONTACT_WEBHOOK_URL;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(
+      request({
+        name: "테스터",
+        contact: `tester@example.com" onmouseover="steal()`,
+      }),
+    );
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const mail = JSON.parse(String(init.body));
+
+    expect(response.status).toBe(200);
+    /* 속성이 열리지 않는다. `onmouseover=`라는 글자 자체는 남는다 —
+       &quot; 뒤의 그냥 글자라서. 위험한 건 진짜 따옴표가 붙은 형태다. */
+    expect(mail.html).not.toContain('onmouseover="');
+    expect(mail.html).not.toContain('example.com" ');
+    // 값 자체는 글자로 남아 담당자가 무엇이 들어왔는지 볼 수 있다
+    expect(mail.html).toContain("&quot;");
+    // 형태가 아니면 링크로도, 답장 주소로도 쓰지 않는다
+    expect(mail.html).not.toContain("mailto:");
+    expect(mail.reply_to).toBeUndefined();
+  });
+
+  it("이메일 형태가 아닌 연락처는 답장 주소로 쓰지 않는다", async () => {
+    process.env.WIGTN_RESEND_API_KEY = "unit-test-key";
+    delete process.env.CONTACT_WEBHOOK_URL;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    // @는 있지만 주소가 아니다. 그대로 넣으면 Resend가 메일 전체를 거절한다
+    await POST(request({ name: "테스터", contact: "카톡 @tester 로 주세요" }));
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const mail = JSON.parse(String(init.body));
+
+    expect(mail.reply_to).toBeUndefined();
+    expect(mail.html).not.toContain("mailto:");
+    expect(mail.html).toContain("카톡 @tester 로 주세요");
   });
 
   it("이메일 실패 시 웹훅으로 폴백해 리드를 지킨다", async () => {
@@ -183,7 +233,7 @@ describe("슬랙 웹훅", () => {
         name: "테스터",
         contact: "tester@example.com",
         company: "WIGTN",
-        modules: ["채용"],
+        domain: "채용, 커리어",
         message: "<script>alert(1)</script>문의드립니다",
       }),
     );
@@ -216,7 +266,6 @@ describe("슬랙 웹훅", () => {
         name: "테스터",
         contact: "tester@example.com",
         company: "",
-        modules: [],
         message: "문의",
       }),
     );
@@ -254,7 +303,6 @@ describe("발송 채널", () => {
         name: "테스터",
         contact: "tester@example.com",
         company: "WIGTN",
-        modules: [],
         message: "문의",
       }),
     );
@@ -282,7 +330,6 @@ describe("발송 채널", () => {
         name: "테스터",
         contact: "tester@example.com",
         company: "",
-        modules: [],
         message: "문의",
       }),
     );
@@ -306,7 +353,6 @@ describe("발송 채널", () => {
         name: "테스터",
         contact: "tester@example.com",
         company: "",
-        modules: [],
         message: "문의",
       }),
     );

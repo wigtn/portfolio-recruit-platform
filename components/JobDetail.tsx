@@ -77,12 +77,17 @@ export function JobDetail({ jobId }: { jobId: string }) {
   const company = COMPANIES.find((item) => item.slug === row.companySlug);
   const seedJob = JOBS.find((item) => item.id === row.id);
   const closed = row.status === "마감";
-  const others = (rows ?? []).filter(
-    (item) =>
-      item.companySlug === row.companySlug &&
-      item.id !== row.id &&
-      item.status === "노출중",
-  );
+  /* 3건까지만. 오른쪽 기둥이 본문보다 길어지면 본문 카드 아래에 빈 면이
+     그만큼 남는다. 여기서 할 일은 "이 회사에 다른 자리도 있다"를 알리는
+     것이지 목록을 다 보여주는 게 아니다 — 나머지는 회사 페이지에서 본다 */
+  const others = (rows ?? [])
+    .filter(
+      (item) =>
+        item.companySlug === row.companySlug &&
+        item.id !== row.id &&
+        item.status === "노출중",
+    )
+    .slice(0, 3);
 
   const apply = () => {
     if (role === "guest") {
@@ -225,6 +230,48 @@ export function JobDetail({ jobId }: { jobId: string }) {
                 </span>
               ))}
             </div>
+          </section>
+        ) : null}
+
+        {/* 회사 정보 — 본문 맨 아래. 지원할지 정하는 마지막 순간에 실제로
+            확인하는 것들이다(규모, 어디로 출근하는지, 이 회사 영업직이
+            보통 얼마를 받는지). 오른쪽 지원 카드는 짧아야 하므로 여기 둔다 */}
+        {company ? (
+          <section className="jobdoc-sec is-co">
+            <h4>회사 정보</h4>
+            <dl className="jobdoc-facts">
+              <div>
+                <dt>업종</dt>
+                <dd>{company.industry}</dd>
+              </div>
+              <div>
+                <dt>근무 지역</dt>
+                <dd>{company.region}</dd>
+              </div>
+              <div>
+                <dt>사원수</dt>
+                <dd>{company.employees.toLocaleString()}명</dd>
+              </div>
+              <div>
+                <dt>영업직 연봉</dt>
+                <dd>
+                  {company.salaryLow.toLocaleString()}~
+                  {company.salaryHigh.toLocaleString()}만원
+                  <small>{company.salaryCount}건 기준</small>
+                </dd>
+              </div>
+            </dl>
+            {company.tags.length > 0 ? (
+              <div className="jobdoc-cotags">
+                {company.tags.map((tag) => (
+                  <span key={tag}>#{tag}</span>
+                ))}
+              </div>
+            ) : null}
+            <Link className="jobdoc-colink" href={`/companies/${company.slug}`}>
+              {company.name} 회사 페이지에서 리뷰 {company.reviewCount}건 보기
+              <Icon name="arrow" />
+            </Link>
           </section>
         ) : null}
 
