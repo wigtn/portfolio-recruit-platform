@@ -15436,7 +15436,7 @@ select.in {
     padding 0.3s ease,
     opacity 0.2s ease;
 }
-.chatpanel.is-operating {
+.chatpanel.is-pill {
   /* 알약으로 변신한다 — 머리 줄 하나 크기.
 
      232px로 줄여 마지막 말풍선을 남겨 봤는데, 그 창이 커서 라벨과 같은
@@ -15456,10 +15456,10 @@ select.in {
     0 12px 30px rgba(16, 24, 40, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
-.chatpanel.is-operating .chatbody,
-.chatpanel.is-operating .chatchips,
-.chatpanel.is-operating .chatform,
-.chatpanel.is-operating .chatnote {
+.chatpanel.is-pill .chatbody,
+.chatpanel.is-pill .chatchips,
+.chatpanel.is-pill .chatform,
+.chatpanel.is-pill .chatnote {
   max-height: 0;
   opacity: 0;
   padding-top: 0;
@@ -15469,11 +15469,11 @@ select.in {
 /* 캡슐 안에서 머리 줄이 곧 전부다. 경계선은 걷고, 재생 버튼처럼 지금
    상관없는 조작은 자리째 접는다 — 남는 건 아바타 + 진행 문구 + 펼치기 +
    닫기다. 닫기는 캡슐 오른쪽 끝에 닿는다(사용자 지시). */
-.chatpanel.is-operating .chathead {
+.chatpanel.is-pill .chathead {
   border-bottom-color: transparent;
   padding-right: 9px;
 }
-.chatpanel.is-operating .cskip {
+.chatpanel.is-pill .cskip {
   width: 0;
   padding: 0;
   margin: 0;
@@ -15485,35 +15485,53 @@ select.in {
 }
 /* 우측 밀기는 cskip의 margin-left: auto가 담당했다. 캡슐에서 그걸 0으로
    접었으니 펼치기 버튼이 이어받아야 닫기가 오른쪽 끝에 선다(리뷰 지적) */
-.chatpanel.is-operating .cexpand {
+.chatpanel.is-pill .cexpand {
   margin-left: auto;
 }
-/* 진행 문구는 한 줄로 흐른다. 두 줄로 꺾이면 캡슐 높이가 흔들린다 */
-.chatpanel.is-operating .ct span {
-  display: block;
-  white-space: nowrap;
+/* 진행 문구에 두 줄을 준다.
+
+   한 줄 말줄임이었는데, 안내 문구가 "채용공고 하이라이트. 실데이터로
+   돌아가요"처럼 20자를 넘어 대부분 …로 잘렸다(사용자 지적). 캡슐에서
+   읽어야 할 것은 제목이 아니라 이 문장이다.
+
+   캡슐을 키우지 않고 자리를 만든다 — 제목("상담 챗봇")을 접는다.
+   말하는 주체는 왼쪽 아바타가 이미 말하고 있어서 캡슐에서는 한 번 더
+   적을 이유가 없다. 그 한 줄을 문구가 물려받아 두 줄이 된다.
+
+   두 줄을 넘기면 그때는 자른다 — 높이가 흔들리면 캡슐이 출렁인다. */
+.chatpanel.is-pill .ct b {
+  display: none;
+}
+.chatpanel.is-pill .ct span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  /* 제목이 빠진 만큼 본문이 커져도 된다. 캡슐의 유일한 글이다 */
+  font-size: 12.5px;
+  line-height: 1.42;
+  color: var(--ink-2);
 }
 /* 펼치기 — 아래(down) 아이콘을 뒤집어 "위로 펼친다"로 읽는다.
    닫기와 같은 .cx 문법이라 크기·색·터치 면적이 같다 */
 .cexpand .ic {
   transform: rotate(180deg);
 }
-.chatpanel.is-operating .bub.bot {
+.chatpanel.is-pill .bub.bot {
   background: color-mix(in srgb, var(--card-2) 40%, transparent);
   border-color: color-mix(in srgb, var(--line) 40%, transparent);
 }
-.chatpanel.is-operating .bub.user {
+.chatpanel.is-pill .bub.user {
   background: color-mix(in srgb, var(--accent) 68%, transparent);
 }
 /* 글자는 그대로 둔다. 오히려 배경이 옅어질수록 또렷해야 읽힌다 */
-.chatpanel.is-operating .bub.bot,
-.chatpanel.is-operating .tstep,
-.chatpanel.is-operating .thinking-say {
+.chatpanel.is-pill .bub.bot,
+.chatpanel.is-pill .tstep,
+.chatpanel.is-pill .thinking-say {
   color: var(--ink);
 }
-.chatpanel.is-operating .bub.user {
+.chatpanel.is-pill .bub.user {
   color: #fff;
   text-shadow: 0 1px 2px color-mix(in srgb, var(--accent) 55%, transparent);
 }
@@ -16594,6 +16612,29 @@ body:has(.agc-ring) .evpop {
 .chatbody .bub.is-confirm {
   border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
   background: color-mix(in srgb, var(--accent) 7%, var(--card));
+}
+/* 답을 기다리는 동안만 한 번 시선을 끈다.
+
+   챗봇은 안내 중에 화면을 옮기고 커서를 날린다. 그 와중에 채팅창에
+   조용히 뜬 질문은 놓치기 쉽다(사용자 지적: 수락 버튼이 뜬지도 모르겠다).
+   무한 반복은 재촉이라 세 번만 뛰고 멈춘다 — 물어봤다는 사실만 전하면
+   된다. box-shadow만 움직여 레이아웃은 건드리지 않는다. */
+.chatbody .bub.is-confirm:has(.hitl) {
+  animation: hitl-knock 1.1s var(--ease-out-soft) 3;
+}
+@keyframes hitl-knock {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+  35% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chatbody .bub.is-confirm:has(.hitl) {
+    animation: none;
+  }
 }
 .chatbody .hitl {
   display: flex;
@@ -17845,7 +17886,7 @@ body:has(.pdrawer) {
 
      여기서 display: none으로 본문을 없애던 규칙을 걷었다. 순간에 사라져
      "확 접히는" 것으로 보였고, 걸음 피드까지 없어져 무슨 도구가 도는지
-     읽을 수 없었다(실기기 지적 둘 다). 지금은 전역 .chatpanel.is-operating이
+     읽을 수 없었다(실기기 지적 둘 다). 지금은 전역 .chatpanel.is-pill이
      높이를 232px로 줄이고 마지막 말풍선을 남긴다 — 두 클래스 선택자라
      이 블록의 .chatpanel 높이보다 항상 세다. */
   /* 여기에 있던 `body:has(.evpop) .chatwidget` 리프트도 뺐다. 팝업이 fab
