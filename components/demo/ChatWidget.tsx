@@ -258,6 +258,14 @@ const CATCH_UP = 45;
 const TAIL = 12;
 /** 한 요청에서 이어 돌릴 도구 걸음 수 상한. 안내 하나에는 이면 충분하다 */
 const MAX_STEPS = 6;
+/* 화면이 바뀐 뒤 눈이 새 화면을 읽을 시간.
+
+   settled()는 화면이 "그려졌는지"만 본다. 그려지자마자 다음 걸음으로
+   넘어가면 기계에게는 충분해도 사람에게는 화면이 스치듯 지나간다(실기기
+   지적: 눈으로 천천히 쫓아가기 힘든 속도). 그려진 뒤 한 박자 세워 둔다. */
+const SCREEN_BEAT_MS = 1000;
+/** 걸음과 걸음 사이 숨. 연달아 도는 조작이 한 동작으로 뭉개지지 않게 */
+const STEP_GAP_MS = 480;
 /* 다음 걸음을 물었을 때 **첫 응답**까지 기다릴 시간.
    답변 길이 제한이 아니다. 한 글자라도 시작하면 끝까지 흐르게 둔다.
    라우트가 도구 판단 12초, 답변 시작 15초를 스스로 재므로 그 뒤에 선다.
@@ -487,8 +495,10 @@ export function ChatWidget() {
     const el = body.current;
     if (!el || !stick.current) return;
     el.scrollTo({ top: el.scrollHeight });
-    // 생각 중 줄도 높이를 차지한다. 붙었다 떨어질 때 같이 따라가야 한다
-  }, [msgs, thinking, running]);
+    /* 생각 중 줄도 높이를 차지한다. 붙었다 떨어질 때 같이 따라가야 한다.
+       operating도 본다 — 패널이 접히면서 chatbody가 낮아지면 보이는 창이
+       줄어드는데, 다시 바닥을 잡아야 지금 도는 걸음이 창 안에 남는다 */
+  }, [msgs, thinking, running, operating]);
 
   function onScroll() {
     const el = body.current;
@@ -785,10 +795,13 @@ export function ChatWidget() {
             window.clearTimeout(watchdog);
             resolve();
           };
+          /* 커서의 전체 여정(찾기 2.2 + 스크롤 1.2 + 비행 0.76 + 숨 0.56 +
+             누름 0.56)보다 넉넉히 뒤. 6초였을 때 박자를 늘리자 정상 진행을
+             끊었다 */
           const watchdog = window.setTimeout(() => {
             window.removeEventListener(AGENT_DONE_EVENT, onDone);
             resolve();
-          }, 6000);
+          }, 9000);
           window.addEventListener(AGENT_DONE_EVENT, onDone);
         });
 
@@ -1092,10 +1105,14 @@ export function ChatWidget() {
     }
 
     markProgress("chatbot");
-    /* 화면을 옮겼으면 실제로 그 화면이 그려질 때까지 기다린다.
-       고정 시간으로 어림하면 느린 날엔 옛 화면의 빈 자리를 짚고, 빠른 날엔
-       멀쩡히 그려진 화면 앞에서 괜히 멈춰 있다 */
-    if (close) await settled(2500);
+    /* 화면을 옮겼으면 실제로 그 화면이 그려질 때까지 기다리고, 그려진 뒤
+       한 박자 세운다. settled()는 기계의 기준이고 SCREEN_BEAT는 사람의
+       기준이다 — 화면이 뜨자마자 다음 조작이 시작되면 방금 어디로 왔는지
+       읽을 새가 없다 */
+    if (close) {
+      await settled(2500);
+      await wait(SCREEN_BEAT_MS);
+    }
     return { ok: true, note };
   }
 
@@ -1156,6 +1173,9 @@ export function ChatWidget() {
 
       for (const call of calls) {
         if (controller.signal.aborted) break;
+        /* 둘째 걸음부터는 숨을 고르고 시작한다. 연달아 도는 조작이 한
+           동작으로 뭉개지면 눈이 따라올 수 없다 */
+        if (done > 0) await wait(STEP_GAP_MS);
         /* 실행하는 동안 무엇을 하는 중인지 띄운다. 화면이 저절로 바뀌는 몇
            초를 아무 설명 없이 두면 오작동으로 읽힌다 */
         setRunning(call.name);
@@ -1605,6 +1625,10 @@ export function ChatWidget() {
           ]
             .filter(Boolean)
             .join(" ")}
+          /* 패널 높이가 접히고 펴질 때마다 바닥을 다시 잡는다. transition은
+             React 이펙트를 깨우지 않아서, 여기서 받지 않으면 접힌 창이
+             걸음 피드의 중간을 보여준다 */
+          onTransitionEnd={onGrowEnd}
         >
           <div className="chathead">
             {/* 머리 줄 아바타는 정적이다. 생각 중이라는 사실은 본문의
@@ -1615,9 +1639,14 @@ export function ChatWidget() {
             <div className="ct">
               <b>상담 챗봇</b>
               <span>
-                {playing
-                  ? "대화가 재생되고 있어요"
-                  : "무엇을 만들지, 얼마나 걸릴지 물어보세요"}
+                {/* 접혀 있는 동안엔 머리 줄이 유일한 문장이다. 지금 무슨
+                    도구가 도는지를 여기서 말해야 접힌 창이 벙어리가 안 된다 */}
+                {operating
+                  ? (running ? TOOL_RUNNING[running] : undefined) ??
+                    "화면을 안내하고 있어요"
+                  : playing
+                    ? "대화가 재생되고 있어요"
+                    : "무엇을 만들지, 얼마나 걸릴지 물어보세요"}
               </span>
             </div>
             {playing ? (

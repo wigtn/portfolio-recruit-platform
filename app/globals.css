@@ -10883,6 +10883,10 @@ select.in {
   .footer .ft-brand-block {
     grid-column: 1 / -1;
     padding-bottom: 8px;
+    /* ≤900px 블록이 준 밑선을 걷는다. 아코디언 첫 줄(.fcol)이 자기 윗선을
+       그리므로, 여기 밑선까지 남으면 로고 아래 선이 두 줄로 보인다(실기기
+       지적). 선은 아코디언 쪽 하나만 남긴다 */
+    border-bottom: 0;
   }
   .footer .flinks a {
     padding: 6px 0; /* 터치 타깃 확보 */
@@ -12788,39 +12792,34 @@ select.in {
      말하고 있는 하나만 살아 있으면 된다. 나머지는 지나간 말이라 움직일
      이유가 없고, 움직여도 아무도 보지 않는다. */
 }
-/* 회전 블롭 — 파스텔 다색 코닉을 블러로 뭉갠다 */
+/* 회전 블롭 — 파스텔 다색 코닉.
+
+   blur를 걸지 않는다. filter가 걸린 자식은 새 합성 레이어로 올라가고,
+   iOS 사파리는 그 레이어에 부모의 둥근 클립을 다시 적용하지 못한다 —
+   블롭이어야 할 아바타 뒤로 그라데이션 사각형이 드러난다(실기기 확인).
+   원형으로 자르고(-18% + 50%) 번짐 여유를 줄여도 filter가 남아 있는 한
+   재발했다. 레이어 승격의 원인 자체를 없애야 클립이 어디서나 선다.
+
+   블러가 하던 일(색 경계 뭉개기)은 중간 색을 촘촘히 끼워 대신한다.
+   위에 스펙큘러(::after)가 얹히므로 차이는 거의 안 보인다. */
 .aiav::before {
   content: "";
   position: absolute;
-  inset: -30%;
+  inset: -18%;
+  border-radius: 50%;
   background: conic-gradient(
     from var(--aiv-spin),
     #a78bfa,
+    #c4b5fd 12%,
     #f0abfc 26%,
+    #c7d2fe 39%,
     #67e8f9 52%,
+    #93c5fd 64%,
     #818cf8 76%,
+    #9a7cf8 88%,
     #a78bfa
   );
-  filter: blur(4px) saturate(1.15);
-  /* 여기도 기본은 정지. 멈춰 있어도 코닉 그라디언트에 블러가 얹힌 그림은
-     그대로라 겉보기는 거의 같다 — 도는 것만 멈춘다 */
   z-index: 0;
-  /* 자기를 원으로 자른다.
-
-     부모의 overflow: hidden에만 기대면 안 된다. filter가 걸린 자식은 새
-     합성 레이어로 올라가고, 그때 부모의 둥근 클립이 사각으로 떨어지는
-     브라우저가 있다 — 블롭이어야 할 아바타 뒤로 그라데이션 사각형이
-     드러난다(실기기에서 확인).
-
-     border-radius: inherit로는 부족했다. 부모의 8값 %를 자기 크기(부모보다
-     30% 큰 상자) 기준으로 다시 계산해서 모양이 어긋나고, 모서리가 남는다.
-     원이면 어느 크기에서도 모서리가 없다. 블러가 얹혀 있어 블롭 안에서는
-     원인지 블롭인지 구분되지 않는다.
-
-     번짐 여유도 줄인다. -30%로 크게 잡고 5px로 흐리면 부모 밖으로 새는
-     양이 커서, 클립이 한 번 실패하면 그만큼 크게 드러난다. */
-  inset: -18%;
-  border-radius: 50%;
 }
 
 /* ── 살아 움직이는 아바타 ──
@@ -12928,7 +12927,8 @@ select.in {
 }
 .aiav.is-think::before {
   animation-duration: 3s, 1.6s;
-  filter: blur(5px) saturate(1.25);
+  /* filter를 다시 켜지 않는다 — 위 ::before 주석 참고. blur 하나로 iOS
+     클립이 통째로 풀린다 */
 }
 @media (prefers-reduced-motion: reduce) {
   .aiav,
@@ -13454,19 +13454,25 @@ select.in {
   animation: aiav-morph 6.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
   transition: box-shadow 0.2s ease;
 }
+/* blur 없음 — .aiav::before와 같은 이유. filter가 걸린 자식은 iOS에서
+   부모의 둥근 클립을 탈출해 그라데이션 사각형이 드러난다 */
 .aiplaybtn::before {
   content: "";
   position: absolute;
-  inset: -30%;
+  inset: -18%;
+  border-radius: 50%;
   background: conic-gradient(
     from var(--aiv-spin),
     #a78bfa,
+    #c4b5fd 12%,
     #f0abfc 26%,
+    #c7d2fe 39%,
     #67e8f9 52%,
+    #93c5fd 64%,
     #818cf8 76%,
+    #9a7cf8 88%,
     #a78bfa
   );
-  filter: blur(5px) saturate(1.15);
   animation: aiav-spin 8s linear infinite;
   z-index: 0;
 }
@@ -14555,6 +14561,46 @@ select.in {
   background: var(--line-2);
   clip-path: polygon(0 50%, 100% 0, 100% 100%);
   z-index: 0;
+  transition: filter 0.9s ease;
+}
+/* 재생 중 꼬리 외곽선에 흐르는 빔.
+
+   보더 빔(.uk-border-beam)은 말풍선의 둥근 사각을 따라 돌 뿐, 꼬리는
+   별도 clip-path 조각이라 빔이 못 닿는다 — 박스에만 그라데이션이 돌고
+   꼬리는 회색 정지선으로 남았다(실기기 지적). 빔의 경로에 삼각형을
+   끼워 넣을 수는 없으니, 같은 색·같은 주기의 그라데이션을 꼬리 외곽선
+   1.6px에 흘려 빔이 꼬리를 지나는 것처럼 잇는다. */
+.aifloat .aftail::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 50%, 100% 0, 100% 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--accent) 30%, #22d3ee),
+    var(--accent) 50%,
+    color-mix(in oklab, var(--accent) 24%, #f472b6)
+  );
+  background-size: 100% 300%;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.aifloat.is-playing .aftail::before {
+  opacity: 1;
+  transition: opacity 0.35s ease;
+  /* 빔과 같은 2.4s 주기 — 다른 박자로 돌면 두 애니메이션으로 읽힌다 */
+  animation: aftail-beam 2.4s linear infinite;
+}
+.aifloat.is-playing .aftail {
+  filter: drop-shadow(
+    0 0 6px color-mix(in srgb, var(--accent) 45%, transparent)
+  );
+  transition: filter 0.35s ease;
+}
+@keyframes aftail-beam {
+  to {
+    background-position: 0 -300%;
+  }
 }
 .aifloat .aftail::after {
   content: "";
@@ -14896,7 +14942,10 @@ select.in {
 .seen-compact .titem b {
   font-size: 12.5px;
 }
-.seen-compact .titem span {
+/* 설명 한 줄 클램프. .tic을 빼야 한다 — 아이콘 원도 같은 span이라, 여기에
+   걸리면 display: -webkit-box가 grid를 덮어 place-items가 죽고 아이콘이
+   원의 왼쪽 위로 밀린다(실기기 지적: 아이콘이 가운데 정렬이 안 됨) */
+.seen-compact .titem span:not(.tic) {
   font-size: 11px;
   line-height: 1.45;
   display: -webkit-box;
@@ -15316,34 +15365,85 @@ select.in {
 
 /* ── 조작하는 동안 물러나는 창 ──
       챗봇이 화면을 직접 움직이는 몇 초 동안, 정작 봐야 할 것은 뒤에서
-      일어나는 일이다. 그때 창이 불투명한 판으로 앞을 가리고 있으면 무엇이
-      바뀌었는지 보이지 않는다. 유리를 더 얇게 만들어 뒤를 비춘다.
+      일어나는 일이다. 그때 창이 화면 절반을 덮고 있으면 무엇이 바뀌었는지
+      보이지 않는다.
+
+      전에는 모바일에서 display: none으로 본문을 통째로 없앴다. 두 가지가
+      틀렸다 — 없어지는 게 순간이라 창이 "확 접히는" 것으로 보였고(실기기
+      지적), 걸음 피드까지 사라져 챗봇이 지금 무슨 도구를 돌리는지 읽을
+      수 없었다.
+
+      지금은 **줄어들되 마지막 말풍선은 남긴다.** 패널 높이를 낮추면
+      chatbody(flex: 1)가 따라 줄고, 자동 스크롤이 바닥을 잡고 있으므로
+      남은 창에 보이는 것이 곧 지금 도는 걸음이다. 입력칸·칩·주의 문구는
+      높이 0으로 접는다 — 조작 중에 쓸 물건이 아니다.
 
       투명도는 **배경에만** 건다. 요소에 opacity를 걸면 글자까지 같이
-      흐려지고, 그러면 지금 무슨 도구가 도는지 읽을 수 없게 된다. 물러나야
-      하는 건 판이지 글이 아니다. */
-.chatpanel,
-.chatbody .bub.bot,
-.chatbody .bub.user,
-.chatform {
+      흐려진다. 물러나야 하는 건 판이지 글이 아니다. 다만 지나간
+      말풍선(마지막이 아닌 줄)은 통째로 가라앉힌다 — 그건 이미 읽은
+      글이고, 지금 걸음이 도드라져야 한다. */
+.chatpanel {
   transition:
+    height 0.5s cubic-bezier(0.32, 0.72, 0.24, 1),
     background-color 0.32s ease,
     background 0.32s ease,
     backdrop-filter 0.32s ease,
+    -webkit-backdrop-filter 0.32s ease,
     border-color 0.32s ease,
     box-shadow 0.32s ease;
 }
+.chatbody .bub.bot,
+.chatbody .bub.user {
+  transition:
+    background-color 0.32s ease,
+    background 0.32s ease,
+    border-color 0.32s ease,
+    box-shadow 0.32s ease;
+}
+.chatbody .bubrow {
+  transition: opacity 0.32s ease;
+}
+/* 접히는 세 줄. max-height는 접기 전 실측 상한보다 넉넉히 —
+   textarea가 세 줄(96px)로 자란 폼이 122px 정도다 */
+.chatchips,
+.chatform,
+.chatnote {
+  transition:
+    max-height 0.4s cubic-bezier(0.32, 0.72, 0.24, 1),
+    padding 0.4s cubic-bezier(0.32, 0.72, 0.24, 1),
+    opacity 0.24s ease,
+    background-color 0.32s ease;
+  max-height: 180px;
+  overflow: hidden;
+}
 .chatpanel.is-operating {
-  background: color-mix(in srgb, var(--card) 38%, transparent);
-  /* 판이 얇아진 만큼 흐림을 올린다. 안 그러면 뒤 글자와 앞 글자가 겹쳐
-     읽혀서 둘 다 안 읽힌다 */
-  /* 접힌 상태(머리 줄만)라 넓은 반경이 할 일이 없다 */
-  backdrop-filter: blur(12px) saturate(1.7);
-  -webkit-backdrop-filter: blur(12px) saturate(1.7);
+  /* 머리 줄(63) + 걸음 피드 한 화면. 대화 전체가 아니라 "지금 무슨 일이
+     일어나는지"만 보이면 된다 */
+  height: 232px;
+  background: color-mix(in srgb, var(--card) 26%, transparent);
+  /* 판이 얇아진 만큼만 흐린다. 세게 흐리면 뒤(정작 봐야 할 화면)가 뭉개진다 */
+  backdrop-filter: blur(8px) saturate(1.5);
+  -webkit-backdrop-filter: blur(8px) saturate(1.5);
   border-color: color-mix(in srgb, var(--line-2) 40%, transparent);
   box-shadow:
     0 18px 44px rgba(16, 24, 40, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.chatpanel.is-operating .chatchips,
+.chatpanel.is-operating .chatform,
+.chatpanel.is-operating .chatnote {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  pointer-events: none;
+}
+/* 지나간 대화는 가라앉는다. 마지막 줄(지금 도는 걸음)만 온전한 농도 */
+.chatpanel.is-operating .chatbody .bubrow {
+  opacity: 0.4;
+}
+.chatpanel.is-operating .chatbody .bubrow:last-of-type {
+  opacity: 1;
 }
 .chatpanel.is-operating .bub.bot {
   background: color-mix(in srgb, var(--card-2) 40%, transparent);
@@ -15351,9 +15451,6 @@ select.in {
 }
 .chatpanel.is-operating .bub.user {
   background: color-mix(in srgb, var(--accent) 68%, transparent);
-}
-.chatpanel.is-operating .chatform {
-  background: color-mix(in srgb, var(--card) 30%, transparent);
 }
 /* 글자는 그대로 둔다. 오히려 배경이 옅어질수록 또렷해야 읽힌다 */
 .chatpanel.is-operating .bub.bot,
@@ -16140,6 +16237,11 @@ body:has(.agc-ring) .evpop {
   height: 0;
   transition: transform 0.76s cubic-bezier(0.33, 0.02, 0.15, 1);
   will-change: transform;
+}
+/* 도착한 뒤의 보정은 짧게 따라붙는다. 추적(대상이 스크롤·레이아웃으로
+   움직일 때)까지 0.76초 곡선을 쓰면 커서가 계속 미끄러지는 중으로 보인다 */
+.agc-dot.is-track {
+  transition: transform 0.22s ease-out;
 }
 .agc-arrow {
   position: absolute;
@@ -17619,31 +17721,13 @@ body:has(.pdrawer) {
     right: max(12px, var(--safe-r));
   }
 
-  /* ── 짚는 동안에는 창이 접힌다 ──
+  /* ── 짚는 동안의 접힘은 전역 규칙 하나로 ──
 
-     좁은 화면에서 챗 패널은 세로의 절반 넘게 차지한다. 그 상태로 챗봇이
-     화면을 짚으면 정작 짚은 자리가 패널 뒤에 있다 — 유리를 아무리 얇게
-     해도 그 아래 글자는 겹쳐 읽힌다.
-
-     그래서 도구가 도는 동안에는 높이를 머리 줄만 남기고 접는다. 닫지는
-     않는다. 닫아 버리면 무슨 작업이 도는 중인지 알 수 없고, 끝난 뒤 다시
-     열어야 한다. 머리 줄에는 지금 무엇을 하는지가 적혀 있다. */
-  /* 높이를 박지 않는다.
-
-     56px을 박았더니 레이아웃이 깨졌다. 머리 줄이 실제로 63px이라 그 안에
-     들어가지 못하고, 패널이 flex column이라 남은 자식들까지 눌려 뭉갰다.
-     "머리만 남긴다"는 의도를 픽셀로 옮기려다 실측을 안 맞춘 것이다.
-
-     내용을 빼면 높이는 알아서 머리 줄이 된다. display: none이라 접히는
-     동작은 안 보이지만, 어긋난 높이로 뭉개지는 것보다 낫다. */
-  .chatpanel.is-operating {
-    height: auto;
-    min-height: 0;
-  }
-  .chatpanel.is-operating .chatbody,
-  .chatpanel.is-operating .chatform {
-    display: none;
-  }
+     여기서 display: none으로 본문을 없애던 규칙을 걷었다. 순간에 사라져
+     "확 접히는" 것으로 보였고, 걸음 피드까지 없어져 무슨 도구가 도는지
+     읽을 수 없었다(실기기 지적 둘 다). 지금은 전역 .chatpanel.is-operating이
+     높이를 232px로 줄이고 마지막 말풍선을 남긴다 — 두 클래스 선택자라
+     이 블록의 .chatpanel 높이보다 항상 세다. */
   /* 여기에 있던 `body:has(.evpop) .chatwidget` 리프트도 뺐다. 팝업이 fab
      자리를 비켜서므로 겹치지 않고, 올리면 챗 패널이 화면 위로 넘친다. */
   .chatpanel {
