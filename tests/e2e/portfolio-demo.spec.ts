@@ -43,9 +43,9 @@ async function reportPost(page: Page) {
   }).toPass();
   await page.getByRole("button", { name: "신고하기", exact: true }).click();
   await expect(page.getByText("신고가 접수됐어요")).toBeVisible();
-  /* 모달 안의 닫기로 좁힌다. 화면에는 이벤트 팝업의 닫기도 있어서 이름만으로
-     찾으면 둘이 잡힌다(strict mode 위반). 팝업이 역할과 무관하게 뜨게 되면서
-     드러났는데, 애초에 이 단정이 어느 닫기를 말하는지 불분명했다. */
+  /* 모달 안의 닫기로 좁힌다. 화면에 닫기가 여럿이면 이름만으로 찾을 때
+     둘이 잡힌다(strict mode 위반). 지금은 겹치는 층이 없지만, 어느 닫기를
+     말하는지는 단정이 스스로 밝히는 편이 오래 간다. */
   await page
     .locator(".modalwrap")
     .getByRole("button", { name: "닫기", exact: true })

@@ -23,17 +23,6 @@ async function setRole(page: Page, role: "guest" | "member" | "admin") {
       window.localStorage.setItem("wigtn-demo-role-v1", nextRole);
     }
     window.localStorage.setItem("wigtn-demo-coach-guide", "1");
-    /* 이벤트 팝업을 미리 닫아 둔다.
-
-       팝업이 떠 있으면 탭바가 물러난다(body:has(.evpop) .tabbar). 레이아웃을
-       보려는 테스트가 광고 때문에 실패하면 무엇이 깨졌는지 알 수 없다.
-
-       팝업 자체를 보는 테스트는 이 값을 지워 되살린다 — addInitScript는
-       등록 순서대로 돌아서, 뒤에서 removeItem을 부르면 그쪽이 이긴다. */
-    window.localStorage.setItem(
-      "wigtn-demo-event-popup-v1",
-      String(Date.now() + 60 * 60 * 1000),
-    );
   }, role);
 }
 
@@ -151,26 +140,14 @@ test("작은 화면의 역할 모달은 뷰포트 안에 머물고 배경을 잠
   ).toBeVisible();
 });
 
-test("모바일 플로팅 UI는 이벤트·가이드·챗 패널을 동시에 겹치지 않는다", async ({
-  page,
-}) => {
+test("모바일에서 가이드와 챗 fab이 겹치지 않는다", async ({ page }) => {
+  /* 이벤트 팝업은 걷어냈다(2026-08-02). 팝업과의 겹침을 보던 테스트를
+     남은 두 fab 사이의 계약으로 줄인다 — 겹치면 하나를 누르려다 다른
+     것이 눌린다. */
   await page.setViewportSize({ width: 360, height: 640 });
   await setRole(page, "guest");
-  await page.addInitScript(() =>
-    window.localStorage.removeItem("wigtn-demo-event-popup-v1"),
-  );
   await page.goto("/");
 
-  await expect(page.locator(".evpop")).toBeVisible();
-
-  /* 계약이 바뀌었다.
-
-     전에는 팝업이 뜨면 두 fab을 숨겼다(toBeHidden). 그러면 팝업을 닫기
-     전까지 상담으로 가는 길이 화면에서 사라진다 — 사용자 지시로 버튼은
-     남기기로 했다.
-
-     대신 지켜야 할 것은 "겹치지 않는다"다. 겹치면 팝업을 누르려다 fab이
-     눌리거나 그 반대가 된다. 겹침을 실제 사각형으로 확인한다. */
   await expect(page.locator(".demowidget")).toBeVisible();
   await expect(page.locator(".chatwidget")).toBeVisible();
 
@@ -182,7 +159,6 @@ test("모바일 플로팅 UI는 이벤트·가이드·챗 패널을 동시에 �
       return { l: r.left, t: r.top, r: r.right, b: r.bottom };
     };
     return {
-      pop: rect(".evpop"),
       guide: rect(".demowidget .fab"),
       chat: rect(".chatwidget .chatfab"),
       vh: window.innerHeight,
@@ -193,10 +169,9 @@ test("모바일 플로팅 UI는 이벤트·가이드·챗 패널을 동시에 �
     b: { l: number; t: number; r: number; b: number } | null,
   ) => !!a && !!b && a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
 
-  expect(boxes.pop).not.toBeNull();
-  expect(hits(boxes.pop, boxes.guide)).toBe(false);
-  expect(boxes.pop && hits(boxes.pop, boxes.chat)).toBe(false);
-  // fab은 하단에 남는다 — 팝업을 피하겠다고 화면 중간까지 올라가면 안 된다
+  expect(boxes.guide).not.toBeNull();
+  expect(hits(boxes.guide, boxes.chat)).toBe(false);
+  // 둘 다 하단에 남는다 — 화면 중간까지 올라오면 안 된다
   expect(boxes.chat!.b).toBeGreaterThan(boxes.vh - 160);
 });
 

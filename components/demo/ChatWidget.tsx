@@ -1867,15 +1867,30 @@ export function ChatWidget() {
      정하고, 뒤 두 자리는 반드시 좋은 답이 나오는 것으로 채운다.
 
      키가 없거나 스크립트로 답한 턴에는 followups가 비어 있어, 자연히
-     정적 넷으로 돌아간다 — 폴백을 따로 만들 필요가 없다. */
+     정적 넷으로 돌아간다 — 폴백을 따로 만들 필요가 없다.
+
+     칩은 **답이 끝난 뒤에만** 바뀐다. followups는 스트리밍 도중 마커가
+     도착하는 순간 채워지는데, 그걸 그대로 쓰면 방문자가 아직 답을 읽는
+     중에 칩 줄이 갈리고 남아 있던 칩이 옆으로 밀려난다(사용자 지적).
+     읽는 중에 손 닿을 곳이 움직이는 건 그 자체로 방해다. 말풍선이 닫힌
+     답에서만 가져오면, 칩이 바뀌는 순간이 "답이 끝났다"와 겹쳐서
+     움직임에 이유가 생긴다. */
   const live = (
-    [...msgs].reverse().find((msg) => msg.role === "bot" && msg.followups)
+    [...msgs]
+      .reverse()
+      .find((msg) => msg.role === "bot" && !msg.streaming && msg.followups)
       ?.followups ?? []
   ).filter((text) => !asked.has(text));
   const chips: Array<ChatIntent | { id: string; chip: string }> = [
     ...live.map((text) => ({ id: `live:${text}`, chip: text })),
     ...nextChips(lastIntent, asked, 4 - live.length),
   ];
+  /* 칩 묶음이 바뀌면 줄 전체가 한 번에 갈린다.
+
+     칩마다 등장 애니메이션을 따로 주면, 새 칩은 떠오르고 남은 칩은
+     제자리에서 순간이동한다 — 두 움직임이 따로 놀아서 "밀려난다"로
+     보인다. 줄을 통째로 바꿔 끼우면 한 동작이 된다. */
+  const chipKey = chips.map((one) => one.id).join("|");
 
   return (
     <aside className="chatwidget" aria-label="상담 챗봇">
@@ -2197,7 +2212,7 @@ export function ChatWidget() {
 
           {/* 재생 중에는 칩을 숨긴다. 대화가 흐르는 중에 선택지를 주면 둘이 다툰다 */}
           {!playing && chips.length ? (
-            <div className="chatchips" ref={bindChips}>
+            <div className="chatchips" key={chipKey} ref={bindChips}>
               {chips.map((intent) => (
                 <button
                   key={intent.id}

@@ -7,7 +7,6 @@ import { NavMenu } from "@/components/NavMenu";
 import { TabBar } from "@/components/TabBar";
 import { RouteMotion } from "@/components/demo/RouteMotion";
 import { PromoBar } from "@/components/demo/PromoBar";
-import { EventPopup } from "@/components/demo/EventPopup";
 
 /** 서비스 셸 — 시안 정본의 .promobar / .nav / .footer */
 export default function SiteLayout({
@@ -108,7 +107,6 @@ export default function SiteLayout({
       </footer>
 
       <TabBar />
-      <EventPopup />
     </div>
   );
 }
