@@ -9731,7 +9731,11 @@ select.in {
 #memberAnswers .comment.is-in {
   opacity: 1;
   transform: none;
-  max-height: 220px;
+  /* 상한을 두지 않는다. 리빌 전환 시절의 220px이 남아 있었는데, is-in은
+     이제 정적으로 붙는 클래스라 전환은 없고 상한만 실해를 끼쳤다 —
+     대댓글이 몇 개 쌓이면 220px 밖이 잘려서 둘째 대댓글부터 보이지
+     않았다(실기기 지적). 댓글의 키는 내용이 정한다. */
+  max-height: none;
   padding: 16px 0;
 }
 /* 운영자 공식 답변 — 유일하게 카드 대접 */
@@ -16531,6 +16535,71 @@ body:has(.agc-ring) .evpop {
       채로 자기 차례를 기다린다는 것만 보이면 된다. */
 /* 줄 서 있는 질문 — 문구는 뺐다(사용자 지시). 옅어진 색만으로
    "보내졌고, 답은 차례대로"를 말한다. 차례가 오면 제 색으로 돌아온다 */
+/* ── 실행 허락(HITL) 말풍선 ──
+      데이터를 쓰는 조작 직전에 뜬다. 답변과 헷갈리면 안 되므로 브랜드색
+      테두리로 "지금 결정을 기다리는 중"임을 말한다. 버튼은 이 데모의
+      기본 버튼 문법(.btn)과 같은 크기 감각으로 — 여기만 다른 물건이면
+      급조한 확인창으로 읽힌다. */
+.chatbody .bub.is-confirm {
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--card));
+}
+.chatbody .hitl {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.chatbody .hitl button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  corner-shape: squircle;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.chatbody .hitl .ic {
+  width: 13px;
+  height: 13px;
+}
+.chatbody .hitl-ok {
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+}
+.chatbody .hitl-ok:hover {
+  filter: brightness(1.06);
+}
+.chatbody .hitl-no {
+  border: 1px solid var(--line-2);
+  background: var(--card);
+  color: var(--ink-3);
+}
+.chatbody .hitl-no:hover {
+  background: var(--card-2);
+}
+/* 내린 결정. 버튼이 있던 자리에 결과가 남는다 */
+.chatbody .hitl-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-4);
+}
+.chatbody .hitl-done .ic {
+  width: 12px;
+  height: 12px;
+}
+.chatbody .hitl-done.is-ok {
+  color: var(--accent-ink);
+}
+
 .chatbody .bub.is-waiting {
   background: color-mix(in srgb, var(--accent) 52%, transparent);
 }

@@ -228,7 +228,10 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
         await type(ask.title, setTitle, 40);
         await type(ask.body, setBody, 34);
         await new Promise((r) => window.setTimeout(r, 240));
-        outcome = publish(ask) ?? undefined;
+        /* submit: false면 여기서 멈춘다. 챗봇은 채우기까지만 하고, 등록
+           버튼은 방문자가 내용을 확인하고 직접 누른다(사용자 지시).
+           폼은 채워진 채 남고, 게스트 권한 확인은 publish가 눌릴 때 돈다. */
+        outcome = ask.submit === false ? undefined : (publish(ask) ?? undefined);
       } catch {
         outcome = "글을 쓰다가 멈췄어요.";
       } finally {

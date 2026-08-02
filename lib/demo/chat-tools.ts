@@ -306,6 +306,29 @@ const TOOLS: Tool[] = [
     orb: "searching",
   },
   {
+    name: "guide_screen",
+    description:
+      "화면 하나를 열고 그 화면의 주요 기능을 처음부터 끝까지 순서대로 " +
+      "짚어가며 안내한다. 방문자가 '안내해줘', '가이드해줘', '자세히 " +
+      "보여줘', '둘러보고 싶다'고 하면 point_at을 낱개로 부르지 말고 이 " +
+      "도구를 쓴다. 안내할 지점과 순서, 설명은 화면마다 준비돼 있다. " +
+      "여러 화면을 안내하려면 화면마다 한 번씩 부른다. 데모 전체 안내면 " +
+      "home부터 순서대로. admin 화면은 switch_role로 운영자 전환이 먼저다.",
+    params: {
+      screen: {
+        type: "string",
+        enum: SCREEN_ENUM,
+        description: `안내할 화면:\n${Object.entries(SCREEN_LABEL)
+          .map(([id, label]) => `- ${id}: ${label}`)
+          .join("\n")}`,
+      },
+    },
+    required: ["screen"],
+    spec: { fields: { screen: enumField(SCREEN_ENUM) } },
+    running: "화면을 차례로 안내하는 중",
+    orb: "shaping",
+  },
+  {
     name: "switch_role",
     description:
       "방문자의 역할을 바꾼다. 백오피스는 운영자만 볼 수 있고 글쓰기 같은 " +
@@ -361,9 +384,10 @@ const TOOLS: Tool[] = [
   {
     name: "write_post",
     description:
-      "커뮤니티에 글을 실제로 등록한다. 방문자가 '글 한번 써봐', '이런 " +
-      "내용으로 올려줘'라고 하면 쓴다. 글쓰기 화면을 열고 내용을 채운 뒤 " +
-      "등록까지 한다. 회원 이상만 쓸 수 있다.",
+      "글쓰기 화면을 열고 내용을 **채워 준다.** 방문자가 '글 한번 써봐', " +
+      "'이런 내용으로 올려줘'라고 하면 쓴다. 등록 버튼은 누르지 않는다 — " +
+      "게시는 방문자가 내용을 확인하고 직접 누른다. 실행 후 그렇게 " +
+      "안내하라. 회원 이상만 쓸 수 있다.",
     params: {
       board: {
         type: "string",
@@ -394,7 +418,7 @@ const TOOLS: Tool[] = [
     name: "answer_post",
     description:
       "커뮤니티 글에 답변을 단다. 어떤 글에 달지 검색어로 찾는다. " +
-      "회원 이상만 쓸 수 있다.",
+      "실행 전에 채팅에서 방문자 확인을 받는다. 회원 이상만 쓸 수 있다.",
     params: {
       query: { type: "string", description: "답변을 달 글의 제목이나 주제" },
       text: { type: "string", description: "답변 내용. 300자 이내" },
@@ -414,7 +438,7 @@ const TOOLS: Tool[] = [
     name: "react_post",
     description:
       "커뮤니티 글에 반응한다. 도움돼요를 누르거나 스크랩한다. " +
-      "반응이 화면 곳곳에 바로 반영되는 것을 보여줄 때 쓴다.",
+      "실행 전에 채팅에서 방문자 확인을 받는다.",
     params: {
       query: { type: "string", description: "반응할 글의 제목이나 주제" },
       action: {
@@ -437,7 +461,8 @@ const TOOLS: Tool[] = [
   {
     name: "follow_company",
     description:
-      "회사를 팔로우하거나 해제한다. 팔로우하면 내 정보와 홈에 반영된다.",
+      "회사를 팔로우하거나 해제한다. 팔로우하면 내 정보와 홈에 반영된다. " +
+      "실행 전에 채팅에서 방문자 확인을 받는다.",
     params: {
       company: { type: "string", enum: COMPANY_SLUGS, description: "회사 slug" },
       follow: {
@@ -457,7 +482,8 @@ const TOOLS: Tool[] = [
     name: "apply_job",
     description:
       "채용공고에 지원한다. 어떤 공고인지 검색어로 찾는다. 지원하면 공고 " +
-      "상세와 내 정보에 지원 완료로 남는다.",
+      "상세와 내 정보에 지원 완료로 남는다. 실행 전에 채팅에서 방문자 " +
+      "확인을 받는다.",
     params: {
       query: { type: "string", description: "지원할 공고의 회사명이나 직무" },
     },
@@ -473,7 +499,7 @@ const TOOLS: Tool[] = [
     name: "submit_evidence",
     description:
       "실적 인증을 신청한다. 신청하면 운영자 화면의 증빙 검토 대기열에 " +
-      "실제로 쌓인다. 사용자 화면과 백오피스가 이어지는 것을 보여줄 때 쓴다.",
+      "실제로 쌓인다. 실행 전에 채팅에서 방문자 확인을 받는다.",
     params: {
       files: {
         type: "number",
@@ -518,17 +544,14 @@ const TOOLS: Tool[] = [
     running: "상담 화면을 여는 중",
     orb: "shaping",
   },
-  {
-    name: "reset_demo",
-    description:
-      "이 브라우저의 체험 기록을 지우고 처음 상태로 되돌린다. 방문자가 " +
-      "'초기화', '처음부터 다시'를 자기 입으로 요청했을 때만 쓴다. " +
-      "되돌릴 수 없으므로 다른 의도로 추측해서 부르지 않는다.",
-    params: {},
-    spec: { needsIntent: true, fields: {} },
-    running: "처음 상태로 되돌리는 중",
-    orb: "working",
-  },
+  /* reset_demo는 여기 없다.
+
+     있었다. "방문자가 자기 입으로 요청했을 때만"이라는 조건(needsIntent)을
+     달아 두었지만, 되돌릴 수 없는 파괴 조작은 조건부 허용이 아니라 **노출
+     자체를 끊는 것**이 맞다(사용자 지시). 스키마가 목록에 없으면 모델이
+     설득당해도 부를 수가 없다. 초기화는 체험 가이드 위젯에서 방문자가
+     직접 누른다. 모델이 이름을 지어내 부르면 guard의 REFUSED가 이유를
+     말하며 거절한다. */
 ];
 
 /** OpenAI에 넘기는 정의. 이름과 설명이 곧 모델이 읽는 사용법이다 */

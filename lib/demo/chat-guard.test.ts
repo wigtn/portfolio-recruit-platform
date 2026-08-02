@@ -131,19 +131,20 @@ describe("챗봇 도구 관문", () => {
     }
   });
 
-  it("초기화는 방문자가 자기 입으로 말해야 열린다", () => {
-    expect(
-      guard("reset_demo", {}, TOOL_SPECS.reset_demo, ctx({ question: "안녕" }))
-        .ok,
-    ).toBe(false);
-    expect(
-      guard(
-        "reset_demo",
-        {},
-        TOOL_SPECS.reset_demo,
-        ctx({ question: "처음부터 다시 볼래" }),
-      ).ok,
-    ).toBe(true);
+  it("초기화는 방문자가 요청해도 챗봇이 하지 않는다", () => {
+    /* 예전에는 "자기 입으로 말하면" 열렸다. 파괴 조작은 조건부 허용이
+       아니라 비노출이 맞다(사용자 지시) — 도구 목록에서 빠졌고, 모델이
+       이름을 지어내 불러도 거절 사유와 함께 막힌다. TOOL_SPECS에 명세가
+       없는 것 자체가 계약이다. */
+    expect(TOOL_SPECS.reset_demo).toBeUndefined();
+    const verdict = guard(
+      "reset_demo",
+      {},
+      TOOL_SPECS.reset_demo,
+      ctx({ question: "처음부터 다시 볼래" }),
+    );
+    expect(verdict.ok).toBe(false);
+    if (!verdict.ok) expect(verdict.why).toContain("체험 가이드");
   });
 
   it("한 요청에서 조작 횟수를 넘기면 멈춘다", () => {

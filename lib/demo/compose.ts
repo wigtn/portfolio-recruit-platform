@@ -33,6 +33,14 @@ export type ComposeRequest = {
   board: string;
   title: string;
   body: string;
+  /**
+   * false면 채우기까지만 하고 등록은 하지 않는다.
+   *
+   * 게시는 방문자의 손으로 일어나야 한다(사용자 지시). 챗봇은 내용을
+   * 채워 보여주고, 등록 버튼은 방문자가 확인하고 누른다. 생략하면
+   * true(등록까지) — 사람이 폼에서 쓰는 기존 흐름과 같다.
+   */
+  submit?: boolean;
 };
 
 export type ComposeResult = {

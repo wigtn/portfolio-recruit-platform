@@ -21,7 +21,6 @@ import {
   DEMO_PANEL_OPEN_EVENT,
   loadProgress,
   markProgress,
-  resetDemoExperience,
   saveDemoTheme,
 } from "@/lib/demo/progress";
 import { useRouter } from "next/navigation";
@@ -46,6 +45,7 @@ import {
   type ToolCall,
 } from "@/lib/demo/chat-tools";
 import { guard } from "@/lib/demo/chat-guard";
+import { tourOf } from "@/lib/demo/guide-tours";
 import { findJob, findPost } from "@/lib/demo/chat-find";
 import { loadUser, saveUser, toggleIn } from "@/lib/demo/user";
 import { submitEvidence } from "@/lib/demo/submit";
@@ -94,6 +94,16 @@ type Msg = {
   /* 잘못된 상황을 알리는 쪽지. 답변이 아니라 알림이라 생김새가 달라야
      한다. 답변처럼 보이면 방문자는 그게 대답인 줄 알고 읽는다 */
   notice?: "timeout" | "failed" | "offline";
+  /**
+   * 실행 허락을 묻는 말풍선(HITL).
+   *
+   * 데이터를 쓰는 조작(반응, 팔로우, 지원, 인증 신청)은 모델이 하겠다고
+   * 정해도 곧바로 실행하지 않는다. 채팅 안에서 방문자에게 묻고, 허용
+   * 버튼이 눌린 뒤에만 실행한다. pending이면 버튼이 살아 있고, 답이
+   * 정해지면 어떤 답이었는지가 말풍선에 남는다 — 지워 버리면 "내가
+   * 허락했었나"를 대화에서 되짚을 수 없다.
+   */
+  confirm?: "pending" | "allowed" | "denied";
 };
 
 /**
@@ -273,15 +283,74 @@ const STEP_GAP_MS = 480;
 const FIRST_BYTE_MS = 30000;
 
 /**
- * 한 턴이 끝나야 하는 시각.
+ * 진행 없이 버틸 수 있는 시간.
  *
  * FIRST_BYTE_MS는 응답이 시작되는지만 본다. 시작된 뒤 스트림이 안 닫히거나
  * 에이전트 루프가 한 걸음에서 멈추면 아무도 끊지 않아 로딩이 영원히 돈다.
- * 도구를 여러 번 부르는 턴도 있어서 넉넉히 두되, 상한은 반드시 있어야 한다.
+ *
+ * 총량 상한이 아니라 **무진행 상한**이다. 총량으로 재면 정상적인 긴 턴
+ * (화면 여러 개를 대본대로 안내하는 투어는 화면당 15초쯤 든다)을 멀쩡히
+ * 돌다가 끊는다. 걸음이 하나 끝날 때마다 시계를 되감고, 이 시간 동안
+ * 아무 걸음도 못 마쳤을 때만 고장으로 본다.
  */
 const TURN_MS = 90000;
 /** 답을 기다리는 동안 세워 두는 걸음. 실제 도구가 아니라 표시용이다 */
 const WRAP_STEP = "__wrap";
+
+/**
+ * 커서에게 한 걸음을 시키고 끝날 때까지 기다린다.
+ *
+ * point_at과 투어(guide_screen)와 글쓰기 뒤 등록 버튼 안내가 전부 이 하나를
+ * 쓴다. 같은 일을 세 곳이 제각기 구현하면 감시 상한과 신호 정리가 한 곳씩
+ * 어긋난다. 대상이 없으면 커서가 곧바로 ok: false를 돌려주므로(AGENT_DONE의
+ * detail), 낡은 지점 하나 때문에 상한까지 기다리지 않는다.
+ */
+function stepCursor(
+  step: { selector: string; note?: string; click?: boolean; hold?: number },
+  watchdogMs = 9000,
+): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    const onDone = (event: Event) => {
+      window.removeEventListener(AGENT_DONE_EVENT, onDone);
+      window.clearTimeout(watchdog);
+      resolve((event as CustomEvent<{ ok?: boolean }>).detail?.ok !== false);
+    };
+    /* 커서의 전체 여정(찾기 2.2 + 스크롤 1.2 + 비행 0.76 + 숨 0.56 +
+       누름 0.56)보다 넉넉히 뒤. 신호가 영영 안 오는 경우의 안전장치다 */
+    const watchdog = window.setTimeout(() => {
+      window.removeEventListener(AGENT_DONE_EVENT, onDone);
+      resolve(false);
+    }, watchdogMs);
+    window.addEventListener(AGENT_DONE_EVENT, onDone);
+    window.dispatchEvent(new CustomEvent(AGENT_EVENT, { detail: step }));
+  });
+}
+
+/**
+ * 실행 전에 방문자 허락이 필요한 도구와, 그때 묻는 문장.
+ *
+ * 기준은 "이 브라우저의 데이터가 바뀌는가"다. 화면 이동과 표시는 자유,
+ * 데이터 쓰기는 허락, 게시글은 채우기까지(등록은 유저 손), 파괴 조작은
+ * 도구 자체가 없다 — 네 단으로 자른다.
+ *
+ * 문장에는 무엇이 어떻게 남는지까지 적는다. "해도 될까요?"만 물으면
+ * 무엇을 허락하는지 모른 채 누르게 된다.
+ */
+const HITL_ASK: Record<string, (str: (k: string) => string) => string> = {
+  react_post: (str) =>
+    `"${str("query")}" 글에 ${str("action") === "scrap" ? "스크랩" : "도움돼요"}를 남기려고 해요. 해도 될까요? 내 정보의 반응 목록에 남아요.`,
+  follow_company: (str) =>
+    `${COMPANY_LABEL[str("company")] ?? "이 회사"}를 팔로우하려고 해요. 해도 될까요? 홈과 내 정보에 반영돼요.`,
+  apply_job: (str) =>
+    `"${str("query")}" 공고에 지원하려고 해요. 해도 될까요? 지원 완료 기록이 내 정보에 남아요.`,
+  submit_evidence: (str) =>
+    `증빙 ${str("files") || "몇"}건으로 실적 인증을 신청하려고 해요. 해도 될까요? 운영자 검토 대기열에 실제로 올라가요.`,
+  answer_post: (str) =>
+    `"${str("query")}" 글에 이 답변을 등록하려고 해요.\n\n"${str("text").slice(0, 140)}${str("text").length > 140 ? "…" : ""}"\n\n등록해도 될까요?`,
+};
+
+/** 허락을 기다리는 상한. 자리 비움을 거절로 읽되, 턴 상한보다 먼저 끝낸다 */
+const HITL_WAIT_MS = 45000;
 
 /** 서버가 도구를 쓰기로 했을 때 돌려주는 모양 */
 type ChatReply = {
@@ -726,6 +795,34 @@ export function ChatWidget() {
     setRated((prev) => ({ ...prev, [id]: prev[id] === value ? null : value }));
   }
 
+  /* ── 실행 허락(HITL) ──
+     데이터를 쓰는 도구는 실행 직전에 여기로 온다. 말풍선에 허용·거절
+     버튼이 뜨고, 눌릴 때까지 도구는 멈춰 있다. 답은 말풍선에 남는다. */
+  const okWaiters = useRef(new Map<number, (ok: boolean) => void>());
+
+  function decide(id: number, ok: boolean) {
+    setMsgs((prev) =>
+      prev.map((msg) =>
+        msg.id === id ? { ...msg, confirm: ok ? "allowed" : "denied" } : msg,
+      ),
+    );
+    const waiter = okWaiters.current.get(id);
+    okWaiters.current.delete(id);
+    waiter?.(ok);
+  }
+
+  function askPermission(text: string): Promise<boolean> {
+    const id = push({ role: "bot", text, confirm: "pending" });
+    return new Promise<boolean>((resolve) => {
+      okWaiters.current.set(id, resolve);
+      /* 자리를 비웠으면 거절로 접는다. 열어 둔 채 두면 턴 상한(90s)이
+         끊어서 "오래 걸려 멈췄어요"가 되는데, 그건 이유가 틀린 끝맺음이다 */
+      window.setTimeout(() => {
+        if (okWaiters.current.has(id)) decide(id, false);
+      }, HITL_WAIT_MS);
+    });
+  }
+
   /** 같은 질문을 다시 태운다. 답이 마음에 안 들 때 질문을 다시 치지 않게 */
   async function regenerate(botId: number) {
     if (busy) return;
@@ -777,6 +874,16 @@ export function ChatWidget() {
     const str = (key: string) => (typeof a[key] === "string" ? a[key] : "");
     const num = (key: string) => (typeof a[key] === "number" ? a[key] : 0);
 
+    /* ── 실행 허락(HITL) ──
+       검문을 통과한 **뒤에** 묻는다. 검문에서 떨어질 요청을 물어보면
+       허락해 줬는데 실행이 안 되는 이상한 그림이 된다. 거절은 실패가
+       아니라 결정이다 — 그대로 받아들이고 강행하지 않는다. */
+    const asking = HITL_ASK[tool.name];
+    if (asking) {
+      const allowed = await askPermission(asking((key) => String(a[key] ?? "")));
+      if (!allowed) return fail("이 조작은 하지 않기로 하셨어요.");
+    }
+
     let note = "";
     let close = false;
 
@@ -785,42 +892,71 @@ export function ChatWidget() {
         const target = TARGET_BY_ID[str("target")];
         if (!target) return fail("그 지점을 찾지 못했어요.");
 
-        /* 커서가 다 짚을 때까지 기다린다.
-           고정 시간으로 어림하면 화면이 느린 날 설명이 먼저 나오고, 빠른 날엔
-           커서가 멈춰 선 채로 기다린다. 끝났다는 신호를 직접 받는다.
-           신호가 안 오는 경우(대상을 못 찾음)를 대비해 상한을 둔다 */
-        const done = new Promise<void>((resolve) => {
-          const onDone = () => {
-            window.removeEventListener(AGENT_DONE_EVENT, onDone);
-            window.clearTimeout(watchdog);
-            resolve();
-          };
-          /* 커서의 전체 여정(찾기 2.2 + 스크롤 1.2 + 비행 0.76 + 숨 0.56 +
-             누름 0.56)보다 넉넉히 뒤. 6초였을 때 박자를 늘리자 정상 진행을
-             끊었다 */
-          const watchdog = window.setTimeout(() => {
-            window.removeEventListener(AGENT_DONE_EVENT, onDone);
-            resolve();
-          }, 9000);
-          window.addEventListener(AGENT_DONE_EVENT, onDone);
+        /* 커서가 다 짚을 때까지 기다린다. 고정 시간으로 어림하면 화면이
+           느린 날 설명이 먼저 나오고, 빠른 날엔 커서가 멈춰 선 채로
+           기다린다. 끝났다는 신호를 직접 받는다(stepCursor). */
+        const shown = await stepCursor({
+          selector: target.selector,
+          note: str("note"),
+          click: a.click === true,
         });
-
-        window.dispatchEvent(
-          new CustomEvent(AGENT_EVENT, {
-            detail: {
-              selector: target.selector,
-              note: str("note"),
-              click: a.click === true,
-            },
-          }),
-        );
-        await done;
+        if (!shown) return fail("그 지점이 지금 화면에는 보이지 않아요.");
         return {
           ok: true,
           note:
             a.click === true
               ? `${str("note")} (직접 눌렀어요)`
               : str("note"),
+        };
+      }
+
+      /* 화면 하나를 대본대로 처음부터 끝까지 안내한다. 무엇을 어떤 순서로
+         짚을지는 guide-tours.ts에 적혀 있다 — 모델은 "이 화면을 안내하라"만
+         정하고, 동선은 코드가 쥔다. 지점 하나가 낡아 사라졌어도 건너뛰고
+         나머지를 안내한다. */
+      case "guide_screen": {
+        const screen = str("screen") as ScreenId;
+        if (ADMIN_SCREENS.has(screen) && roleNow.current !== "admin") {
+          return fail(
+            "백오피스는 운영자만 볼 수 있어요. 먼저 역할을 운영자로 바꿔야 합니다.",
+          );
+        }
+        const steps = tourOf(screen);
+        if (!steps.length) {
+          return fail("이 화면은 아직 안내 대본이 준비되지 않았어요.");
+        }
+        if (window.location.pathname !== SCREEN_PATH[screen]) {
+          router.push(SCREEN_PATH[screen]);
+          await settled(2500);
+          // 화면이 뜨자마자 짚기 시작하면 어디로 왔는지 읽을 새가 없다
+          await wait(SCREEN_BEAT_MS);
+        }
+        let shown = 0;
+        for (const step of steps) {
+          const ok = await stepCursor({
+            selector: step.selector,
+            note: step.note,
+            /* 읽을 시간. 커서가 곧 다음으로 떠나므로 여기가 곧 문장당
+               체류 시간이다 */
+            hold: 2400,
+          });
+          if (ok) shown += 1;
+          await wait(STEP_GAP_MS);
+        }
+        if (!shown) {
+          return fail(
+            `${SCREEN_LABEL[screen]} 화면에서 안내할 지점을 찾지 못했어요.`,
+          );
+        }
+        markProgress("chatbot");
+        const skipped = steps.length - shown;
+        return {
+          ok: true,
+          note:
+            `${SCREEN_LABEL[screen]} 화면 ${shown}곳을 차례로 안내했어요.` +
+            (skipped
+              ? ` ${skipped}곳은 지금 화면 상태에서는 보이지 않아 건너뛰었어요.`
+              : ""),
         };
       }
 
@@ -925,6 +1061,8 @@ export function ChatWidget() {
           board: str("board"),
           title: str("title"),
           body: str("body"),
+          // 채우기까지만. 등록은 방문자가 누른다(사용자 지시)
+          submit: false,
         };
 
         /* 그래도 받을 때까지 계속 부른다.
@@ -972,9 +1110,17 @@ export function ChatWidget() {
         const failed = await filled.finally(() => window.clearInterval(knock));
         if (failed) return fail(failed);
         markProgress("chatbot");
+        /* 게시는 방문자의 손으로(사용자 지시). 채워만 두고 등록 버튼을
+           짚어서 다음 손이 어디로 가야 하는지 보여준다. 여기서 대신
+           누르면 "내용을 확인하고 게시한다"는 단계 자체가 사라진다. */
+        await stepCursor({
+          selector: ".formcard .btn.primary",
+          note: "내용 확인하고 등록은 직접 눌러주세요",
+          hold: 5200,
+        });
         return {
           ok: true,
-          note: `"${str("title")}" 글을 등록했어요. 내 정보의 작성 글에 쌓입니다.`,
+          note: `"${str("title")}" 글을 채워뒀어요. 내용을 확인하시고 등록하기 버튼을 직접 눌러주세요.`,
         };
       }
 
@@ -1084,14 +1230,10 @@ export function ChatWidget() {
         break;
       }
 
-      case "reset_demo": {
-        note = "체험 기록을 지웠어요. 처음 상태로 되돌립니다.";
-        window.setTimeout(() => {
-          resetDemoExperience();
-          window.location.reload();
-        }, 1400);
-        break;
-      }
+      /* reset_demo 케이스는 지웠다. 파괴 조작은 도구 목록에서 아예 빠졌고
+         (chat-tools.ts), 모델이 이름을 지어내 부르면 guard의 REFUSED가
+         이유를 말하며 거절한다. 여기 실행 코드가 남아 있으면 그게 곧
+         잠기지 않은 문이다. */
 
       case "open_contact": {
         note = "상담 신청 폼으로 모셔갈게요. 연락처는 직접 적어주셔야 해요.";
@@ -1132,6 +1274,8 @@ export function ChatWidget() {
     question: string,
     write: AnswerWriter,
     controller: AbortController,
+    /** 걸음이 하나 끝났다 — 무진행 시계를 되감아 달라 */
+    kick: () => void = () => {},
   ) {
     const trace: unknown[] = [];
     let reply = first;
@@ -1185,6 +1329,9 @@ export function ChatWidget() {
           { question, used: done },
         );
         done += 1;
+        // 걸음이 끝났다 — 무진행 시계를 되감는다. 투어처럼 긴 도구가
+        // 멀쩡히 돌고 있는데 총량 상한이 끊으면 안 된다
+        kick();
         // 한 걸음마다 자국을 남긴다. 화면이 저절로 바뀌면 오작동으로 읽힌다
         write.endStep(result.note, !result.ok);
         setRunning(null);
@@ -1439,10 +1586,16 @@ export function ChatWidget() {
        무엇이 원인이든 여기서 끝난다. 사용자에게 "멈춘 화면"을 남기는 것보다
        "오래 걸려서 멈췄다"고 말하는 편이 낫다. */
     let timedOut = false;
-    const turnGuard = window.setTimeout(() => {
-      timedOut = true;
-      if (abort.current === controller) controller.abort();
-    }, TURN_MS);
+    let turnGuard = 0;
+    /* 시계를 되감는다. 걸음이 진행되는 한 턴은 살아 있다 */
+    const armGuard = () => {
+      window.clearTimeout(turnGuard);
+      turnGuard = window.setTimeout(() => {
+        timedOut = true;
+        if (abort.current === controller) controller.abort();
+      }, TURN_MS);
+    };
+    armGuard();
 
     try {
       const response = await askServer(
@@ -1480,7 +1633,7 @@ export function ChatWidget() {
           await scripted();
           return;
         }
-        await runAgent(first, text, write, controller);
+        await runAgent(first, text, write, controller, armGuard);
         return;
       }
 
@@ -1696,6 +1849,7 @@ export function ChatWidget() {
                     msg.role,
                     msg.waiting ? "is-waiting" : "",
                     msg.notice ? `is-notice is-${msg.notice}` : "",
+                    msg.confirm ? "is-confirm" : "",
                     msg.streaming && !msg.text ? "is-thinking" : "",
                     msg.streaming && msg.text ? "is-answering" : "",
                   ]
@@ -1757,6 +1911,41 @@ export function ChatWidget() {
                         />
                         {msg.streaming ? <span className="cur" /> : null}
                       </p>
+                    ) : null}
+                    {/* 실행 허락(HITL). 버튼이 눌리기 전엔 도구가 멈춰
+                        있고, 답은 말풍선에 남는다 */}
+                    {msg.confirm === "pending" ? (
+                      <span className="hitl">
+                        <button
+                          className="hitl-ok"
+                          onClick={() => decide(msg.id, true)}
+                        >
+                          <Icon name="check" />
+                          해도 돼요
+                        </button>
+                        <button
+                          className="hitl-no"
+                          onClick={() => decide(msg.id, false)}
+                        >
+                          안 할래요
+                        </button>
+                      </span>
+                    ) : null}
+                    {msg.confirm === "allowed" || msg.confirm === "denied" ? (
+                      <span
+                        className={
+                          msg.confirm === "allowed"
+                            ? "hitl-done is-ok"
+                            : "hitl-done"
+                        }
+                      >
+                        <Icon
+                          name={msg.confirm === "allowed" ? "check" : "x"}
+                        />
+                        {msg.confirm === "allowed"
+                          ? "허락하셔서 실행했어요"
+                          : "하지 않기로 했어요"}
+                      </span>
                     ) : null}
                     {msg.role === "bot" && msg.reply && !msg.streaming ? (
                       <span className="bfoot">
