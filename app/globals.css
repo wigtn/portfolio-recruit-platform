@@ -15389,6 +15389,8 @@ select.in {
 .chatpanel {
   transition:
     height 0.5s cubic-bezier(0.32, 0.72, 0.24, 1),
+    width 0.5s cubic-bezier(0.32, 0.72, 0.24, 1),
+    border-radius 0.5s cubic-bezier(0.32, 0.72, 0.24, 1),
     background-color 0.32s ease,
     background 0.32s ease,
     backdrop-filter 0.32s ease,
@@ -15407,8 +15409,8 @@ select.in {
 .chatbody .bubrow {
   transition: opacity 0.32s ease;
 }
-/* 접히는 세 줄. max-height는 접기 전 실측 상한보다 넉넉히 —
-   textarea가 세 줄(96px)로 자란 폼이 122px 정도다 */
+/* 접히는 줄들. max-height는 접기 전 실측 상한보다 넉넉히 —
+   textarea가 세 줄(96px)로 자란 폼이 122px 정도, 본문은 패널 상한만큼 */
 .chatchips,
 .chatform,
 .chatnote {
@@ -15420,19 +15422,40 @@ select.in {
   max-height: 180px;
   overflow: hidden;
 }
+.chatbody {
+  transition:
+    max-height 0.45s cubic-bezier(0.32, 0.72, 0.24, 1),
+    padding 0.45s cubic-bezier(0.32, 0.72, 0.24, 1),
+    opacity 0.2s ease;
+  max-height: 560px;
+}
+/* 복귀도 부드럽게 — 전환은 기본 상태에 둬야 양방향으로 돈다 */
+.chathead .cskip {
+  transition:
+    width 0.3s ease,
+    padding 0.3s ease,
+    opacity 0.2s ease;
+}
 .chatpanel.is-operating {
-  /* 머리 줄(63) + 걸음 피드 한 화면. 대화 전체가 아니라 "지금 무슨 일이
-     일어나는지"만 보이면 된다 */
-  height: 232px;
-  background: color-mix(in srgb, var(--card) 26%, transparent);
-  /* 판이 얇아진 만큼만 흐린다. 세게 흐리면 뒤(정작 봐야 할 화면)가 뭉개진다 */
+  /* 알약으로 변신한다 — 머리 줄 하나 크기.
+
+     232px로 줄여 마지막 말풍선을 남겨 봤는데, 그 창이 커서 라벨과 같은
+     구역(우하단)을 두고 다퉜다(실기기 지적: 시야 방해가 상당하다). 안내
+     중의 무대는 화면이지 채팅창이 아니다. 창은 "안내 중"이라는 사실과
+     지금 도는 도구 이름만 말하는 캡슐로 물러나고, 끝나면 원래 판으로
+     돌아온다. 진행 내용은 커서 라벨(agc-note)이 현장에서 직접 말한다. */
+  width: 276px;
+  height: 64px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card) 55%, transparent);
   backdrop-filter: blur(8px) saturate(1.5);
   -webkit-backdrop-filter: blur(8px) saturate(1.5);
   border-color: color-mix(in srgb, var(--line-2) 40%, transparent);
   box-shadow:
-    0 18px 44px rgba(16, 24, 40, 0.1),
+    0 12px 30px rgba(16, 24, 40, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
+.chatpanel.is-operating .chatbody,
 .chatpanel.is-operating .chatchips,
 .chatpanel.is-operating .chatform,
 .chatpanel.is-operating .chatnote {
@@ -15442,12 +15465,18 @@ select.in {
   padding-bottom: 0;
   pointer-events: none;
 }
-/* 지나간 대화는 가라앉는다. 마지막 줄(지금 도는 걸음)만 온전한 농도 */
-.chatpanel.is-operating .chatbody .bubrow {
-  opacity: 0.4;
+/* 캡슐 안에서 머리 줄이 곧 전부다. 경계선은 걷고, 재생 버튼처럼 지금
+   상관없는 조작은 자리째 접는다 — 남는 건 아바타 + 상태 문구 + 닫기 */
+.chatpanel.is-operating .chathead {
+  border-bottom-color: transparent;
 }
-.chatpanel.is-operating .chatbody .bubrow:last-of-type {
-  opacity: 1;
+.chatpanel.is-operating .cskip {
+  width: 0;
+  padding: 0;
+  margin: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 .chatpanel.is-operating .bub.bot {
   background: color-mix(in srgb, var(--card-2) 40%, transparent);
@@ -16155,31 +16184,31 @@ body:has(.agc-ring) .evpop {
 
 /* ── 안내 말풍선 ──
 
-   보라 판에 흰 글자 한 덩어리였다. 같은 제품 안에서 챗봇은 말풍선으로
-   말하는데 화면을 짚을 때만 다른 모양이면, 같은 주체가 말한다는 게 안
-   읽힌다. 챗봇 말풍선의 문법을 그대로 쓴다 — 왼쪽에 얼굴, 오른쪽에 말,
-   흰 바탕에 검은 글씨.
+   흰 카드였다. 챗봇 말풍선과 같은 문법을 쓰려는 선택이었는데, 안내가
+   짚는 화면의 대부분이 흰 카드 위라 라벨이 배경에 묻혔다(실기기 지적:
+   포커스 라벨이 잘 안 보인다). 안내 라벨의 첫 임무는 일관성이 아니라
+   **어디서든 읽히는 것**이다 — 다크 글래스로 뒤집는다. 흰 화면 위에서든
+   히어로의 어두운 배너 위에서든 이 정도 명도차는 항상 선다.
 
-   AI라는 사실은 색으로 말한다. 테두리에 보라→자홍→인디고 그라데이션을
-   한 겹 두르면, 판 전체를 물들이지 않고도 이 말풍선이 어디서 왔는지
-   전해진다(AI 답변 카드와 같은 색이다). */
+   AI라는 사실은 색으로 말한다. 테두리의 보라→자홍→인디고 그라데이션은
+   다크 판 위에서 오히려 더 또렷하다(AI 답변 카드와 같은 색이다). */
 .agc-note {
   position: absolute;
   display: flex;
   align-items: flex-start;
-  gap: 9px;
-  max-width: 290px;
-  padding: 10px 13px 10px 10px;
-  border-radius: 14px;
+  gap: 10px;
+  max-width: 320px;
+  padding: 11px 15px 11px 11px;
+  border-radius: 15px;
   corner-shape: squircle;
-  font-size: 12.5px;
-  line-height: 1.6;
-  font-weight: 650;
-  color: var(--ink);
-  background: var(--card);
+  font-size: 13.5px;
+  line-height: 1.55;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(17, 19, 30, 0.93);
   box-shadow:
-    0 16px 32px -16px rgba(14, 16, 24, 0.4),
-    0 2px 8px rgba(14, 16, 24, 0.08);
+    0 18px 40px -14px rgba(10, 12, 20, 0.65),
+    0 3px 10px rgba(10, 12, 20, 0.28);
   animation: agc-note-in 0.34s var(--ease-spring) 0.12s backwards;
 }
 /* 그라데이션 테두리 — 배경 두 겹(패딩 박스는 카드색, 보더 박스는 그라데이션)을
@@ -17825,7 +17854,10 @@ body:has(.pdrawer) {
   }
   .chatbody {
     min-height: 0;
-    max-height: none;
+    /* none이 아니라 수치 상한 — 안내 캡슐로 접히는 전환(max-height 0)이
+       none에서 출발하면 보간이 안 돼 뚝 접힌다. 패널 상한(520)보다 크면
+       평소 레이아웃에는 아무 영향이 없다 */
+    max-height: 560px;
   }
   .chathead .cx,
   .demowidget .guide-coach .cx {
