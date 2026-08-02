@@ -15444,7 +15444,8 @@ select.in {
      중의 무대는 화면이지 채팅창이 아니다. 창은 "안내 중"이라는 사실과
      지금 도는 도구 이름만 말하는 캡슐로 물러나고, 끝나면 원래 판으로
      돌아온다. 진행 내용은 커서 라벨(agc-note)이 현장에서 직접 말한다. */
-  width: 276px;
+  /* 부제가 커서 라벨과 같은 문장을 실시간으로 흘리므로 읽을 폭이 필요하다 */
+  width: 308px;
   height: 64px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--card) 55%, transparent);
@@ -15466,9 +15467,11 @@ select.in {
   pointer-events: none;
 }
 /* 캡슐 안에서 머리 줄이 곧 전부다. 경계선은 걷고, 재생 버튼처럼 지금
-   상관없는 조작은 자리째 접는다 — 남는 건 아바타 + 상태 문구 + 닫기 */
+   상관없는 조작은 자리째 접는다 — 남는 건 아바타 + 진행 문구 + 펼치기 +
+   닫기다. 닫기는 캡슐 오른쪽 끝에 닿는다(사용자 지시). */
 .chatpanel.is-operating .chathead {
   border-bottom-color: transparent;
+  padding-right: 9px;
 }
 .chatpanel.is-operating .cskip {
   width: 0;
@@ -15477,6 +15480,18 @@ select.in {
   opacity: 0;
   overflow: hidden;
   pointer-events: none;
+}
+/* 진행 문구는 한 줄로 흐른다. 두 줄로 꺾이면 캡슐 높이가 흔들린다 */
+.chatpanel.is-operating .ct span {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 펼치기 — 아래(down) 아이콘을 뒤집어 "위로 펼친다"로 읽는다.
+   닫기와 같은 .cx 문법이라 크기·색·터치 면적이 같다 */
+.cexpand .ic {
+  transform: rotate(180deg);
 }
 .chatpanel.is-operating .bub.bot {
   background: color-mix(in srgb, var(--card-2) 40%, transparent);
@@ -16184,14 +16199,14 @@ body:has(.agc-ring) .evpop {
 
 /* ── 안내 말풍선 ──
 
-   흰 카드였다. 챗봇 말풍선과 같은 문법을 쓰려는 선택이었는데, 안내가
-   짚는 화면의 대부분이 흰 카드 위라 라벨이 배경에 묻혔다(실기기 지적:
-   포커스 라벨이 잘 안 보인다). 안내 라벨의 첫 임무는 일관성이 아니라
-   **어디서든 읽히는 것**이다 — 다크 글래스로 뒤집는다. 흰 화면 위에서든
-   히어로의 어두운 배너 위에서든 이 정도 명도차는 항상 선다.
+   챗봇 말풍선의 문법을 그대로 쓴다 — 왼쪽에 얼굴, 오른쪽에 말, 흰 바탕에
+   검은 글씨. 다크 글래스로 뒤집어 봤지만 데모의 결과 겉돌았다(사용자
+   반려). 흰 카드로 두되 시인성은 색이 아니라 **크기와 분리감**으로 든다:
+   글자 13.5px, 판 최대 320px, 배경에서 띄우는 그림자를 진하게.
 
-   AI라는 사실은 색으로 말한다. 테두리의 보라→자홍→인디고 그라데이션은
-   다크 판 위에서 오히려 더 또렷하다(AI 답변 카드와 같은 색이다). */
+   AI라는 사실은 색으로 말한다. 테두리에 보라→자홍→인디고 그라데이션을
+   한 겹 두르면, 판 전체를 물들이지 않고도 이 말풍선이 어디서 왔는지
+   전해진다(AI 답변 카드와 같은 색이다). */
 .agc-note {
   position: absolute;
   display: flex;
@@ -16204,11 +16219,11 @@ body:has(.agc-ring) .evpop {
   font-size: 13.5px;
   line-height: 1.55;
   font-weight: 700;
-  color: #fff;
-  background: rgba(17, 19, 30, 0.93);
+  color: var(--ink);
+  background: var(--card);
   box-shadow:
-    0 18px 40px -14px rgba(10, 12, 20, 0.65),
-    0 3px 10px rgba(10, 12, 20, 0.28);
+    0 18px 40px -14px rgba(14, 16, 24, 0.5),
+    0 3px 10px rgba(14, 16, 24, 0.14);
   animation: agc-note-in 0.34s var(--ease-spring) 0.12s backwards;
 }
 /* 그라데이션 테두리 — 배경 두 겹(패딩 박스는 카드색, 보더 박스는 그라데이션)을
