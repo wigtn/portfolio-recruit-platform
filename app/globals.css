@@ -15477,9 +15477,16 @@ select.in {
   width: 0;
   padding: 0;
   margin: 0;
+  /* 테두리까지 걷는다. 남기면 폭 0이어도 2px 부스러기가 보인다(리뷰 지적) */
+  border: 0;
   opacity: 0;
   overflow: hidden;
   pointer-events: none;
+}
+/* 우측 밀기는 cskip의 margin-left: auto가 담당했다. 캡슐에서 그걸 0으로
+   접었으니 펼치기 버튼이 이어받아야 닫기가 오른쪽 끝에 선다(리뷰 지적) */
+.chatpanel.is-operating .cexpand {
+  margin-left: auto;
 }
 /* 진행 문구는 한 줄로 흐른다. 두 줄로 꺾이면 캡슐 높이가 흔들린다 */
 .chatpanel.is-operating .ct span {
