@@ -1205,8 +1205,7 @@ small,
      탭바가 같이 있어야 하고, 챗 위젯이 탭바 위(dock-b + 56px)에 떠 있어
      자리도 겹치지 않는다. */
   body:has(.modalwrap) .tabbar,
-  body:has(.pdrawer.is-open) .tabbar,
-  body:has(.evpop) .tabbar {
+  body:has(.pdrawer.is-open) .tabbar {
     opacity: 0;
     transform: translateY(12px);
     pointer-events: none;
@@ -1227,8 +1226,7 @@ small,
       visibility 0s linear 0.22s;
   }
   body:has(.modalwrap) .tabbar,
-  body:has(.pdrawer.is-open) .tabbar,
-  body:has(.evpop) .tabbar {
+  body:has(.pdrawer.is-open) .tabbar {
     transition:
       opacity 0.22s ease,
       transform 0.22s var(--ease-out-soft),
@@ -6839,154 +6837,13 @@ a.adcard:hover,
    z-index는 모달(`.modalwrap` = 60)보다 **아래**여야 한다 — 계정 전환
    모달을 열었는데 광고가 그 위로 올라오면 안 된다.
    ═══════════════════════════════════════════════════════════════════════ */
-.evpop {
-  position: fixed;
-  left: 20px;
-  /* 탭바가 서면 팝업도 같이 올라간다. 기준선은 하나다 */
-  bottom: max(20px, var(--dock-b));
-  z-index: 45;
-  width: 340px;
-  max-width: calc(100vw - 40px);
-  border-radius: 14px;
-  overflow: hidden;
-  background: var(--grad-purple);
-  color: #fff;
-  box-shadow: 0 24px 54px -20px rgba(16, 24, 40, 0.5);
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-  animation: evpop-in calc(var(--duration-slow) * 1.5) var(--ease-spring) 900ms
-    both;
-}
-.evpop:active {
-  cursor: grabbing;
-}
-@keyframes evpop-in {
-  from {
-    opacity: 0;
-    transform: translateY(26px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 
 /* 동심원 두 개는 어디서나 보는 장식이라 걷어냈다 — 빛 한 덩이만 둔다 */
-.evpop-art {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      120% 90% at 100% 0%,
-      rgba(255, 255, 255, 0.26),
-      transparent 62%
-    ),
-    radial-gradient(
-      70% 60% at 0% 100%,
-      rgba(255, 255, 255, 0.12),
-      transparent 70%
-    );
-}
 
-.evpop-body {
-  position: relative;
-  padding: 20px 20px 18px;
-}
-.evpop-tag {
-  display: inline-flex;
-  align-items: center;
-  height: 21px;
-  padding: 0 9px;
-  border-radius: 5px;
-  background: #fff;
-  color: var(--accent-ink);
-  font-size: 10.5px;
-  font-weight: 850;
-  letter-spacing: 0.14em;
-  margin-bottom: 13px;
-}
-.evpop-title {
-  display: block;
-  font-size: 19.5px;
-  font-weight: 850;
-  letter-spacing: -0.03em;
-  line-height: 1.34;
-  margin-bottom: 7px;
-  word-break: keep-all;
-  overflow-wrap: anywhere;
-}
-.evpop-sub {
-  font-size: 12.5px;
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.84);
-  margin: 0 0 16px;
-  word-break: keep-all;
-  overflow-wrap: anywhere;
-}
 /* 폭을 꽉 채운다 — 팝업 안에서 눌러야 할 곳이 하나뿐임을 분명히 한다 */
-.evpop-cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 42px;
-  border-radius: 9px;
-  background: #fff;
-  color: var(--accent-ink);
-  font-size: 13.5px;
-  font-weight: 800;
-  transition: background var(--duration-fast) var(--ease-out-soft);
-}
-.evpop-cta:hover {
-  background: var(--accent-soft);
-}
-.evpop-cta .ic {
-  width: 14px;
-  height: 14px;
-  transition: transform var(--duration-fast) var(--ease-out-soft);
-}
-.evpop-cta:hover .ic {
-  transform: translateX(3px);
-}
 
 /* 한국 이벤트 팝업의 관용구 — 아래 띠에 "오늘 하루 보지 않기 / 닫기".
    전에는 버튼 하나가 띠 전체를 먹어 글자가 왼쪽 끝에 붙어 있었다. */
-.evpop-foot {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 0 16px;
-  height: 40px;
-  border-top: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(0, 0, 0, 0.18);
-}
-.evpop-foot button {
-  border: 0;
-  background: none;
-  padding: 0;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 650;
-  color: rgba(255, 255, 255, 0.82);
-  cursor: pointer;
-  transition: color var(--duration-fast) var(--ease-out-soft);
-}
-.evpop-foot button:hover {
-  color: #fff;
-}
-.evpop-close {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-.evpop-close .ic {
-  width: 12px;
-  height: 12px;
-}
 
 @media (max-width: 620px) {
   /* 하단 전폭을 쓰지 않는다.
@@ -6998,43 +6855,10 @@ a.adcard:hover,
 
      fab이 쓰는 자리(12 + 44 + 8 + 44 = 108px)를 비켜 두면 밀어 올릴 이유가
      없어진다. 폭은 좁아지지만 이 팝업이 하는 일은 한 줄 알림이라 충분하다. */
-  .evpop {
-    left: 12px;
-    right: 116px;
-    width: auto;
-    max-width: none;
-  }
-  /* 둘 중 하나만 말한다.
-
-     코치 말풍선("여기 10가지, 전부 실제로 동작해요")은 가이드 fab 왼쪽에
-     붙는데, 이벤트 팝업도 같은 자리를 노린다. 겹치면 글자가 포개져 둘 다
-     안 읽힌다(실제로 그렇게 겹쳐 있었다).
-
-     팝업이 떠 있는 동안은 코치를 접는다. 코치는 팝업을 닫으면 다시 나온다 —
-     안내는 사라져도 되지만 광고는 방문자가 닫아야 사라지기 때문이다. */
-  body:has(.evpop) .guide-coach {
-    display: none;
-  }
 
   /* 광고가 화면을 덜 먹게 — 그림 층은 좁은 화면에서 뺀다 */
-  .evpop-art {
-    display: none;
-  }
-  .evpop-sub {
-    display: none;
-  }
-  .evpop-body {
-    padding: 12px 14px 6px;
-  }
-  .evpop-title {
-    font-size: 13.5px;
-    line-height: 1.45;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .evpop {
-    animation: none;
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -16205,11 +16029,6 @@ select.in {
    챗 패널만 접어서는 부족했다. 이벤트 팝업이 화면 가운데를 크게 덮고 있어서,
    정작 챗봇이 가리킨 자리가 그 뒤에 있었다(실제 캡처로 확인). 안내가 도는
    몇 초 동안은 안내가 우선이다 — 닫지는 않고 비켜 준다. */
-body:has(.agc-ring) .evpop {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.24s ease;
-}
 
 /* ── 안내 말풍선 ──
 
@@ -16985,25 +16804,28 @@ body:has(.agc-ring) .evpop {
 
 /* 추천 질문 칩. 하나씩 차례로 들어온다. 한꺼번에 나타나면 목록으로 보이고,
    차례로 들어오면 "고르라고 내민 것"으로 읽힌다 */
-.chatchips button {
-  animation: chip-in 0.3s var(--ease-out-soft) backwards;
+/* 칩 줄은 **한 덩어리로** 갈린다.
+
+   전에는 칩마다 등장 애니메이션을 계단식(0.02s씩)으로 줬다. 처음 열 때는
+   보기 좋은데, 대화 중 칩이 바뀌는 순간에는 새 칩이 떠오르는 동안 남은
+   칩이 제자리에서 순간이동한다 — 두 움직임이 따로 놀아 "밀려난다"로
+   읽힌다(사용자 지적). flex 자식의 위치 이동은 transition으로 못 잡으니,
+   개별 등장을 줄 전체의 교체 한 동작으로 바꾼다.
+
+   컨테이너가 칩 묶음을 key로 물고 있어(ChatWidget의 chipKey) 묶음이
+   바뀌면 새로 마운트되고, 이 애니메이션이 한 번 돈다. */
+.chatchips {
+  animation: chips-swap 0.26s var(--ease-out-soft);
 }
-.chatchips button:nth-child(1) {
-  animation-delay: 0.02s;
-}
-.chatchips button:nth-child(2) {
-  animation-delay: 0.08s;
-}
-.chatchips button:nth-child(3) {
-  animation-delay: 0.14s;
-}
-.chatchips button:nth-child(4) {
-  animation-delay: 0.2s;
-}
-@keyframes chip-in {
+@keyframes chips-swap {
   from {
     opacity: 0;
-    transform: translateY(5px) scale(0.97);
+    transform: translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chatchips {
+    animation: none;
   }
 }
 
@@ -17840,18 +17662,6 @@ body:has(.pdrawer) {
   }
 
   /* 손가락 환경에서는 이벤트 팝업을 고정 카드로 취급한다. */
-  .evpop {
-    /* bottom은 기준선(--dock-b)을 그대로 쓴다. 여기서 다시 박으면 탭바
-       아래로 내려가 탭이 가려진다 */
-    cursor: default;
-    touch-action: pan-y;
-  }
-  .evpop:active {
-    cursor: default;
-  }
-  .evpop-foot button {
-    min-height: 40px;
-  }
 
   /* 화면 전체를 덮는 것들(모달·드로어·스텝업)이 떠 있는 동안에만 물러난다.
      그건 "지금은 이것부터 처리하라"는 화면이라 fab이 그 위에 떠 있으면
@@ -17881,8 +17691,8 @@ body:has(.pdrawer) {
      읽을 수 없었다(실기기 지적 둘 다). 지금은 전역 .chatpanel.is-pill이
      높이를 232px로 줄이고 마지막 말풍선을 남긴다 — 두 클래스 선택자라
      이 블록의 .chatpanel 높이보다 항상 세다. */
-  /* 여기에 있던 `body:has(.evpop) .chatwidget` 리프트도 뺐다. 팝업이 fab
-     자리를 비켜서므로 겹치지 않고, 올리면 챗 패널이 화면 위로 넘친다. */
+  /* 여기 있던 이벤트 팝업 회피 규칙은 팝업 자체가 사라져 함께 걷었다
+     (2026-08-02, "거슬린다"는 지적). */
   .chatpanel {
     width: min(
       360px,

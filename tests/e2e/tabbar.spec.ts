@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
  * 모바일 하단 탭바 계약.
  *
  * 이 기능은 UI를 하나 더 얹는 것보다 **기존 하단 레이어와의 정합**이 훨씬 큰
- * 일이다. 우하단에는 이미 체험 가이드, 챗봇, 이벤트 팝업, 토스트가 앉아 있고,
+ * 일이다. 우하단에는 이미 체험 가이드, 챗봇, 토스트가 앉아 있고,
  * 탭바가 서면 그것들이 전부 같이 올라가야 한다. 그 어긋남은 눈으로 한 번
  * 보고 넘어가면 다음 변경에서 조용히 되돌아온다.
  *
@@ -29,7 +29,7 @@ test.describe("모바일 하단 탭바", () => {
     await page.goto("/community");
 
     /* 여백은 계산된 bottom 값으로 잰다.
-       화면에 그려진 위치로 재면 안 된다. 이벤트 팝업 같은 층이 뜨는 순간
+       화면에 그려진 위치로 재면 안 된다. 모달 같은 층이 뜨는 순간
        탭바가 물러나면서 translateY가 걸리고, 그 도중을 재면 여백이 줄어든
        것처럼 보인다. 실제로 5.8px이 나와 판정이 뒤집혔다. 여기서 묻는 것은
        "어디에 놓였나"이지 "지금 어디에 있나"가 아니다. */
@@ -103,7 +103,6 @@ test.describe("모바일 하단 탭바", () => {
   for (const layer of [
     { name: "모달", cls: "modalwrap" },
     { name: "드로어", cls: "pdrawer is-open" },
-    { name: "이벤트 팝업", cls: "evpop" },
   ]) {
     test(`${layer.name}이 열리면 물러난다`, async ({ page }) => {
       await page.setViewportSize(MOBILE);
@@ -129,13 +128,9 @@ test.describe("모바일 하단 탭바", () => {
      탭바가 남는다 — 챗 위젯이 탭바 위에 떠 있어 자리도 겹치지 않는다 */
   test("챗 패널이 열려도 탭바는 남는다", async ({ page }) => {
     await page.setViewportSize(MOBILE);
-    /* 이벤트 팝업(900ms 뒤 등장)과 첫 방문 역할 모달이 탭바를 물리면
-       이 검증과 겹친다 — 각자 제 테스트가 있으니 여기선 치워 둔다 */
+    /* 첫 방문 역할 모달이 탭바를 물리면 이 검증과 겹친다 — 제 테스트가
+       따로 있으니 여기선 치워 둔다 */
     await page.addInitScript(() => {
-      window.localStorage.setItem(
-        "wigtn-demo-event-popup-v1",
-        String(Date.now() + 60 * 60 * 1000),
-      );
       window.localStorage.setItem("wigtn-demo-role-v1", "member");
     });
     await page.goto("/community");
@@ -156,10 +151,6 @@ test.describe("모바일 하단 탭바", () => {
   test("활성 유리알이 탭을 따라 이동한다", async ({ page }) => {
     await page.setViewportSize(MOBILE);
     await page.addInitScript(() => {
-      window.localStorage.setItem(
-        "wigtn-demo-event-popup-v1",
-        String(Date.now() + 60 * 60 * 1000),
-      );
       window.localStorage.setItem("wigtn-demo-role-v1", "member");
     });
     await page.goto("/");
