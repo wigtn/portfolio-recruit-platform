@@ -7,6 +7,7 @@ import type { PolicyRow } from "@/lib/admin/seed";
 import { Icon } from "@/components/Icon";
 import { SkRegion } from "@/components/Skeleton";
 import { toast } from "@/components/ds/Toaster";
+import { toneOf } from "@/lib/admin/run";
 import {
   POLICY_FOOT_NOTE,
   POLICY_GROUPS,
@@ -67,7 +68,7 @@ export function PolicyMatrix() {
     toasted.current = res;
     if (!res.ok && res.code === "STEP_UP_REQUIRED") return;
     if (!res.ok) {
-      toast(res.message, { tone: "error" });
+      toast(res.message, { tone: toneOf(res) });
       return;
     }
     // 멱등 재실행("이미 처리된 요청")은 저장 완료로 위장하지 않는다

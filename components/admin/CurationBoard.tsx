@@ -9,6 +9,7 @@ import { BOARDS, FEED } from "@/lib/seed/feed";
 import { Icon } from "@/components/Icon";
 import { Sk, SkRegion } from "@/components/Skeleton";
 import { toast } from "@/components/ds/Toaster";
+import { toneOf } from "@/lib/admin/run";
 import { useDragSort } from "@/components/ds/useDragSort";
 import { CompanyLogo } from "./CompanyLogo";
 import { FormModal } from "./FormModal";
@@ -65,7 +66,7 @@ export function CurationBoard() {
     if (!res || toasted.current === res) return;
     toasted.current = res;
     if (!res.ok) {
-      toast(res.message, { tone: "error" });
+      toast(res.message, { tone: toneOf(res) });
       return;
     }
     // 멱등 재실행("이미 처리된 요청")은 저장 완료로 위장하지 않는다
@@ -87,7 +88,7 @@ export function CurationBoard() {
       JSON.stringify(draft) !== JSON.stringify(admin.state.curation);
     if (dirty && !wasDirty.current) {
       toast("저장하지 않은 변경이 있어요, 저장을 눌러야 홈에 반영돼요.", {
-        tone: "info",
+        tone: "warn",
       });
     }
     wasDirty.current = dirty;

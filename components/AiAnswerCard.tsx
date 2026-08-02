@@ -188,7 +188,7 @@ export function AiAnswerCard({
       if (res.status === 429) {
         const data = (await res.json()) as { error?: string };
         toast(data.error ?? "실호출 한도에 도달했어요. 예시로 재생해요.", {
-          tone: "info",
+          tone: "warn",
         });
         playSeeded(countsAgainstQuota);
         return;

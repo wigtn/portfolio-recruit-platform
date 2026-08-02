@@ -8,6 +8,7 @@ import { COMPANIES } from "@/lib/seed/companies";
 import { Icon } from "@/components/Icon";
 import { Sk, SkRegion } from "@/components/Skeleton";
 import { toast } from "@/components/ds/Toaster";
+import { toneOf } from "@/lib/admin/run";
 import { StepUpModal } from "./StepUpModal";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { FormModal } from "./FormModal";
@@ -29,7 +30,7 @@ export function JobsAdmin() {
     if (!res || toasted.current === res) return;
     toasted.current = res;
     if (!res.ok && res.code === "STEP_UP_REQUIRED") return;
-    toast(res.message, { tone: res.ok ? "success" : "error" });
+    toast(res.message, { tone: toneOf(res) });
   }, [admin.result]);
 
   if (!admin.state) {

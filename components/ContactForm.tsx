@@ -82,7 +82,6 @@ const DOMAINS = [
 export function ContactForm() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [domain, setDomain] = useState("");
   const [custom, setCustom] = useState("");
   const [message, setMessage] = useState("");
@@ -97,7 +96,6 @@ export function ContactForm() {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
         setSending(true);
-        setError(null);
         try {
           const response = await fetch("/api/contact", {
             method: "POST",
@@ -123,8 +121,8 @@ export function ContactForm() {
         } catch (err) {
           const reason =
             err instanceof Error ? err.message : "접수하지 못했어요.";
-          setError(reason);
-          // 폼이 화면 밖에 있을 수도 있다. 실패는 특히 놓치면 안 된다
+          /* 폼이 화면 밖에 있을 수도 있다. 실패는 특히 놓치면 안 된다 —
+             인라인 배너는 폼 안에 갇히지만 토스트는 어디서든 보인다 */
           toast(reason, { tone: "error" });
         } finally {
           setSending(false);
@@ -254,12 +252,6 @@ export function ContactForm() {
           placeholder="구현하고 싶은 서비스를 자유롭게 적어주세요. 위 버튼을 누르면 틀이 들어가요"
         />
       </div>
-
-      {error ? (
-        <div className="safenote warn" style={{ marginBottom: 14 }}>
-          <b>{error}</b>
-        </div>
-      ) : null}
 
       {/* 안내를 위, 버튼을 아래 한 줄로. 좌우로 벌려 두면 좁은 화면에서
           줄바꿈이 어디서 일어날지에 따라 버튼이 이리저리 옮겨 다닌다.

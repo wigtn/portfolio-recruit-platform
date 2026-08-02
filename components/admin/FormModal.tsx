@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Select } from "@/components/ds/Select";
 import { Icon } from "@/components/Icon";
+import { toast } from "@/components/ds/Toaster";
 import { Overlay } from "./Overlay";
 
 /**
@@ -53,7 +54,6 @@ export function FormModal({
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(fields.map((f) => [f.key, initial?.[f.key] ?? ""])),
   );
-  const [error, setError] = useState<string | null>(null);
 
   return (
     <Overlay onClose={onCancel}>
@@ -65,10 +65,9 @@ export function FormModal({
             (field) => field.required && !values[field.key]?.trim(),
           );
           if (missing) {
-            setError(`${missing.label}을(를) 입력해주세요.`);
+            toast(`${missing.label}을(를) 입력해주세요.`, { tone: "warn" });
             return;
           }
-          setError(null);
           onSubmit(values);
         }}
       >
@@ -131,16 +130,6 @@ export function FormModal({
 
         {preview ? preview(values) : null}
 
-        {error ? (
-          <div className="safenote warn" style={{ marginBottom: 0 }}>
-            <span className="si">
-              <Icon name="alert" />
-            </span>
-            <div>
-              <b>{error}</b>
-            </div>
-          </div>
-        ) : null}
 
         <div className="facts">
           <button type="button" className="btn line" onClick={onCancel}>

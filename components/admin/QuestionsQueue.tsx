@@ -116,7 +116,7 @@ export function QuestionsQueue() {
     if (!value) {
       // 순간 안내는 배너가 아니라 토스트로 — 본문 높이를 흔들지 않는다
       toast("답변 내용을 입력해주세요, 사용자에게 그대로 보여요", {
-        tone: "error",
+        tone: "warn",
       });
       textRef.current?.focus();
       return;

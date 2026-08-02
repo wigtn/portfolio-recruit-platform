@@ -96,6 +96,12 @@ export function CompaniesAdmin() {
 
   async function onFile(file: File) {
     if (!/\.(csv|tsv|txt)$/i.test(file.name)) {
+      /* 결과 카드는 기록이라 남기되, 알림은 토스트가 맡는다. 파일을 떨군
+         자리와 결과 카드가 떨어져 있어서 카드만으로는 놓친다 */
+      toast(
+        `${file.name.split(".").pop()?.toUpperCase()} 파일은 브라우저에서 열 수 없어요.`,
+        { tone: "warn" },
+      );
       setImported({
         rows: [],
         errors: [],

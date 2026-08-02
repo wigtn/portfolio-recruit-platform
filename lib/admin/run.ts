@@ -39,6 +39,36 @@ const GATE_MESSAGE: Record<string, string> = {
   TOOL_NOT_FOUND: "알 수 없는 작업이에요.",
 };
 
+/**
+ * 거절의 성격.
+ *
+ * 막혔다고 다 실패는 아니다. "본인 확인이 필요해요"는 **다음 단계**이고,
+ * "권한이 없어요, 운영자로 전환해보세요"는 방문자가 할 일이 있는 안내다.
+ * 그걸 전부 빨강으로 띄우면 뭔가 고장 난 것으로 읽히고, 정작 진짜 고장
+ * (알 수 없는 작업, 멱등 키 없음)과 구분되지 않는다.
+ *
+ * 톤을 호출부마다 정하지 않고 여기 문구 옆에 둔다 — 문구를 고치는 사람이
+ * 톤도 같이 보게 된다.
+ */
+export type GateTone = "info" | "warn" | "error";
+
+const GATE_TONE: Record<string, GateTone> = {
+  // 할 일이 남은 것 — 사람이 이어서 하면 된다
+  STEP_UP_REQUIRED: "warn",
+  PERMISSION_DENIED: "warn",
+  ACTIVE_SESSION_REQUIRED: "warn",
+  INPUT_INVALID: "warn",
+  // 여기부터는 우리 쪽 고장이다
+  IDEMPOTENCY_KEY_REQUIRED: "error",
+  TOOL_NOT_FOUND: "error",
+};
+
+/** 결과에 맞는 토스트 톤. 성공은 완료, 거절은 위 표, 모르는 코드는 실패 */
+export function toneOf(res: ToolResult): "success" | GateTone {
+  if (res.ok) return "success";
+  return GATE_TONE[res.code] ?? "error";
+}
+
 /** 조치에 딸려오는 입력값 — 등록·수정처럼 id만으로 부족한 작업이 쓴다 */
 export type ToolPayload = Record<string, unknown>;
 
