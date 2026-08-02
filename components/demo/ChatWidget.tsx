@@ -9,9 +9,10 @@ import {
   DEMO_SCRIPT,
   FALLBACK,
   GREETING,
-  INTENTS,
   intentById,
+  nextChips,
   resolveScripted,
+  splitFollowups,
   type ChatIntent,
 } from "@/lib/demo/chat";
 import {
@@ -93,7 +94,7 @@ type Msg = {
   steps?: Step[];
   /* 잘못된 상황을 알리는 쪽지. 답변이 아니라 알림이라 생김새가 달라야
      한다. 답변처럼 보이면 방문자는 그게 대답인 줄 알고 읽는다 */
-  notice?: "timeout" | "failed" | "offline";
+  notice?: "timeout" | "failed" | "offline" | "quota";
   /**
    * 실행 허락을 묻는 말풍선(HITL).
    *
@@ -104,6 +105,8 @@ type Msg = {
    * 허락했었나"를 대화에서 되짚을 수 없다.
    */
   confirm?: "pending" | "allowed" | "denied";
+  /** 이 답변이 실어 온 후속 질문. 칩 줄 앞자리를 차지한다 */
+  followups?: string[];
 };
 
 /**
@@ -489,6 +492,11 @@ export function ChatWidget() {
   /* 안내 중에도 대화창을 펼쳐 두겠다는 뜻. 캡슐의 펼치기 버튼이 켠다.
      안내가 끝나면 리셋 — 다음 안내는 다시 캡슐부터 시작한다 */
   const [stayOpen, setStayOpen] = useState(false);
+  /* 방문자가 직접 접어 둔 상태. 안내와 무관하게 언제든 캡슐로 줄일 수
+     있어야 한다 — 닫으면 대화가 사라지지만 접으면 그대로 남는다.
+     안내가 시작될 때 자동으로 접히는 것(operating)과는 다른 축이라 따로
+     둔다. 둘 중 하나만 참이어도 캡슐이다. */
+  const [folded, setFolded] = useState(false);
   /* 지금 커서가 짚는 지점의 설명. 캡슐 부제가 이걸 읽는다 — 현장 라벨과
      같은 문장이 캡슐에도 흐르면 캡슐만 보고도 안내가 어디까지 왔는지 안다 */
   const [stepNote, setStepNote] = useState<string | null>(null);
@@ -521,8 +529,37 @@ export function ChatWidget() {
     return () => window.removeEventListener(AGENT_EVENT, onStep);
   }, []);
 
-  /** 캡슐로 접혀 있는 상태인가 */
-  const pill = operating && !stayOpen;
+  /* 허락을 기다리는 중인가.
+
+     이게 캡슐보다 세다. 게이트가 떴는데 창이 캡슐로 접혀 있으면 버튼이
+     안 보이고, 방문자는 물어본 줄도 모른 채 45초 뒤 자동 거절을 맞는다
+     (사용자 지적). 묻는 쪽이 답할 자리를 가리면 그건 묻는 게 아니다. */
+  const awaitingOk = msgs.some((msg) => msg.confirm === "pending");
+
+  /* 캡슐로 접혀 있는가.
+
+     두 길로 접힌다 — 안내가 시작돼 자동으로(operating), 또는 방문자가
+     직접(folded). 허락을 기다리는 중이면 어느 쪽이든 펼친다. */
+  const pill = (folded || (operating && !stayOpen)) && !awaitingOk;
+
+  /* 게이트가 뜨면 그 자리로 데려간다.
+
+     평소 자동 스크롤은 방문자가 위로 올려 읽고 있으면 멈춘다(stick).
+     그 배려가 여기서는 해가 된다 — 물어봤는데 화면 밖에 있으면 못 본다.
+     묻는 순간만은 예외로 바닥을 잡는다. */
+  useEffect(() => {
+    if (!awaitingOk) return;
+    const el = body.current;
+    if (!el) return;
+    stick.current = true;
+    setPinned(false);
+    /* 패널이 캡슐에서 펼쳐지는 전환(0.5s)이 끝난 뒤라야 실제 높이가 나온다 */
+    const timer = window.setTimeout(
+      () => el.scrollTo({ top: el.scrollHeight, behavior: "smooth" }),
+      560,
+    );
+    return () => window.clearTimeout(timer);
+  }, [awaitingOk]);
 
   /* 줄 서 있던 질문을 **한꺼번에** 꺼낸다.
      하나씩 보내면 요청마다 왕복이 따로 돌고, 모델은 앞 요청을 모른 채 다음
@@ -1510,9 +1547,23 @@ export function ChatWidget() {
     };
 
     const write: AnswerWriter = {
+      /* 후속 질문은 여기서 떼어낸다.
+
+         스트림 텍스트가 지나는 문이 이 하나뿐이라, 여기서 자르면 표시도
+         저장도 한 번에 맞는다. 마커가 도착하는 중인 상태도 splitFollowups가
+         감춰 주므로 대괄호 부스러기가 화면에 스치지 않는다.
+
+         칩은 한 번 파싱되면 붙들어 둔다 — 뒤이어 오는 청크에서 다시
+         빈 배열이 나와도 지우지 않는다. */
       put(value, extra) {
         if (!value) return;
-        edit((msg) => ({ ...msg, text: value, ...extra }));
+        const { body, chips } = splitFollowups(value);
+        edit((msg) => ({
+          ...msg,
+          text: body,
+          followups: chips.length ? chips : msg.followups,
+          ...extra,
+        }));
       },
       say(text) {
         const key = stepKey++;
@@ -1648,11 +1699,33 @@ export function ChatWidget() {
       if (response.headers.get("content-type")?.includes("application/json")) {
         const first = (await response.json()) as ChatReply & {
           fallback?: boolean;
+          rateLimited?: boolean;
+          why?: "ip" | "session" | "daily";
         };
         /* 키 없음·한도 초과도 JSON({ fallback: true })으로 온다. 이걸
            에이전트 응답으로 착각하면 도구도 말도 없어서 **아무 답이 없는**
            화면이 된다(실제 사고). 라우트의 계약대로 스크립트 답변으로 간다 */
         if (first.fallback) {
+          /* 한도에 걸린 것이면 그렇다고 말한다.
+
+             서버는 rateLimited와 why를 성실히 보내는데 여기서 읽지 않아,
+             같은 질문에 갑자기 다른 결의 답이 나오는 이유를 방문자가 알
+             수 없었다. 배지가 "AI 실시간 답변"에서 "준비된 답변"으로 바뀌는
+             것만이 유일한 단서였다. 네트워크 실패 때는 이미 이유를 말하고
+             있었으니(아래 분기), 여기만 비어 있던 셈이다.
+
+             키가 없어 폴백인 경우(rateLimited 없음)는 알리지 않는다. 그건
+             방문자 사정이 아니라 이 데모의 구성이고, 어차피 답은 나온다. */
+          if (first.rateLimited) {
+            push({
+              role: "bot",
+              text:
+                first.why === "daily"
+                  ? "오늘 실시간 답변 총량을 다 써서, 준비된 답변으로 대신할게요."
+                  : "지금 실시간 답변 한도를 다 써서, 준비된 답변으로 대신할게요. 잠시 뒤에 다시 열려요.",
+              notice: "quota",
+            });
+          }
           await scripted();
           return;
         }
@@ -1772,19 +1845,44 @@ export function ChatWidget() {
     }
   }
 
+  /* 칩은 대화를 따라 바뀐다.
+
+     예전에는 INTENTS 순서에서 안 물어본 것 앞 넷을 잘랐다. 무엇을 물었든
+     다음 제안이 같아서 대화가 아니라 목록이었다(사용자 지적). 방문자의
+     마지막 질문이 무엇에 걸렸는지 보고, 거기서 이어지는 것을 세운다.
+
+     resolveScripted를 쓰는 이유: 이미 있는 키워드 매칭이라 새 규칙을
+     만들지 않아도 되고, 실호출로 답한 질문에도 같은 잣대가 선다 —
+     답이 어디서 왔든 방문자가 무엇을 물었는지는 같은 문장에서 읽힌다. */
   const asked = new Set(
     msgs.filter((msg) => msg.role === "user").map((msg) => msg.text),
   );
-  const chips = INTENTS.filter(
-    (intent) => intent.chip && !asked.has(intent.chip),
-  ).slice(0, 4);
+  const lastAsk = [...msgs].reverse().find((msg) => msg.role === "user");
+  const lastIntent = lastAsk ? resolveScripted(lastAsk.text)?.id ?? null : null;
+
+  /* 하이브리드 — 모델이 실어 보낸 후속 질문이 앞, 준비된 답변이 뒤.
+
+     모델 것만 쓰면 맥락은 맞는데 저희가 답을 준비 안 한 질문이 섞이고,
+     정적 목록만 쓰면 무엇을 물었든 제안이 같다. 앞 두 자리는 지금 대화가
+     정하고, 뒤 두 자리는 반드시 좋은 답이 나오는 것으로 채운다.
+
+     키가 없거나 스크립트로 답한 턴에는 followups가 비어 있어, 자연히
+     정적 넷으로 돌아간다 — 폴백을 따로 만들 필요가 없다. */
+  const live = (
+    [...msgs].reverse().find((msg) => msg.role === "bot" && msg.followups)
+      ?.followups ?? []
+  ).filter((text) => !asked.has(text));
+  const chips: Array<ChatIntent | { id: string; chip: string }> = [
+    ...live.map((text) => ({ id: `live:${text}`, chip: text })),
+    ...nextChips(lastIntent, asked, 4 - live.length),
+  ];
 
   return (
     <aside className="chatwidget" aria-label="상담 챗봇">
       {open ? (
-        /* 도구가 도는 동안(is-operating) 창이 물러난다. 정작 봐야 할 것은
+        /* 캡슐(is-pill)일 때 창이 물러난다. 안내 중에는 정작 봐야 할 것이
            뒤에서 일어나는 일이라, 앞을 불투명한 판이 가리고 있으면 무엇이
-           바뀌었는지 보이지 않는다. 물러나는 건 판이지 글이 아니다 */
+           바뀌었는지 보이지 않는다. 방문자가 직접 접었을 때도 같은 모양이다 */
         <div
           className={[
             "chatpanel",
@@ -1797,7 +1895,10 @@ export function ChatWidget() {
                애플이 쓰는 순서와 같다: 움직이는 동안은 싸게, 멈추면 제대로. */
             glassOn ? "is-settled" : "",
             busy ? "is-thinking" : "",
-            pill ? "is-operating" : "",
+            /* 이름이 is-operating이었다. 안내 중에만 접혔을 땐 맞았는데,
+               이제 방문자가 직접 접을 수도 있어 "조작 중"이 아니게 됐다.
+               상태의 이름은 원인이 아니라 결과여야 한다 — 캡슐이다 */
+            pill ? "is-pill" : "",
           ]
             .filter(Boolean)
             .join(" ")}
@@ -1841,16 +1942,25 @@ export function ChatWidget() {
                 다시
               </button>
             )}
-            {/* 캡슐에서 원래 창으로. 안내를 멈추지는 않는다 — 창만 펼친다 */}
-            {pill ? (
-              <button
-                className="cx cexpand"
-                aria-label="대화창 펼치기"
-                onClick={() => setStayOpen(true)}
-              >
-                <Icon name="down" />
-              </button>
-            ) : null}
+            {/* 접기·펼치기. 닫기와 달리 대화가 남는다 — 캡슐로 줄었다가
+                같은 자리에서 그대로 돌아온다. 안내 중에 펼쳐도 안내는
+                멈추지 않는다(창만 펼친다) */}
+            <button
+              className={pill ? "cx cexpand" : "cx cfold"}
+              aria-label={pill ? "대화창 펼치기" : "대화창 접기"}
+              onClick={() => {
+                if (pill) {
+                  setFolded(false);
+                  // 안내 중이었다면 "펼친 채로 두겠다"는 뜻이기도 하다
+                  if (operating) setStayOpen(true);
+                  return;
+                }
+                setFolded(true);
+                setStayOpen(false);
+              }}
+            >
+              <Icon name="down" />
+            </button>
             <button
               className="cx"
               aria-label="상담 챗봇 닫기"

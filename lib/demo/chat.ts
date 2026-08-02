@@ -284,6 +284,109 @@ export const INTENTS: ChatIntent[] = [
  */
 export const DEMO_SCRIPT = ["cms", "duration", "maintenance", "contact"];
 
+/**
+ * 하나를 물으면 다음에 궁금해지는 것.
+ *
+ * 칩이 늘 고정 순서(견적 → 기간 → 관리자…)였다. 방문자가 무엇을 물었든
+ * 다음 제안이 같으니 대화가 아니라 목록이었다(사용자 지적: 질문에 따라
+ * 동적으로 바뀌어야 한다).
+ *
+ * 순서는 실제로 상담이 흘러가는 길을 따른다. 견적을 물으면 무엇이 값을
+ * 가르는지(관리자 범위, 소스 유무)가 다음이고, 기술을 물으면 그 옆의
+ * 기술이 다음이다. 마지막에는 대체로 상담으로 모인다 — 억지로 밀지 않고,
+ * 그 질문이 실제로 다음 단계일 때만 목록 끝에 둔다.
+ */
+export const NEXT_BY_INTENT: Record<string, string[]> = {
+  tour: ["demo", "cms", "ai", "cost"],
+  cost: ["duration", "source", "cms", "revision"],
+  duration: ["process", "cost", "team", "revision"],
+  cms: ["ai", "security", "cost", "demo"],
+  ai: ["cost", "security", "stack", "maintenance"],
+  source: ["cost", "stack", "mobile", "duration"],
+  maintenance: ["deploy", "security", "cost", "contact"],
+  stack: ["deploy", "source", "security", "mobile"],
+  deploy: ["maintenance", "security", "stack", "cost"],
+  demo: ["cms", "ai", "cost", "tour"],
+  revision: ["process", "duration", "cost", "contact"],
+  renewal: ["source", "seo", "cost", "duration"],
+  seo: ["mobile", "stack", "renewal", "cost"],
+  mobile: ["seo", "stack", "source", "cost"],
+  payment: ["security", "cost", "cms", "duration"],
+  process: ["duration", "team", "revision", "contact"],
+  team: ["process", "duration", "maintenance", "cost"],
+  security: ["payment", "cms", "maintenance", "ai"],
+  contact: ["cost", "duration", "process", "tour"],
+};
+
+/**
+ * 답변 끝에 실려 오는 후속 질문의 표식.
+ *
+ * 모델이 `[[NEXT]]질문1|질문2` 한 줄을 답변 뒤에 붙인다. 칩을 따로 물으면
+ * 왕복이 하나 더 늘어서, 이미 도는 답변 콜의 꼬리에 얹었다.
+ */
+export const NEXT_MARK = "[[NEXT]]";
+
+/**
+ * 답변에서 후속 질문을 떼어낸다.
+ *
+ * 스트리밍 중에도 불린다. 그래서 **마커가 도착하는 중인 상태**를 봐야
+ * 한다 — "[[N"까지만 온 순간에 그대로 그리면 방문자가 대괄호 부스러기를
+ * 본다. 꼬리가 마커의 앞부분이면 미리 감춘다.
+ */
+export function splitFollowups(text: string): {
+  body: string;
+  chips: string[];
+} {
+  const at = text.indexOf(NEXT_MARK);
+  if (at < 0) {
+    for (let n = NEXT_MARK.length - 1; n > 0; n -= 1) {
+      if (text.endsWith(NEXT_MARK.slice(0, n))) {
+        return { body: text.slice(0, text.length - n), chips: [] };
+      }
+    }
+    return { body: text, chips: [] };
+  }
+  const chips = text
+    .slice(at + NEXT_MARK.length)
+    .split("|")
+    .map((one) => one.trim())
+    /* 줄바꿈 뒤에 딴 말을 붙이는 경우가 있다. 첫 줄만 질문으로 본다 */
+    .map((one) => one.split("\n")[0].trim())
+    .filter((one) => one.length > 1 && one.length <= 40)
+    .slice(0, 2);
+  return { body: text.slice(0, at).trimEnd(), chips };
+}
+
+/**
+ * 지금 대화에 이어 붙일 칩을 고른다.
+ *
+ * 마지막으로 걸린 인텐트의 이웃을 먼저 세우고, 모자라면 기본 순서로
+ * 채운다. 이미 물어본 것은 뺀다 — 같은 질문이 다시 제안되면 대화가
+ * 제자리를 돈다.
+ */
+export function nextChips(
+  lastIntentId: string | null,
+  asked: Set<string>,
+  limit = 4,
+): ChatIntent[] {
+  const picked: ChatIntent[] = [];
+  const take = (id: string) => {
+    if (picked.length >= limit) return;
+    const intent = intentById(id);
+    if (!intent?.chip) return;
+    if (asked.has(intent.chip)) return;
+    if (picked.some((p) => p.id === intent.id)) return;
+    picked.push(intent);
+  };
+
+  for (const id of (lastIntentId && NEXT_BY_INTENT[lastIntentId]) ?? []) {
+    take(id);
+  }
+  // 이웃만으로 모자라면 기본 순서로 채운다. 칩 줄이 비면 진입로가 사라진다
+  for (const intent of INTENTS) take(intent.id);
+  return picked;
+}
+
 /** 스크립트 답변. 키워드 점수로 고른다. 못 고르면 null(모른다고 말한다) */
 export function intentById(id: string) {
   return INTENTS.find((intent) => intent.id === id) ?? null;

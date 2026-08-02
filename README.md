@@ -53,6 +53,11 @@ npm install
 | `WIGTN_OPENAI_API_KEY` | AI 답변과 챗봇이 준비된 답변으로 동작 |
 | `WIGTN_RESEND_API_KEY` | 상담 접수가 503 |
 | `CONTACT_FROM`, `CONTACT_TO` | 발신, 수신 주소 |
+| `WIGTN_COOKIE_SECRET` | 실호출 한도가 IP 축만으로 degrade |
+
+키를 넣으면 AI를 실제로 부릅니다. 비로그인 데모라 한도가 곧 비용
+방어선인데, 그 기준과 걸렸을 때 화면에 뜨는 것은
+[docs/ai-rate-limits.md](docs/ai-rate-limits.md)에 정리해 뒀습니다.
 
 ## 검증
 
