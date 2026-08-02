@@ -8,7 +8,9 @@ import {
   type Role,
 } from "@/lib/demo/chat-tools";
 import { guard, MAX_CALLS_PER_TURN, type GuardedArgs } from "@/lib/demo/chat-guard";
-import { LLM_MODEL, completionParams } from "@/lib/demo/llm";
+import { LLM_MODEL, completionParams, withTimeout } from "@/lib/demo/llm";
+import { createQuota, type Axis } from "@/lib/demo/quota";
+import { sseToText, TEXT_STREAM_HEADERS } from "@/lib/demo/sse";
 import { anon, clientIp } from "@/lib/demo/anon";
 
 /**
@@ -23,7 +25,10 @@ import { anon, clientIp } from "@/lib/demo/anon";
  */
 export const runtime = "nodejs";
 
-const PER_IP_WINDOW_MS = 60 * 60 * 1000;
+/* 한도 값. 세는 방식은 lib/demo/quota가 갖고, 여기는 이 라우트의 값만
+   정한다. 챗봇이 AI 답변보다 넉넉한 건 대화가 이어지는 물건이기 때문이다 —
+   세 번 묻고 막히면 그건 한도가 아니라 고장으로 읽힌다.
+   값과 화면 표현은 docs/ai-rate-limits.md에 정리돼 있다. */
 const PER_IP_MAX = 20;
 const PER_SESSION_MAX = 20;
 const DAILY_MAX = 300;
@@ -31,50 +36,7 @@ const DAILY_MAX = 300;
 const MAX_TURNS = 6;
 const MAX_CHARS = 500;
 
-/** 축(IP, 세션)마다 타임스탬프를 센다. 키는 "ip:" / "ss:"로 갈라 겹치지 않게 */
-const hits = new Map<string, number[]>();
-let daily = { day: "", count: 0 };
-
-type Axis = { key: string; max: number; why: "ip" | "session" };
-
-function windowCount(key: string, now: number): number {
-  const list = (hits.get(key) ?? []).filter((at) => now - at < PER_IP_WINDOW_MS);
-  hits.set(key, list);
-  return list.length;
-}
-
-/**
- * 여러 축을 한꺼번에 본다. 하나라도 상한을 넘으면 막는다.
- *
- * IP와 세션 쿠키를 각각 센다. 둘 다 통과해야 한 번을 허용하고, 허용할 때만
- * 두 축 모두에 자국을 남긴다. 어느 축이 걸렸는지(why)는 폴백 신호로 돌려준다.
- */
-function allow(axes: Axis[], now: number) {
-  // 일일 리셋은 KST(UTC+9) 자정 기준. 한국 데모라 UTC 자정(=KST 오전 9시)에
-  // 끊기면 어색하다. now에 9시간을 더해 KST 달력 날짜를 만든다
-  const today = new Date(now + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  if (daily.day !== today) daily = { day: today, count: 0 };
-  if (daily.count >= DAILY_MAX) return { ok: false as const, why: "daily" };
-
-  for (const axis of axes) {
-    if (windowCount(axis.key, now) >= axis.max) {
-      return { ok: false as const, why: axis.why };
-    }
-  }
-  for (const axis of axes) {
-    const list = hits.get(axis.key) ?? [];
-    list.push(now);
-    hits.set(axis.key, list);
-  }
-  daily.count += 1;
-  // 메모리 누수 방지 — 창 밖으로 벗어난 엔트리는 접근 시점에 걷어낸다
-  if (hits.size > 4000) {
-    for (const [key, list] of hits) {
-      if (list.every((at) => now - at >= PER_IP_WINDOW_MS)) hits.delete(key);
-    }
-  }
-  return { ok: true as const };
-}
+const allow = createQuota(DAILY_MAX);
 
 /** 스크립트 지식을 그대로 컨텍스트로. 모델이 새 숫자를 만들지 못하게 */
 const KNOWLEDGE = INTENTS.map(
@@ -361,19 +323,6 @@ export async function POST(request: Request) {
      방식으로 막고 있다. 여기만 빠져 있었다.
 
      끊기면 스크립트 답변으로 내려간다. 데모가 멈추는 것보다 낫다. */
-  const withTimeout = async (
-    run: (signal: AbortSignal) => Promise<Response>,
-    ms: number,
-  ) => {
-    const guard = new AbortController();
-    const timer = setTimeout(() => guard.abort(), ms);
-    try {
-      return await run(guard.signal);
-    } finally {
-      clearTimeout(timer);
-    }
-  };
-
   /* 도구를 쓸지 먼저 묻는다.
      스트리밍 응답 안에서 tool_calls를 조립하려면 델타를 누적해 파싱해야 하고,
      그 사이 화면에는 빈 말풍선이 떠 있다. 도구 판단은 짧으니 스트리밍 없이
@@ -574,62 +523,7 @@ export async function POST(request: Request) {
     return finalize(NextResponse.json({ fallback: true }));
   }
 
-  /* 네트워크 청크는 SSE 프레임 경계와 무관하게 잘려서 온다. 한 줄이 두 청크에
-     걸치면 앞 조각은 JSON으로 파싱되지 않는데, 그걸 버리면 그 프레임이 싣고
-     있던 글자가 통째로 사라진다. 완성되지 않은 마지막 줄은 버퍼에 남겨 다음
-     청크와 이어 붙인다(/api/ai-answer도 같은 처리를 한다). */
-  const decoder = new TextDecoder();
-  const encoder = new TextEncoder();
-  const reader = upstream.body.getReader();
-  let buffer = "";
+  const stream = sseToText(upstream.body);
 
-  const emit = (
-    line: string,
-    controller: ReadableStreamDefaultController<Uint8Array>,
-  ) => {
-    const data = line.trim();
-    if (!data.startsWith("data:")) return;
-    const payload = data.slice(5).trim();
-    if (!payload || payload === "[DONE]") return;
-    try {
-      const delta = (
-        JSON.parse(payload) as {
-          choices?: Array<{ delta?: { content?: string } }>;
-        }
-      ).choices?.[0]?.delta?.content;
-      if (delta) controller.enqueue(encoder.encode(delta));
-    } catch {
-      /* 완성된 줄인데도 파싱이 안 되면 우리가 모르는 프레임이다. 건너뛴다 */
-    }
-  };
-
-  const stream = new ReadableStream<Uint8Array>({
-    async pull(controller) {
-      const { done, value } = await reader.read();
-      if (done) {
-        buffer += decoder.decode();
-        if (buffer.trim()) emit(buffer, controller);
-        buffer = "";
-        controller.close();
-        return;
-      }
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-      for (const line of lines) emit(line, controller);
-    },
-    cancel() {
-      void reader.cancel();
-    },
-  });
-
-  return finalize(
-    new Response(stream, {
-      headers: {
-        "content-type": "text/plain; charset=utf-8",
-        "cache-control": "no-store",
-        "x-ai-source": "openai",
-      },
-    }),
-  );
+  return finalize(new Response(stream, { headers: TEXT_STREAM_HEADERS }));
 }

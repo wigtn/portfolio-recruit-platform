@@ -12,6 +12,7 @@
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { WINDOW_MS } from "../lib/demo/quota";
 
 const read = (path: string) => readFileSync(path, "utf8");
 
@@ -50,10 +51,11 @@ describe("한도 문서가 코드와 같은 값을 말한다", () => {
     expect(doc).toContain("**200회**");
   });
 
-  it("두 라우트의 창은 1시간이다", () => {
-    const hour = 60 * 60 * 1000;
-    expect(constOf(chat, "PER_IP_WINDOW_MS")).toBe(hour);
-    expect(constOf(answer, "PER_IP_WINDOW_MS")).toBe(hour);
+  it("창은 1시간 — 두 라우트가 같은 카운터를 쓴다", () => {
+    /* 창 길이는 이제 lib/demo/quota 하나가 갖는다. 라우트는 값만 정한다 */
+    expect(WINDOW_MS).toBe(60 * 60 * 1000);
+    expect(chat).toContain("createQuota(DAILY_MAX)");
+    expect(answer).toContain("createQuota(DAILY_MAX)");
   });
 
   it("응답 계약이 문서대로다 — 챗봇 200 폴백, AI답변 429", () => {

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { ALL_POSTS } from "@/lib/seed/posts";
-import { LLM_MODEL, completionParams } from "@/lib/demo/llm";
+import { LLM_MODEL, completionParams, withTimeout } from "@/lib/demo/llm";
 import { clientIp } from "@/lib/demo/anon";
+import { createQuota } from "@/lib/demo/quota";
+import { sseToText, TEXT_STREAM_HEADERS } from "@/lib/demo/sse";
 
 /**
  * AI 참고 답변 실생성 — OpenAI 스트리밍 프록시.
@@ -20,35 +22,13 @@ import { clientIp } from "@/lib/demo/anon";
  */
 export const runtime = "nodejs";
 
-const PER_IP_WINDOW_MS = 60 * 60 * 1000;
+/* 한도 값. 세는 방식은 lib/demo/quota가 갖고, 여기는 이 라우트의 값만
+   정한다. 챗봇보다 좁은 건 글 하나에 한 번 누르는 일회성이라서다.
+   값과 화면 표현은 docs/ai-rate-limits.md에 정리돼 있다. */
 const PER_IP_MAX = 10;
 const DAILY_MAX = 200;
 
-const ipHits = new Map<string, number[]>();
-let daily = { day: "", count: 0 };
-
-function allow(ip: string, now: number) {
-  // 일일 리셋은 KST(UTC+9) 자정 기준(/api/chat과 통일)
-  const today = new Date(now + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  if (daily.day !== today) daily = { day: today, count: 0 };
-  if (daily.count >= DAILY_MAX) return { ok: false as const, why: "daily" };
-
-  const hits = (ipHits.get(ip) ?? []).filter(
-    (at) => now - at < PER_IP_WINDOW_MS,
-  );
-  if (hits.length >= PER_IP_MAX) return { ok: false as const, why: "ip" };
-
-  hits.push(now);
-  ipHits.set(ip, hits);
-  daily.count += 1;
-  // 메모리 누수 방지 — 오래된 IP 엔트리는 접근 시점에 걷어낸다
-  if (ipHits.size > 2000) {
-    for (const [key, list] of ipHits) {
-      if (list.every((at) => now - at >= PER_IP_WINDOW_MS)) ipHits.delete(key);
-    }
-  }
-  return { ok: true as const };
-}
+const allow = createQuota(DAILY_MAX);
 
 export async function POST(request: Request) {
   let postId = "";
@@ -76,7 +56,10 @@ export async function POST(request: Request) {
      붙이지 않는다 — 여기 상한(시간당 10, 하루 200)이 이미 더 보수적이라
      한 축으로 충분하다. 쿠키 발급 부수효과 없이 단순하게 둔다. */
   const ip = clientIp(request);
-  const gate = allow(ip, Date.now());
+  const gate = allow(
+    [{ key: `ip:${ip}`, max: PER_IP_MAX, why: "ip" }],
+    Date.now(),
+  );
   if (!gate.ok) {
     /* 챗봇(/api/chat)은 한도 초과 시 200 + fallback으로 대화를 잇지만, 여기는
        글 상세의 일회성 생성이라 429로 끊고 클라가 시드 초안 연출로 넘긴다.
@@ -97,16 +80,13 @@ export async function POST(request: Request) {
   // 위험 표현을 원문 그대로 포함시키라고 지시한다 — 안전 파이프라인의 재료
   const mustInclude = post.guarded.map((term) => `"${term.raw}"`).join(", ");
 
-  /* 첫 응답까지만 상한을 건다. 업스트림이 늘어지면 이 라우트가 붙들리고
-     화면은 생성 중 표시만 띄운 채 멈춘다. fetch는 헤더가 오면 resolve하므로
-     본문 스트림은 이 상한에 걸리지 않는다. */
-  const guard = new AbortController();
-  const guardTimer = setTimeout(() => guard.abort(), 15000);
+  /* 첫 응답까지만 상한을 건다(withTimeout). 업스트림이 늘어지면 이 라우트가
+     붙들리고 화면은 생성 중 표시만 띄운 채 멈춘다. */
   let upstream: Response;
   try {
-    upstream = await fetch("https://api.openai.com/v1/chat/completions", {
+    upstream = await withTimeout((signal) => fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      signal: guard.signal,
+      signal,
       headers: {
         authorization: `Bearer ${key}`,
         "content-type": "application/json",
@@ -131,12 +111,10 @@ export async function POST(request: Request) {
           },
         ],
       }),
-    });
+    }), 15000);
   } catch {
     // 시작조차 못 했으면 폴백 연출로. 데모가 멈추는 것보다 낫다
     return NextResponse.json({ fallback: true });
-  } finally {
-    clearTimeout(guardTimer);
   }
 
   if (!upstream.ok || !upstream.body) {
@@ -144,64 +122,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ fallback: true });
   }
 
-  /* OpenAI SSE → 순수 텍스트 스트림 재방출.
+  const stream = sseToText(upstream.body);
 
-     네트워크 청크는 SSE 프레임 경계와 무관하게 잘려서 온다. 한 줄이 두 청크에
-     걸치면 앞 조각은 JSON으로 파싱되지 않는다. 그걸 그냥 버리면 그 프레임이
-     싣고 있던 글자가 통째로 사라져, 답변이 "전시회와드콜 모두 장단점이요"처럼
-     음절이 빠진 채로 나온다.
-
-     그래서 완성되지 않은 마지막 줄은 버퍼에 남겨 다음 청크와 이어 붙인다.
-     스트림이 끝나면 버퍼에 남은 것을 마지막으로 한 번 더 처리한다. */
-  const decoder = new TextDecoder();
-  const encoder = new TextEncoder();
-  const reader = upstream.body.getReader();
-  let buffer = "";
-
-  const emit = (line: string, controller: ReadableStreamDefaultController<Uint8Array>) => {
-    const data = line.trim();
-    if (!data.startsWith("data:")) return;
-    const payload = data.slice(5).trim();
-    if (!payload || payload === "[DONE]") return;
-    try {
-      const delta = (
-        JSON.parse(payload) as {
-          choices?: Array<{ delta?: { content?: string } }>;
-        }
-      ).choices?.[0]?.delta?.content;
-      if (delta) controller.enqueue(encoder.encode(delta));
-    } catch {
-      /* 완성된 줄인데도 파싱이 안 되면 우리가 모르는 프레임이다. 건너뛴다 */
-    }
-  };
-
-  const stream = new ReadableStream<Uint8Array>({
-    async pull(controller) {
-      const { done, value } = await reader.read();
-      if (done) {
-        // 마지막 청크가 개행으로 끝나지 않았다면 아직 버퍼에 한 줄이 남아 있다
-        buffer += decoder.decode();
-        if (buffer.trim()) emit(buffer, controller);
-        buffer = "";
-        controller.close();
-        return;
-      }
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      // 마지막 조각은 아직 줄이 안 끝났을 수 있으니 다음 청크까지 들고 간다
-      buffer = lines.pop() ?? "";
-      for (const line of lines) emit(line, controller);
-    },
-    cancel() {
-      void reader.cancel();
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      "content-type": "text/plain; charset=utf-8",
-      "cache-control": "no-store",
-      "x-ai-source": "openai",
-    },
-  });
+  return new Response(stream, { headers: TEXT_STREAM_HEADERS });
 }
