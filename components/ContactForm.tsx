@@ -115,7 +115,7 @@ export function ContactForm() {
           };
           if (!data.ok) throw new Error(data.error ?? "접수하지 못했어요.");
           setSent(true);
-          toast("상담 요청이 접수됐어요, 1영업일 안에 연락드릴게요", {
+          toast("상담 요청이 접수됐어요, 남겨주신 연락처로 회신드릴게요", {
             tone: "success",
           });
         } catch (err) {
@@ -259,7 +259,7 @@ export function ContactForm() {
           같은 이유다 — 폭을 고정한다. */}
       <div className="formsubmit">
         <span className="formsubmit-note">
-          이 요청은 실제로 접수돼요, 1영업일 내 연락드려요
+          이 요청은 실제로 접수돼요
         </span>
         <button
           className="btn primary formsubmit-btn"

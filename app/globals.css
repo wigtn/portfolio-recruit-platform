@@ -6680,72 +6680,9 @@ a.adcard:hover,
 .closing-act .btn.primary:hover .ic {
   transform: translateX(3px);
 }
-/* 근거 4칸 — 컨텐츠 폭을 꽉 채워 가운데 블록을 아래에서 받친다.
-   위쪽 선이 섹션과 같은 좌우 끝에 닿아야 블록이 페이지에 붙어 보인다. */
-.closing-facts {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0;
-  list-style: none;
-  margin: 0;
-  padding: 26px 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
-  text-align: center; /* 가운데 정렬 — 배너 전체의 중심축과 맞춘다 */
-}
-.closing-facts li {
-  padding: 0 20px;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-}
-.closing-facts strong {
-  display: block;
-  font-size: 14.5px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #fff;
-  margin-bottom: 4px;
-}
-.closing-facts li:first-child {
-  padding-left: 0;
-  border-left: 0;
-}
-.closing-facts b {
-  display: block;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: #c084fc; /* 로고 보라의 밝은 톤 — 다크 면 위 라벨 */
-  margin-bottom: 7px;
-}
-.closing-facts span {
-  display: block;
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.6);
-  line-height: 1.5;
-  word-break: keep-all;
-  overflow-wrap: anywhere;
-}
-
-@media (max-width: 900px) {
-  .closing-facts {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 22px 0;
-  }
-  .closing-facts li:nth-child(odd) {
-    padding-left: 0;
-    border-left: 0;
-  }
-}
 @media (max-width: 560px) {
   .closing {
     padding: 38px 0 32px;
-  }
-  .closing-facts {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 18px;
-  }
-  .closing-facts li {
-    padding: 0;
-    border-left: 0;
   }
 }
 
@@ -11869,16 +11806,6 @@ select.in {
 .closing.is-live .closing-act .closing-cta {
   animation: closing-rise 0.55s var(--ease-spring) 0.82s forwards;
 }
-.closing-facts li {
-  opacity: 0;
-}
-.closing.is-live .closing-facts li {
-  animation: closing-rise 0.5s var(--ease-out-soft) forwards;
-}
-.closing.is-live .closing-facts li:nth-child(1) { animation-delay: 0.95s; }
-.closing.is-live .closing-facts li:nth-child(2) { animation-delay: 1.05s; }
-.closing.is-live .closing-facts li:nth-child(3) { animation-delay: 1.15s; }
-.closing.is-live .closing-facts li:nth-child(4) { animation-delay: 1.25s; }
 @keyframes closing-rise {
   from {
     opacity: 0;
@@ -11892,8 +11819,7 @@ select.in {
 @media (prefers-reduced-motion: reduce) {
   .closing-title .w > span,
   .closing-sub,
-  .closing-act .closing-cta,
-  .closing-facts li {
+  .closing-act .closing-cta {
     transform: none;
     opacity: 1;
     animation: none;
