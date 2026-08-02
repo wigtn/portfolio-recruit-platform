@@ -21,11 +21,19 @@ import { TOOL_ORB, TOOL_RUNNING } from "@/lib/demo/chat-tools";
  * 하나가 덧붙은 것처럼 보였다. 색은 옆의 문구가 훑는 빛으로 충분하다.
  */
 
-/** 스스로 생각하는 동안의 단계. 읽기 → 찾기 → 쓰기 */
-const BEATS: Array<{ say: string; orb: OrbState }> = [
-  { say: "질문을 읽고 있어요", orb: "listening" },
-  { say: "관련된 내용을 찾고 있어요", orb: "searching" },
-  { say: "답을 정리하고 있어요", orb: "composing" },
+/* 스스로 생각하는 동안의 단계. 읽기 → 찾기 → 쓰기, 그리고 기다림.
+
+   앞의 셋에서 멈추면 안 된다. 마지막 문구("답을 정리하고 있어요")에 20초씩
+   묶여 있으면 멈춘 것으로 읽힌다(실기기 지적: 재생성이 무한 로딩 같다).
+   시간이 흐르면 흐른다고 말한다 — 뒤로 갈수록 간격을 넓혀, 오래 걸리는
+   날에만 나오는 문구가 되게 한다. */
+const BEATS: Array<{ at: number; say: string; orb: OrbState }> = [
+  { at: 0, say: "질문을 읽고 있어요", orb: "listening" },
+  { at: 2200, say: "관련된 내용을 찾고 있어요", orb: "searching" },
+  { at: 4400, say: "답을 정리하고 있어요", orb: "composing" },
+  { at: 9000, say: "문장을 다듬고 있어요", orb: "composing" },
+  { at: 15000, say: "생각이 길어지고 있어요, 조금만요", orb: "working" },
+  { at: 24000, say: "아직 쓰고 있어요, 거의 다 왔어요", orb: "working" },
 ];
 
 export function Thinking({ tool }: { tool?: string }) {
@@ -33,11 +41,10 @@ export function Thinking({ tool }: { tool?: string }) {
 
   useEffect(() => {
     if (tool) return;
-    const timer = window.setInterval(
-      () => setBeat((now) => Math.min(now + 1, BEATS.length - 1)),
-      2200,
+    const timers = BEATS.slice(1).map((step, index) =>
+      window.setTimeout(() => setBeat(index + 1), step.at),
     );
-    return () => window.clearInterval(timer);
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [tool]);
 
   const say = tool ? (TOOL_RUNNING[tool] ?? "작업하는 중") : BEATS[beat].say;

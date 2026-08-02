@@ -35,6 +35,10 @@ const SUBTASKS: Partial<Record<Stage, string[]>> = {
     "글 본문과 댓글 맥락을 읽고 있어요",
     "질문 의도를 분류하고 있어요. 신규 개척, 프로세스 문의",
     "참고할 현직자 리뷰 범위를 대조하고 있어요",
+    /* 넷째 문구는 기다림을 인정한다. 위 셋이 계속 돌기만 하면 같은 자리를
+       맴도는 것으로 읽힌다(실기기 지적: 무한 로딩 같다). 오래 걸리는 날은
+       오래 걸린다고 말해야 멈춘 게 아니라는 걸 안다 */
+    "모델이 첫 문장을 만들고 있어요, 곧 시작돼요",
   ],
   rescan: [
     "생성된 문장에서 실명 패턴을 검사하고 있어요",
@@ -163,12 +167,23 @@ export function AiAnswerCard({
     try {
       const controller = new AbortController();
       aborter.current = controller;
-      const res = await fetch("/api/ai-answer", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ postId }),
-        signal: controller.signal,
-      });
+      /* **첫 응답까지만** 기한을 둔다. 기한이 없으면 업스트림이 느린 날
+         checking 문구만 무한히 돌아 무한 로딩으로 읽힌다(실기기 지적).
+         헤더가 도착하면 기한을 걷는다 — 본문 스트림은 도착분이 화면에
+         계속 붙으므로 느려도 멈춘 것으로 보이지 않는다. 기한을 넘기면
+         조용히 시드 연출로 간다. 어느 쪽이든 답이 없는 경우는 없다. */
+      const deadline = window.setTimeout(() => controller.abort(), 15000);
+      let res: Response;
+      try {
+        res = await fetch("/api/ai-answer", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ postId }),
+          signal: controller.signal,
+        });
+      } finally {
+        window.clearTimeout(deadline);
+      }
 
       if (res.status === 429) {
         const data = (await res.json()) as { error?: string };
