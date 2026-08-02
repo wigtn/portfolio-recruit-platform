@@ -486,6 +486,12 @@ export function ChatWidget() {
      도구가 시작되면 켜고, 마지막 도구가 끝난 뒤 한 박자 두고 끈다. 연달아
      도는 도구 사이에서 창이 나타났다 사라졌다 하지 않게 하는 몫도 겸한다. */
   const [operating, setOperating] = useState(false);
+  /* 안내 중에도 대화창을 펼쳐 두겠다는 뜻. 캡슐의 펼치기 버튼이 켠다.
+     안내가 끝나면 리셋 — 다음 안내는 다시 캡슐부터 시작한다 */
+  const [stayOpen, setStayOpen] = useState(false);
+  /* 지금 커서가 짚는 지점의 설명. 캡슐 부제가 이걸 읽는다 — 현장 라벨과
+     같은 문장이 캡슐에도 흐르면 캡슐만 보고도 안내가 어디까지 왔는지 안다 */
+  const [stepNote, setStepNote] = useState<string | null>(null);
   const settleOff = useRef<number | null>(null);
   useEffect(() => {
     if (running) {
@@ -495,11 +501,28 @@ export function ChatWidget() {
       return;
     }
     if (!operating) return;
-    settleOff.current = window.setTimeout(() => setOperating(false), 620);
+    settleOff.current = window.setTimeout(() => {
+      setOperating(false);
+      setStayOpen(false);
+      setStepNote(null);
+    }, 620);
     return () => {
       if (settleOff.current) window.clearTimeout(settleOff.current);
     };
   }, [running, operating]);
+
+  /* 커서가 새 걸음을 시작할 때마다 그 걸음의 설명을 받아 둔다 */
+  useEffect(() => {
+    const onStep = (event: Event) => {
+      const note = (event as CustomEvent<{ note?: string }>).detail?.note;
+      if (note) setStepNote(note);
+    };
+    window.addEventListener(AGENT_EVENT, onStep);
+    return () => window.removeEventListener(AGENT_EVENT, onStep);
+  }, []);
+
+  /** 캡슐로 접혀 있는 상태인가 */
+  const pill = operating && !stayOpen;
 
   /* 줄 서 있던 질문을 **한꺼번에** 꺼낸다.
      하나씩 보내면 요청마다 왕복이 따로 돌고, 모델은 앞 요청을 모른 채 다음
@@ -1774,7 +1797,7 @@ export function ChatWidget() {
                애플이 쓰는 순서와 같다: 움직이는 동안은 싸게, 멈추면 제대로. */
             glassOn ? "is-settled" : "",
             busy ? "is-thinking" : "",
-            operating ? "is-operating" : "",
+            pill ? "is-operating" : "",
           ]
             .filter(Boolean)
             .join(" ")}
@@ -1792,10 +1815,12 @@ export function ChatWidget() {
             <div className="ct">
               <b>상담 챗봇</b>
               <span>
-                {/* 접혀 있는 동안엔 머리 줄이 유일한 문장이다. 지금 무슨
-                    도구가 도는지를 여기서 말해야 접힌 창이 벙어리가 안 된다 */}
+                {/* 캡슐일 땐 머리 줄이 유일한 문장이다. 커서가 지금 짚는
+                    지점의 설명(현장 라벨과 같은 문장)을 우선 흘리고, 걸음
+                    사이에는 도구 이름을 말한다 — 캡슐이 벙어리가 안 되게 */}
                 {operating
-                  ? (running ? TOOL_RUNNING[running] : undefined) ??
+                  ? stepNote ??
+                    (running ? TOOL_RUNNING[running] : undefined) ??
                     "화면을 안내하고 있어요"
                   : playing
                     ? "대화가 재생되고 있어요"
@@ -1816,6 +1841,16 @@ export function ChatWidget() {
                 다시
               </button>
             )}
+            {/* 캡슐에서 원래 창으로. 안내를 멈추지는 않는다 — 창만 펼친다 */}
+            {pill ? (
+              <button
+                className="cx cexpand"
+                aria-label="대화창 펼치기"
+                onClick={() => setStayOpen(true)}
+              >
+                <Icon name="down" />
+              </button>
+            ) : null}
             <button
               className="cx"
               aria-label="상담 챗봇 닫기"
