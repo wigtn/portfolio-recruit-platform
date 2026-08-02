@@ -158,9 +158,15 @@ export function AgentCursor() {
 
          예전에는 그냥 return이었다. 그런데 바로 위에서 hideTimer를 껐으므로,
          이전 단계의 커서와 테두리가 지울 사람 없이 화면에 남았다 — "가이드가
-         끝났는데 커서가 그대로"의 정체다. 대상이 없으면 안내할 것도 없다. */
+         끝났는데 커서가 그대로"의 정체다. 대상이 없으면 안내할 것도 없다.
+
+         끝났다는 신호는 이때도 보낸다(ok: false). 안 보내면 기다리는 쪽
+         (투어 엔진)이 지점 하나 없을 때마다 감시 상한까지 통째로 기다린다. */
       if (!target) {
         clear();
+        window.dispatchEvent(
+          new CustomEvent(AGENT_DONE_EVENT, { detail: { ok: false } }),
+        );
         return;
       }
       if (!fresh()) return;
@@ -266,7 +272,9 @@ export function AgentCursor() {
 
       /* 여기서 끝났다고 알린다. 챗봇은 이 신호를 받고 설명을 띄운다.
          고정 시간으로 어림하면 화면이 느린 날 설명이 먼저 나온다 */
-      window.dispatchEvent(new CustomEvent(AGENT_DONE_EVENT));
+      window.dispatchEvent(
+        new CustomEvent(AGENT_DONE_EVENT, { detail: { ok: true } }),
+      );
 
       hideTimer = window.setTimeout(() => {
         if (fresh()) clear();
