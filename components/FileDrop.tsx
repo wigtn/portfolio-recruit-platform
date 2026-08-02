@@ -6,6 +6,7 @@ import {
   MAX_POST_ATTACHMENT_BYTES,
 } from "@wigtn/content-engine";
 import { Icon } from "./Icon";
+import { toast } from "./ds/Toaster";
 
 /**
  * 첨부 업로드 — 실제로 검증한다.
@@ -45,9 +46,7 @@ export function FileDrop({
   note?: string;
   compact?: boolean;
 }) {
-  const [errors, setErrors] = useState<Array<{ name: string; why: string }>>(
-    [],
-  );
+
   const input = useRef<HTMLInputElement>(null);
 
   function take(list: FileList | null) {
@@ -59,7 +58,20 @@ export function FileDrop({
       if (why) bad.push({ name: file.name, why });
       else ok.push({ name: file.name, size: file.size });
     });
-    setErrors(bad);
+    /* 거절은 토스트로 모아서 한 번만 말한다.
+
+       파일마다 배너를 쌓으면 다섯 개를 떨궜을 때 화면이 경고로 덮인다.
+       무엇이 왜 빠졌는지는 한 줄이면 되고, 여러 건이면 첫 사유가 대개
+       나머지와 같다(용량, 확장자). */
+    if (bad.length === 1) {
+      toast(`${bad[0].name}는 첨부하지 않았어요. ${bad[0].why}`, {
+        tone: "warn",
+      });
+    } else if (bad.length > 1) {
+      toast(`${bad.length}개 파일을 첨부하지 않았어요. ${bad[0].why}`, {
+        tone: "warn",
+      });
+    }
     if (ok.length) onChange([...files, ...ok]);
   }
 
@@ -113,21 +125,6 @@ export function FileDrop({
         </div>
       ) : null}
 
-      {errors.map((error) => (
-        <div
-          className="safenote warn"
-          style={{ marginTop: 10 }}
-          key={error.name}
-        >
-          <span className="si">
-            <Icon name="shield" />
-          </span>
-          <div>
-            <b>{error.name}는 첨부하지 않았어요</b>
-            <span>{error.why}</span>
-          </div>
-        </div>
-      ))}
     </>
   );
 }

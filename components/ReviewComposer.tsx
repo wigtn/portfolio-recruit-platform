@@ -12,6 +12,7 @@ import { useRole } from "@/lib/demo/role";
 import { markProgress } from "@/lib/demo/progress";
 import { RoleModal } from "./demo/RoleModal";
 import { Icon } from "./Icon";
+import { toast } from "./ds/Toaster";
 import { Coach } from "./Coach";
 
 /**
@@ -83,7 +84,6 @@ export function ReviewComposer({ company }: { company: Company }) {
   const [job, setJob] = useState(JOBS[0]);
   const [years, setYears] = useState(YEARS[0]);
   const [submitted, setSubmitted] = useState<Review | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [gateOpen, setGateOpen] = useState(false);
 
   const missing = SALES_AXES.filter((axis) => !axes[axis.key]);
@@ -91,21 +91,22 @@ export function ReviewComposer({ company }: { company: Company }) {
   function submit() {
     // 권한 매트릭스 pl-3: 게스트는 리뷰 작성 불가 — 실행 대신 로그인으로 유도한다
     if (role === "guest") {
-      setError(
-        "지금은 게스트로 보고 있어요, 리뷰는 로그인해야 남길 수 있어요.",
-      );
+      toast("지금은 게스트로 보고 있어요, 리뷰는 로그인해야 남길 수 있어요.", {
+        tone: "warn",
+      });
       setGateOpen(true);
       return;
     }
     if (missing.length > 0) {
-      setError(
+      toast(
         `${missing.map((axis) => axis.label).join(", ")} 별점을 매겨주세요.`,
+        { tone: "warn" },
       );
       return;
     }
     // *가 붙은 필드는 실제로 검증한다 — 빈 리뷰가 등록되면 필수 표시가 거짓이 된다
     if (!headline.trim() || !pros.trim() || !cons.trim()) {
-      setError("한줄 총평, 장점, 단점을 모두 적어주세요.");
+      toast("한줄 총평, 장점, 단점을 모두 적어주세요.", { tone: "warn" });
       return;
     }
 
@@ -131,7 +132,6 @@ export function ReviewComposer({ company }: { company: Company }) {
     };
     saveMyReview(review);
     markProgress("company-review");
-    setError(null);
     setSubmitted(review);
   }
 
@@ -247,12 +247,6 @@ export function ReviewComposer({ company }: { company: Company }) {
             onChange={(event) => setCons(event.target.value)}
           />
         </div>
-
-        {error ? (
-          <div className="safenote" style={{ marginBottom: 14 }}>
-            <b>{error}</b>
-          </div>
-        ) : null}
 
         <div className="formactions">
           <a className="btn line" href={`/companies/${company.slug}`}>

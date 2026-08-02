@@ -87,7 +87,7 @@ export function CurationBoard() {
       JSON.stringify(draft) !== JSON.stringify(admin.state.curation);
     if (dirty && !wasDirty.current) {
       toast("저장하지 않은 변경이 있어요, 저장을 눌러야 홈에 반영돼요.", {
-        tone: "info",
+        tone: "warn",
       });
     }
     wasDirty.current = dirty;

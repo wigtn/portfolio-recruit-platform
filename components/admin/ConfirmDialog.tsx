@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "@/components/Icon";
+import { toast } from "@/components/ds/Toaster";
 import { Overlay, useOverlayClose } from "./Overlay";
 
 /**
@@ -66,7 +67,6 @@ function ConfirmForm({
   const close = useOverlayClose();
   const needReason = initialReason !== undefined;
   const [reason, setReason] = useState(initialReason ?? "");
-  const [error, setError] = useState<string | null>(null);
   // 진행 불가(사유 비움)면 패널을 흔든다 — P1 실패 문법(uk-shake).
   // 애니메이션이 끝나면 클래스를 걷어 다음 실패에도 다시 흔들리게 한다.
   const [shake, setShake] = useState(false);
@@ -80,7 +80,7 @@ function ConfirmForm({
       onSubmit={(event) => {
         event.preventDefault();
         if (needReason && !reason.trim()) {
-          setError("사유를 적어주세요, 처리 기록에 그대로 남아요.");
+          toast("사유를 적어주세요, 처리 기록에 그대로 남아요.", { tone: "warn" });
           setShake(true);
           return;
         }
@@ -102,23 +102,12 @@ function ConfirmForm({
             className="in"
             value={reason}
             onChange={(event) => {
-              setError(null);
               setReason(event.target.value);
             }}
           />
         </div>
       ) : null}
 
-      {error ? (
-        <div className="safenote warn" style={{ marginBottom: 0 }}>
-          <span className="si">
-            <Icon name="alert" />
-          </span>
-          <div>
-            <b>{error}</b>
-          </div>
-        </div>
-      ) : null}
 
       <div className="facts">
         <button type="button" className="btn line" onClick={close}>

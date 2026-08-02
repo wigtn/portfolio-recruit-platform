@@ -8442,26 +8442,48 @@ select.in {
   gap: 8px;
   pointer-events: none;
 }
+/* ── 토스트 — 어두운 리퀴드 글래스 ──
+
+   흰 카드 위 흰 토스트는 안 보인다. 화면에서 유일하게 어두운 조각이 되어
+   무조건 눈에 걸리게 한다. 재질은 이 제품의 유리 문법을 그대로 쓴다 —
+   탭바·챗 패널과 같은 언어라야 "다른 데서 온 알림"으로 안 읽힌다.
+
+   유리를 유리로 보이게 하는 건 흐림이 아니라 **가장자리의 빛**이다.
+   위쪽 안쪽 선(inset)이 하이라이트, 아래쪽이 그림자 — 판이 두께를 갖는다.
+   애플이 알림에 쓰는 그 층이다.
+
+   모서리는 알약이 아니라 스쿼클이다. 토스트 문구는 두 줄이 되는 일이
+   흔한데(검증 메시지가 길다) 알약은 그때 우스워진다. 이 제품의 다른
+   판들과 같은 곡률로 둔다. */
 .ds-toast {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   max-width: 380px;
-  padding: 11px 12px 11px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  /* 흰 카드 위 흰 토스트는 안 보인다 — 다크 글래스(P1 말풍선과 같은 언어)로
-     화면에서 유일하게 어두운 조각이 되어 무조건 눈에 걸린다 */
-  background: rgba(28, 28, 32, 0.88);
-  backdrop-filter: blur(14px) saturate(160%);
-  box-shadow: 0 14px 34px -14px rgba(16, 24, 40, 0.5);
+  padding: 11px 12px 11px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  corner-shape: squircle;
+  background: rgba(24, 25, 31, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    0 16px 40px -16px rgba(8, 10, 18, 0.62),
+    0 2px 10px rgba(8, 10, 18, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28);
   font-size: 12.5px;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(255, 255, 255, 0.94);
   pointer-events: auto;
   animation: uk-toast-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
   word-break: keep-all;
   overflow-wrap: anywhere;
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .ds-toast {
+    background: rgba(24, 25, 31, 0.95);
+  }
 }
 .ds-toast.is-out {
   animation: uk-toast-out 0.3s cubic-bezier(0.7, 0, 0.84, 0) both;
@@ -8478,17 +8500,41 @@ select.in {
   width: 12px;
   height: 12px;
 }
+/* ── 성격을 색으로 ──
+
+   info와 success가 둘 다 브랜드색이라 사실상 같은 얼굴이었다. "저장했어요"와
+   "이 권한은 못 바꿔요"가 같아 보이면 색이 아무 말도 안 하는 것이다.
+
+   넷을 가른다 — 안내는 브랜드색, 완료는 초록, 주의는 노랑, 실패는 빨강.
+   왼쪽 세로 획(border-left)도 같은 색으로 세워, 아이콘을 못 알아보는
+   경우에도 성격이 먼저 읽히게 한다. */
 .ds-toast.is-info .ds-toast-ic {
-  background: color-mix(in srgb, var(--accent) 34%, transparent);
-  color: color-mix(in oklab, var(--accent) 32%, #fff);
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+  color: color-mix(in oklab, var(--accent) 26%, #fff);
 }
 .ds-toast.is-success .ds-toast-ic {
-  background: color-mix(in srgb, var(--accent) 40%, transparent);
-  color: color-mix(in oklab, var(--accent) 20%, #fff);
+  background: rgba(52, 211, 153, 0.28);
+  color: #a7f3d0;
+}
+.ds-toast.is-warn .ds-toast-ic {
+  background: rgba(251, 191, 36, 0.3);
+  color: #fde68a;
 }
 .ds-toast.is-error .ds-toast-ic {
   background: rgba(248, 113, 113, 0.3);
   color: #fecaca;
+}
+.ds-toast.is-info {
+  border-left: 3px solid color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.ds-toast.is-success {
+  border-left: 3px solid rgba(52, 211, 153, 0.7);
+}
+.ds-toast.is-warn {
+  border-left: 3px solid rgba(251, 191, 36, 0.75);
+}
+.ds-toast.is-error {
+  border-left: 3px solid rgba(248, 113, 113, 0.75);
 }
 .ds-toast-msg b {
   color: #fff;

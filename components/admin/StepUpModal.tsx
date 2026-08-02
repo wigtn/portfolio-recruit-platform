@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/Icon";
+import { toast } from "@/components/ds/Toaster";
 
 /**
  * StepUp 재인증 모달 — 시안 정본 `.stepup-ov`/`.stepup` 구조 그대로.
@@ -20,7 +21,6 @@ export function StepUpModal({
   onCancel: () => void;
 }) {
   const [code, setCode] = useState("");
-  const [error, setError] = useState<string | null>(null);
   // 코드 불일치 시 패널을 흔든다 — P1 실패 문법(uk-shake). 끝나면 클래스를
   // 걷어야 다음 실패에도 다시 흔들린다.
   const [shake, setShake] = useState(false);
@@ -82,7 +82,6 @@ export function StepUpModal({
             value={code}
             maxLength={6}
             onChange={(event) => {
-              setError(null);
               setCode(event.target.value.replace(/\D/g, "").slice(0, 6));
             }}
             style={{
@@ -99,11 +98,6 @@ export function StepUpModal({
           확인해보세요
         </div>
 
-        {error ? (
-          <div className="hint" style={{ color: "var(--hot)" }}>
-            {error}
-          </div>
-        ) : null}
 
         <div className="acts">
           <button
@@ -119,7 +113,7 @@ export function StepUpModal({
             onClick={() => {
               if (code === DEMO_CODE) onVerified();
               else {
-                setError("코드가 일치하지 않아 처리되지 않았습니다");
+                toast("코드가 일치하지 않아 처리되지 않았습니다", { tone: "error" });
                 setShake(true);
                 setCode(""); // 다시 입력할 수 있게 비운다
               }

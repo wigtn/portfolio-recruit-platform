@@ -77,7 +77,6 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
   const [files, setFiles] = useState<Accepted[]>([]);
   const [saved, setSaved] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const timers = useRef<number[]>([]);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
@@ -130,13 +129,13 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
     // 권한 매트릭스 pl-2: 게스트는 글 작성 불가 — 실행 대신 로그인으로 유도한다
     if (role === "guest") {
       const why = "지금은 게스트로 보고 있어요, 글은 로그인해야 등록할 수 있어요.";
-      setError(why);
+      toast(why, { tone: "warn" });
       setGateOpen(true);
       return why;
     }
     if (!useTitle.trim() || !useBody.trim()) {
       const why = "제목과 내용을 입력해주세요.";
-      setError(why);
+      toast(why, { tone: "warn" });
       return why;
     }
     const now = new Date();
@@ -159,7 +158,6 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
       ],
     });
     window.localStorage.removeItem(DRAFT_KEY);
-    setError(null);
     setSubmitted(true);
     return null;
   }
@@ -341,7 +339,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
     setTagInput("");
     if (!tag || tags.includes(tag)) return;
     if (tags.length >= 5) {
-      toast("태그는 5개까지 붙일 수 있어요", { tone: "info" });
+      toast("태그는 5개까지 붙일 수 있어요", { tone: "warn" });
       return;
     }
     setTags((prev) => [...prev, tag]);
@@ -667,14 +665,7 @@ export function PostComposer({ initialBoard }: { initialBoard?: string }) {
           className="formactions"
           style={{ alignItems: "center", justifyContent: "space-between" }}
         >
-          <span
-            style={{
-              fontSize: 12,
-              color: error ? "var(--hot)" : "var(--ink-4)",
-            }}
-          >
-            {error ? <b>{error}</b> : null}
-            {error ? <br /> : null}
+          <span style={{ fontSize: 12, color: "var(--ink-4)" }}>
             {/* 실제 동작과 같은 약속만 — 등록한 글은 마이 "내 글"에 남고,
                 AI 생성 체험은 커뮤니티 글 상세에서 한다 */}
             등록한 글은 마이페이지{" "}
