@@ -27,3 +27,26 @@ export function completionParams(maxTokens: number) {
     reasoning_effort: "none" as const,
   };
 }
+
+/**
+ * **첫 응답까지만** 기한을 건다.
+ *
+ * fetch는 헤더가 오면 resolve하므로 여기 타이머도 그때 풀린다. 본문
+ * 스트림에는 상한이 걸리지 않아 긴 답변이 중간에 잘리지 않는다. 막고 싶은
+ * 건 "시작조차 못 하는" 경우다 — 그건 답이 긴 게 아니라 고장이다.
+ *
+ * 두 라우트가 각자 들고 있었다(챗봇은 헬퍼로, AI 답변은 인라인으로). 같은
+ * 판단을 두 모양으로 적어 두면 한쪽만 고치게 된다.
+ */
+export async function withTimeout(
+  run: (signal: AbortSignal) => Promise<Response>,
+  ms: number,
+): Promise<Response> {
+  const guard = new AbortController();
+  const timer = setTimeout(() => guard.abort(), ms);
+  try {
+    return await run(guard.signal);
+  } finally {
+    clearTimeout(timer);
+  }
+}
