@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { ToolResult } from "@/lib/admin/run";
+import { toneOf, type ToolResult } from "@/lib/admin/run";
 import { toast } from "@/components/ds/Toaster";
 
 /**
@@ -31,7 +31,9 @@ export function ResultNote({
       result.ok
         ? `${result.message}, ${where}에 남았어요`
         : result.message,
-      { tone: result.ok ? "success" : "error" },
+      /* 거절의 성격은 코드가 안다 — 본인 확인 요구나 권한 부족은 실패가
+         아니라 다음 단계다(lib/admin/run의 GATE_TONE) */
+      { tone: toneOf(result) },
     );
   }, [result, where]);
 

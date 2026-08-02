@@ -7,6 +7,7 @@ import type { AdminAccount } from "@/lib/admin/seed";
 import { Icon } from "@/components/Icon";
 import { SkRegion, Sk } from "@/components/Skeleton";
 import { toast } from "@/components/ds/Toaster";
+import { toneOf } from "@/lib/admin/run";
 import { Select } from "@/components/ds/Select";
 import { StepUpModal } from "./StepUpModal";
 import { FormModal } from "./FormModal";
@@ -46,9 +47,7 @@ export function AdminAccounts() {
     if (!res || toasted.current === res) return;
     toasted.current = res;
     if (!res.ok && res.code === "STEP_UP_REQUIRED") return;
-    toast(res.message, {
-      tone: res.ok ? "success" : "error",
-    });
+    toast(res.message, { tone: toneOf(res) });
   }, [admin.result]);
 
   if (!admin.state) {
