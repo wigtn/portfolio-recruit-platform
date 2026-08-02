@@ -94,7 +94,7 @@ type Msg = {
   steps?: Step[];
   /* 잘못된 상황을 알리는 쪽지. 답변이 아니라 알림이라 생김새가 달라야
      한다. 답변처럼 보이면 방문자는 그게 대답인 줄 알고 읽는다 */
-  notice?: "timeout" | "failed" | "offline";
+  notice?: "timeout" | "failed" | "offline" | "quota";
   /**
    * 실행 허락을 묻는 말풍선(HITL).
    *
@@ -1699,11 +1699,33 @@ export function ChatWidget() {
       if (response.headers.get("content-type")?.includes("application/json")) {
         const first = (await response.json()) as ChatReply & {
           fallback?: boolean;
+          rateLimited?: boolean;
+          why?: "ip" | "session" | "daily";
         };
         /* 키 없음·한도 초과도 JSON({ fallback: true })으로 온다. 이걸
            에이전트 응답으로 착각하면 도구도 말도 없어서 **아무 답이 없는**
            화면이 된다(실제 사고). 라우트의 계약대로 스크립트 답변으로 간다 */
         if (first.fallback) {
+          /* 한도에 걸린 것이면 그렇다고 말한다.
+
+             서버는 rateLimited와 why를 성실히 보내는데 여기서 읽지 않아,
+             같은 질문에 갑자기 다른 결의 답이 나오는 이유를 방문자가 알
+             수 없었다. 배지가 "AI 실시간 답변"에서 "준비된 답변"으로 바뀌는
+             것만이 유일한 단서였다. 네트워크 실패 때는 이미 이유를 말하고
+             있었으니(아래 분기), 여기만 비어 있던 셈이다.
+
+             키가 없어 폴백인 경우(rateLimited 없음)는 알리지 않는다. 그건
+             방문자 사정이 아니라 이 데모의 구성이고, 어차피 답은 나온다. */
+          if (first.rateLimited) {
+            push({
+              role: "bot",
+              text:
+                first.why === "daily"
+                  ? "오늘 실시간 답변 총량을 다 써서, 준비된 답변으로 대신할게요."
+                  : "지금 실시간 답변 한도를 다 써서, 준비된 답변으로 대신할게요. 잠시 뒤에 다시 열려요.",
+              notice: "quota",
+            });
+          }
           await scripted();
           return;
         }
