@@ -669,8 +669,19 @@ export const seed: Store = {
       { id: "ps-1", name: "신규 거래처 뚫는 노하우 있나요?" },
       { id: "ps-2", name: "인센티브 구조, 5개 회사 비교해봤습니다" },
     ],
+    /* 첫 번째 배너가 모든 화면 상단 띠에 노출된다(PromoBar). meta는 연결
+       주소 — 드래그로 순서를 바꿔 저장하면 노출 배너가 갈린다(왕복 데모) */
     banners: [
-      { id: "bn-1", name: "가입하면 현직자 리뷰 전체 열람", meta: "노출중" },
+      {
+        id: "bn-1",
+        name: "8월 연봉 리포트 공개, 회사별 연봉을 같은 기준으로 비교해보세요",
+        meta: "/compare",
+      },
+      {
+        id: "bn-2",
+        name: "가입하면 현직자 리뷰 전체 열람",
+        meta: "/companies",
+      },
     ],
     blockedKeywords: [],
   },
