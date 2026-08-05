@@ -76,6 +76,9 @@ export default function SiteLayout({
               <Link href="/notices?kind=notice">공지사항</Link>
               <Link href="/notices?kind=faq">자주 묻는 질문</Link>
               <Link href="/notices?kind=faq&doc=nt-10">신고 안내</Link>
+              {/* 고객센터의 상시 진입점 — 상단 띠는 닫을 수 있는 물건이라
+                  여기가 문의의 정문이다 */}
+              <Link href="/contact">1:1 문의</Link>
             </div>
           </details>
           {/* 약관·운영정책·리뷰 정책은 전부 "정책 문서" 한 화면의 문서들 —
