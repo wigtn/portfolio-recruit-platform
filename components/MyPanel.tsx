@@ -566,6 +566,28 @@ export function MyPanel() {
               ) : null}
             </div>
           </div>
+
+          {/* 고객지원 — 계정 관련 막힘은 여기서 문의로 이어진다. 상단 띠는
+              닫을 수 있는 물건이라, 내 정보와 푸터가 상시 진입점이다 */}
+          <div className="card">
+            <h4>고객지원</h4>
+            <div
+              style={{
+                fontSize: "12.5px",
+                color: "var(--ink-3)",
+                marginBottom: 11,
+              }}
+            >
+              이용 중 궁금한 점은 1:1 문의로 남겨주세요, 운영자가 직접 답해요
+            </div>
+            <Link
+              className="btn line sm"
+              href="/contact"
+              style={{ width: "100%", justifyContent: "center" }}
+            >
+              <Icon name="mail" /> 1:1 문의하기
+            </Link>
+          </div>
         </div>
       </div>
     </>
