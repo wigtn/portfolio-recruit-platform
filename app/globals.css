@@ -2321,6 +2321,27 @@ a.adcard:active,
   transform: translateY(0) scale(0.995);
   box-shadow: var(--lift-sm);
 }
+/* 광고 카드는 <a>였다가 <button>이 됐다(누르면 데모 배너라고 밝히는 모달).
+   리프트 반응이 a.adcard에 묶여 있어 버튼에도 같은 반응을 잇는다 */
+button.adcard {
+  width: 100%;
+  padding: 0;
+  cursor: pointer;
+}
+button.adcard:hover {
+  border-color: var(--accent);
+  box-shadow: var(--lift);
+  transform: translateY(-2px);
+}
+button.adcard:active {
+  transform: translateY(0) scale(0.995);
+  box-shadow: var(--lift-sm);
+}
+@media (prefers-reduced-motion: reduce) {
+  button.adcard:hover {
+    transform: none;
+  }
+}
 /* 드릴다운 가능한 대시보드 카드 */
 .mcard[data-drill],
 .chartcard[data-drill],
@@ -15384,12 +15405,8 @@ select.in {
 .chatpanel.is-pill .ct b {
   display: none;
 }
-.chatpanel.is-pill .ct {
-  align-self: stretch;
-  display: flex;
-  flex: 1;
-  align-items: center;
-}
+/* 문구는 좌측 정렬 그대로 둔다(리뷰 결정) — 채팅을 읽는 시선은 왼쪽에서
+   시작하고, 두 줄로 꺾일 때도 첫 글자 축이 서 있어야 읽는 자리가 안 흔들린다 */
 .chatpanel.is-pill .ct span {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -15400,7 +15417,6 @@ select.in {
   font-size: 12.5px;
   line-height: 1.42;
   color: var(--ink-2);
-  width: 100%;
 }
 /* 펼치기 — 아래(down) 아이콘을 뒤집어 "위로 펼친다"로 읽는다.
    닫기와 같은 .cx 문법이라 크기·색·터치 면적이 같다 */

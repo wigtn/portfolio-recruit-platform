@@ -43,10 +43,16 @@ export function PostAnswers({ post }: { post: Post }) {
   const [replyText, setReplyText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const timers = useRef<number[]>([]);
+  /* 갓 게시된 AI 답변 — 이 줄에만 착지 연출(ai-land)이 입혀진다 */
+  const [landedId, setLandedId] = useState<string | null>(null);
+  const landTimer = useRef(0);
 
   useEffect(() => {
     setMine(loadUser().answers.filter((item) => item.postId === post.id));
-    return () => timers.current.forEach((timer) => window.clearTimeout(timer));
+    return () => {
+      timers.current.forEach((timer) => window.clearTimeout(timer));
+      window.clearTimeout(landTimer.current);
+    };
   }, [post.id]);
 
   // 운영자 답변은 구독으로 따라간다 — 다른 탭의 백오피스에서 등록해도
@@ -153,6 +159,12 @@ export function PostAnswers({ post }: { post: Post }) {
     saveUser({ ...user, answers: [...user.answers, next] });
     setMine((items) => [...items, next]);
     setGateNote(false);
+    /* 착지 연출(리뷰 지적: 게시 순간의 AI풍 그라데이션이 누락됐다) —
+       갓 게시된 줄에만 ai-land를 입혀 상승·스윕·스파클이 한 번 돌고,
+       연출이 끝나면 보통 답변 줄로 가라앉는다. 재방문에는 안 돈다. */
+    setLandedId(next.id);
+    window.clearTimeout(landTimer.current);
+    landTimer.current = window.setTimeout(() => setLandedId(null), 2200);
     return true;
   };
 
@@ -297,20 +309,34 @@ export function PostAnswers({ post }: { post: Post }) {
       {topMine.length > 0 ? (
         <div id="myAnswers">
           {topMine.map((item) => (
-            <div className="comment is-in" key={item.id}>
+            <div
+              className={
+                item.id === landedId
+                  ? "comment is-in ai-comment ai-land"
+                  : "comment is-in"
+              }
+              key={item.id}
+            >
               <div className="cbody">
                 <div className="cwho">
-                  {item.source === "ai" ? (
-                    <>
-                      <Avatar name={DEMO_PROFILE.nick} chars={1} />
-                      <span>{DEMO_PROFILE.nick}, AI 초안으로 작성</span>
-                    </>
-                  ) : (
-                    <>
-                      <AnonymousIdentity />
-                      <span>영업 4년차, 내가 쓴 답변</span>
-                    </>
-                  )}
+                  {/* 내 답변은 익명이 아니라 내 닉네임으로 선다(리뷰 지적).
+                      익명은 시드(다른 사람들) 몫이고, "내가 쓴 것"은 AI 게시와
+                      같은 얼굴이어야 목록에서 내 것으로 읽힌다 */}
+                  <span style={{ position: "relative", display: "inline-flex" }}>
+                    <Avatar name={DEMO_PROFILE.nick} chars={1} />
+                    {item.id === landedId ? (
+                      <span className="aispark" aria-hidden>
+                        <i style={{ "--a": "-40deg" } as React.CSSProperties} />
+                        <i style={{ "--a": "18deg" } as React.CSSProperties} />
+                        <i style={{ "--a": "72deg" } as React.CSSProperties} />
+                      </span>
+                    ) : null}
+                  </span>
+                  <span>
+                    {item.source === "ai"
+                      ? `${DEMO_PROFILE.nick}, AI 초안으로 작성`
+                      : `${DEMO_PROFILE.nick}, 내가 쓴 답변`}
+                  </span>
                 </div>
                 <div className="ctext">{item.text}</div>
                 <div className="cact">
@@ -338,8 +364,8 @@ export function PostAnswers({ post }: { post: Post }) {
                     <div className="creply" key={reply.id}>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div className="cwho">
-                          <AnonymousIdentity />
-                          <span>영업 4년차, 방금</span>
+                          <Avatar name={DEMO_PROFILE.nick} chars={1} />
+                          <span>{DEMO_PROFILE.nick}, 방금</span>
                         </div>
                         <div className="ctext">{reply.text}</div>
                         <div className="cact">

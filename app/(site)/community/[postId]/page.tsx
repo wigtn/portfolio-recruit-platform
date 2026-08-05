@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Crumb } from "@/components/Crumb";
+import { DemoAdCard } from "@/components/DemoAdCard";
 import { notFound } from "next/navigation";
 import { ALL_POSTS, getPost } from "@/lib/seed/posts";
 import { FEED, POPULAR_WEEK } from "@/lib/seed/feed";
@@ -128,21 +129,8 @@ export default async function PostDetailPage({
           </div>
 
           <span className="adlabel">DEMO AD</span>
-          {/* 목록의 같은 광고 슬롯과 동일하게 채용공고로 잇는다. */}
-          <Link className="adcard" href="/jobs">
-            <div className="adimg c">
-              <span className="art" />
-              <div className="k">채용 정보</div>
-              <div className="h">
-                영업직 공고를
-                <br />한눈에 비교
-              </div>
-            </div>
-            <div className="adbody">
-              <span className="adt">포트폴리오용 광고 슬롯 데모</span>
-              <span className="adgo">보기</span>
-            </div>
-          </Link>
+          {/* 어디로도 잇지 않는다 — 누르면 데모용 배너라고 밝힌다(리뷰 반영) */}
+          <DemoAdCard />
         </div>
       </div>
     </div>

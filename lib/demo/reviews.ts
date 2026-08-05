@@ -58,6 +58,41 @@ export function scoreWithMine(company: Company, mine: Review[]) {
   return total / (company.reviewCount + mine.length);
 }
 
+/* ── 리뷰 답글 ──
+   시드 답글(review.replies)은 읽기 전용이라, 체험 중 다는 답글은 리뷰 id로
+   묶어 따로 둔다. 화면(ReviewCard)과 내 정보의 답글 수가 같은 저장소를 봐야
+   "답글을 달았는데 개수가 안 는다"가 안 생긴다. */
+const REPLY_KEY = "wigtn-demo-review-replies-v1";
+
+export type ReviewReply = {
+  id: string;
+  author: string;
+  text: string;
+  writtenAt: string;
+};
+
+export function loadReviewReplies(): Record<string, ReviewReply[]> {
+  if (typeof window === "undefined") return {};
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(REPLY_KEY) ?? "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, ReviewReply[]>)
+      : {};
+  } catch {
+    window.localStorage.removeItem(REPLY_KEY);
+    return {};
+  }
+}
+
+export function addReviewReply(reviewId: string, reply: ReviewReply) {
+  if (typeof window === "undefined") return;
+  const all = loadReviewReplies();
+  all[reviewId] = [...(all[reviewId] ?? []), reply];
+  window.localStorage.setItem(REPLY_KEY, JSON.stringify(all));
+  /* 내 리뷰 목록(내 정보)과 같은 신호를 쓴다 — 답글 수가 그쪽 화면에도 산다 */
+  window.dispatchEvent(new CustomEvent(MY_REVIEWS_CHANGE_EVENT));
+}
+
 export function loadReadReviewReplies(): Set<string> {
   if (typeof window === "undefined") return new Set();
   try {

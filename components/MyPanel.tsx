@@ -18,8 +18,10 @@ import type { Review } from "@/lib/seed/reviews";
 import {
   loadMyReviews,
   loadReadReviewReplies,
+  loadReviewReplies,
   markReviewRepliesRead,
   subscribeMyReviews,
+  type ReviewReply,
 } from "@/lib/demo/reviews";
 
 /**
@@ -48,6 +50,9 @@ export function MyPanel() {
     typeof myEvidenceStatus
   > | null>(null);
   const [storedReviews, setStoredReviews] = useState<Review[]>([]);
+  /* 체험 중 단 답글(리뷰 id → 답글들) — 시드 답글에 얹어 세야 카드의
+     "답글 n"과 리뷰 화면에 실제로 보이는 개수가 같다 */
+  const [replyMap, setReplyMap] = useState<Record<string, ReviewReply[]>>({});
   const [readReviewReplies, setReadReviewReplies] = useState<Set<string>>(
     new Set(),
   );
@@ -60,7 +65,10 @@ export function MyPanel() {
   useEffect(() => {
     setUser(loadUser());
     setEvidence(myEvidenceStatus());
-    const syncReviews = () => setStoredReviews(loadMyReviews());
+    const syncReviews = () => {
+      setStoredReviews(loadMyReviews());
+      setReplyMap(loadReviewReplies());
+    };
     syncReviews();
     setReadReviewReplies(loadReadReviewReplies());
     return subscribeMyReviews(syncReviews);
@@ -333,7 +341,9 @@ export function MyPanel() {
                         const company = COMPANIES.find(
                           (item) => item.slug === review.companySlug,
                         );
-                        const replyCount = review.replies?.length ?? 0;
+                        const replyCount =
+                          (review.replies?.length ?? 0) +
+                          (replyMap[review.id]?.length ?? 0);
                         const unread =
                           replyCount > 0 && !readReviewReplies.has(review.id);
                         return (

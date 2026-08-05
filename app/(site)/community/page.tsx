@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Crumb } from "@/components/Crumb";
+import { DemoAdCard } from "@/components/DemoAdCard";
 import type { CSSProperties } from "react";
 import {
   BOARDS,
@@ -294,20 +295,8 @@ export default async function CommunityPage({
             <LiveKeywords keywords={HOT_KEYWORDS} />
 
             <span className="adlabel">DEMO AD</span>
-            <Link className="adcard" href="/jobs">
-              <div className="adimg c">
-                <span className="art" />
-                <div className="k">채용 정보</div>
-                <div className="h">
-                  영업직 공고를
-                  <br />한눈에 비교
-                </div>
-              </div>
-              <div className="adbody">
-                <span className="adt">포트폴리오용 광고 슬롯 데모</span>
-                <span className="adgo">보기</span>
-              </div>
-            </Link>
+            {/* 어디로도 잇지 않는다 — 누르면 데모용 배너라고 밝힌다(리뷰 반영) */}
+            <DemoAdCard />
           </div>
         </div>
       </div>
