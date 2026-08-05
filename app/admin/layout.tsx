@@ -33,6 +33,12 @@ const GROUPS: AdminNavGroup[] = [
         label: "증빙 검토",
         count: "evidence",
       },
+      {
+        href: "/admin/inquiries",
+        icon: "mail",
+        label: "1:1 문의",
+        count: "inquiries",
+      },
     ],
   },
   {

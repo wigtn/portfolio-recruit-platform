@@ -9,10 +9,10 @@ import { Icon } from "./Icon";
  * 2.4초 자동 순환·호버로 멈춰 읽기는 기존 규격 그대로다.
  */
 const STEPS = [
-  { label: "종류 선택", sub: "확인할 화면을 골라요", icon: "layout" },
-  { label: "내용 작성", sub: "개인정보 없이 의견만 적어요", icon: "edit" },
-  { label: "로컬 저장", sub: "이 브라우저에만 남아요", icon: "check" },
-  { label: "다시 확인", sub: "아래 목록에서 바로 확인해요", icon: "view" },
+  { label: "종류 선택", sub: "어떤 일인지 골라요", icon: "layout" },
+  { label: "내용 작성", sub: "개인정보 없이 닉네임으로", icon: "edit" },
+  { label: "운영자 확인", sub: "문의 큐에서 직접 읽어요", icon: "view" },
+  { label: "답변 알림", sub: "벨과 아래 내역으로 와요", icon: "bell" },
 ];
 
 export function ContactSteps() {

@@ -4,13 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { Crumb } from "./Crumb";
 
 /**
- * 데모 문의 히어로 — 홈 마무리 배너와 같은 무대(영상 screen 블렌드 + 딤 +
+ * 1:1 문의 히어로 — 홈 마무리 배너와 같은 무대(영상 screen 블렌드 + 딤 +
  * 오로라)에 AE식 워드 리빌과 포인터 패럴럭스를 얹는다. 움직이는 건 배경
  * 레이어뿐이다(콘텐츠 크기·위치 불변 규율).
+ *
+ * 목소리는 서비스(W 세일즈)다 — "데모 문의"라는 픽션 밖 이름은 걷어냈다.
+ * 접수는 운영자 문의 큐로 실제로 들어가고, 답변은 알림으로 돌아온다.
  */
-const TITLE_WORDS = ["데모", "문의사항을", "남겨보세요."];
+const TITLE_WORDS = ["궁금한", "점을", "물어보세요."];
 
-const FACTS = ["개인정보 미수집", "브라우저에만 저장", "초기화 가능"];
+const FACTS = ["운영자가 직접 답변", "결과는 알림으로", "개인정보 미수집"];
 
 export function ContactHero() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -63,13 +66,10 @@ export function ContactHero() {
         aria-hidden
       />
       <div className="closing-dim" aria-hidden />
-      <Crumb items={[{ label: "데모 문의사항" }]} />
+      <Crumb items={[{ label: "1:1 문의" }]} />
       <div className="ttl">
         <div>
-          <h1
-            className="contact-title"
-            aria-label="데모 문의사항을 남겨보세요."
-          >
+          <h1 className="contact-title" aria-label="궁금한 점을 물어보세요.">
             {TITLE_WORDS.map((word, index) => (
               <span className="w" key={index} aria-hidden>
                 <span
@@ -81,7 +81,7 @@ export function ContactHero() {
             ))}
           </h1>
           <div className="desc">
-            포트폴리오를 둘러보며 좋았던 점과 궁금한 점을 안전하게 기록해보세요
+            이용 중 막히는 곳이 있으면 남겨주세요, 운영자가 확인하고 답해드려요
           </div>
           <div className="contact-facts">
             {FACTS.map((fact, index) => (

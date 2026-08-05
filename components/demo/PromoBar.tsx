@@ -35,8 +35,8 @@ export function PromoBar() {
       <CuratedPromo />
       <div className="promo-act">
         <Link className="rbtn" href="/contact">
-          <span className="promo-cta-wide">데모 의견 남기기</span>
-          <span className="promo-cta-mobile">의견</span>
+          <span className="promo-cta-wide">1:1 문의 남기기</span>
+          <span className="promo-cta-mobile">문의</span>
           <Icon name="arrow" />
         </Link>
         <button

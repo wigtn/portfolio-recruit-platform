@@ -267,7 +267,7 @@ export const INTENTS: ChatIntent[] = [
       "이 포트폴리오에서는 실제 상담이나 외부 회신을 접수하지 않아요.\n\n" +
       "대신 데모를 보며 든 의견이나 확인할 점을 문의사항 화면에 메모할 수 있어요. " +
       "이름과 연락처는 받지 않고, 작성 내용은 현재 브라우저에만 저장됩니다.",
-    links: [{ label: "데모 문의사항 남기기", href: "/contact" }],
+    links: [{ label: "1:1 문의 남기기", href: "/contact" }],
   },
 ];
 
@@ -296,7 +296,7 @@ export const DEMO_SCRIPT = ["demo", "cms", "ai", "contact"];
  *
  * 순서는 실제로 질문이 이어지는 길을 따른다. 견적을 물으면 무엇이 값을
  * 가르는지(관리자 범위, 소스 유무)가 다음이고, 기술을 물으면 그 옆의
- * 기술이 다음이다. 마지막에는 필요할 때만 데모 문의사항으로 이어진다.
+ * 기술이 다음이다. 마지막에는 필요할 때만 1:1 문의로 이어진다.
  */
 export const NEXT_BY_INTENT: Record<string, string[]> = {
   tour: ["demo", "cms", "ai", "cost"],
@@ -445,4 +445,4 @@ export function isPureQuestion(text: string, midOperation: boolean): boolean {
 /** 못 알아들었을 때. 아는 척하지 않고 데모의 한계를 분명히 말한다 */
 export const FALLBACK =
   "그건 제가 정확히 답하기 어려운 내용이에요.\n\n" +
-  "이 포트폴리오에서는 담당자 연결이나 외부 회신을 제공하지 않아요. 데모 문의사항에 메모해 둘 수는 있어요.";
+  "이 포트폴리오에서는 담당자 연결이나 외부 회신을 제공하지 않아요. 1:1 문의로 남기면 운영자 답변 왕복을 체험할 수 있어요.";

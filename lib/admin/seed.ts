@@ -185,6 +185,28 @@ export type AdminAccount = {
   status: "활성" | "정지" | "초대됨";
 };
 
+/**
+ * 1:1 문의 — 서비스 안 고객센터 문의가 운영자 큐로 들어온다.
+ *
+ * 문의는 익명 커뮤니티와 달리 "내 계정의 일"이라 닉네임으로 남는다.
+ * 답변이 달리면 문의자에게 알림으로 돌아간다(notifications 파생) — 신고·증빙과
+ * 같은 왕복 문법이다. 나중에 실서비스 모듈로 뗄 때 슬랙/메일 연동이 이
+ * 자리(답변 등록 지점)에 붙는다.
+ */
+export type InquiryRow = {
+  id: string;
+  /** 문의 분류 — 사용자 폼의 선택지와 같은 목록이어야 한다 */
+  category: string;
+  message: string;
+  /** 문의자 닉네임 */
+  by: string;
+  at: string;
+  status: "대기" | "답변완료";
+  answer?: string;
+  /** ISO — 표시할 때 화면에서 접는다 */
+  answeredAt?: string;
+};
+
 export type Store = {
   reports: Report[];
   members: Member[];
@@ -196,6 +218,7 @@ export type Store = {
   policy: PolicyRow[];
   admins: AdminAccount[];
   jobs: JobRow[];
+  inquiries: InquiryRow[];
 };
 
 export const seed: Store = {
@@ -712,6 +735,41 @@ export const seed: Store = {
       twoFA: true,
       lastActive: "-",
       status: "초대됨",
+    },
+  ],
+
+  /* 1:1 문의 — 대기 둘, 답변완료 하나. 빈 큐로 시작하면 화면이 무엇을
+     하는 곳인지 안 보이고, 전부 대기면 "답변완료로 옮겨진다"는 왕복도
+     안 보인다. 분류는 사용자 폼(ContactForm)의 선택지와 같은 목록이다. */
+  inquiries: [
+    {
+      id: "inq-1",
+      category: "계정, 로그인",
+      message:
+        "닉네임을 바꾸고 싶은데 설정에서 찾지 못했어요. 익명 활동 기록과 분리해서 변경할 수 있나요?",
+      by: "미림동재규어",
+      at: "08.05 21:14",
+      status: "대기",
+    },
+    {
+      id: "inq-2",
+      category: "회사 리뷰",
+      message:
+        "제가 쓴 리뷰를 회사에서 특정할 수 있는지 걱정돼요. 재직 인증 정보가 리뷰와 같이 보관되나요?",
+      by: "필드세일러",
+      at: "08.05 18:02",
+      status: "대기",
+    },
+    {
+      id: "inq-3",
+      category: "실적 인증",
+      message: "증빙 서류를 잘못 올렸는데 반려 전에 다시 제출할 수 있나요?",
+      by: "성수클로저",
+      at: "08.04 11:37",
+      status: "답변완료",
+      answer:
+        "네, 검토 대기 상태에서는 실적 인증 화면에서 다시 제출하시면 최신 서류로 검토돼요. 이전 제출본은 자동으로 대체됩니다.",
+      answeredAt: "2026-08-04T14:20:00+09:00",
     },
   ],
 

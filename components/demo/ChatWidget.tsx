@@ -661,7 +661,7 @@ export function ChatWidget() {
   // 언마운트 시 진행 중 재생 중단
   useEffect(() => () => void (runId.current += 1), []);
 
-  /* 체험 가이드·데모 문의 화면에서 "데모 도우미" 항목을 누르면 여기로 온다.
+  /* 체험 가이드·1:1 문의 화면에서 "데모 도우미" 항목을 누르면 여기로 온다.
      openPanel을 그대로 태워서 첫 진입이면 재생까지 함께 시작한다. */
   useEffect(() => {
     const onOpen = () => openPanelRef.current?.();
@@ -1278,7 +1278,7 @@ export function ChatWidget() {
          잠기지 않은 문이다. */
 
       case "open_contact": {
-        note = "데모 문의사항 화면을 열었어요. 작성한 내용은 이 브라우저에만 저장돼요.";
+        note = "1:1 문의 화면을 열었어요. 접수하면 운영자 문의 큐에 실제로 쌓여요.";
         router.push("/contact#contact-form");
         close = true;
         break;
@@ -1617,11 +1617,11 @@ export function ChatWidget() {
         const answer = intent
           ? intent.answer
           : missed > 1
-            ? "이 내용은 데모 문의사항에 메모해 둘 수 있어요. 브라우저 밖으로 전송되지는 않아요."
+            ? "이 내용은 1:1 문의로 남길 수 있어요. 운영자가 답하면 알림으로 돌아와요."
             : FALLBACK;
         const links = intent
           ? intent.links
-          : [{ label: "데모 문의사항 남기기", href: "/contact" }];
+          : [{ label: "1:1 문의 남기기", href: "/contact" }];
         const id =
           bubble ?? push({ role: "bot", text: "", streaming: true, reply: true });
         bubble = null; // 다음 질문은 제 말풍선을 새로 연다

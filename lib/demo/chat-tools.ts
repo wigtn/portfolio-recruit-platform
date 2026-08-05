@@ -16,7 +16,7 @@
  * 운영자 조치의 실행(글 가리기, 계정 정지, 삭제, 신고 처리)은 도구가 아니다.
  * 화면까지 안내하고 손은 사람이 댄다. 이 데모가 "위험한 작업 직전에 본인
  * 확인"을 자랑하는데 챗봇이 그걸 우회하면 자기 주장을 스스로 부순다.
- * 데모 문의사항 화면은 열어주기만 한다. 내용 저장은 방문자가 직접 한다.
+ * 1:1 문의 화면은 열어주기만 한다. 접수는 방문자가 직접 한다.
  * 자세한 경계와 그 이유는 lib/demo/chat-guard.ts에 있다.
  *
  * ## 글과 공고를 id로 받지 않는 이유
@@ -59,6 +59,7 @@ export const SCREEN_PATH = {
   admin: "/admin",
   admin_reports: "/admin/reports",
   admin_questions: "/admin/questions",
+  admin_inquiries: "/admin/inquiries",
   admin_members: "/admin/members",
   admin_companies: "/admin/companies",
   admin_jobs: "/admin/jobs",
@@ -84,10 +85,11 @@ export const SCREEN_LABEL: Record<string, string> = {
   notices: "공지",
   badges: "배지",
   my: "내 정보",
-  contact: "데모 문의사항",
+  contact: "1:1 문의",
   admin: "백오피스 대시보드",
   admin_reports: "신고 처리",
   admin_questions: "질문 관리",
+  admin_inquiries: "1:1 문의 관리",
   admin_members: "회원 관리",
   admin_companies: "회사 관리",
   admin_jobs: "채용공고 관리",
@@ -500,12 +502,12 @@ const TOOLS: Tool[] = [
   {
     name: "open_contact",
     description:
-      "데모 문의사항 화면으로 이동한다. 방문자가 포트폴리오에 대한 의견을 " +
+      "1:1 문의 화면으로 이동한다. 방문자가 서비스 이용 문의를 남기고 싶어 " +
       "남기고 싶다고 할 때만 쓴다. 대화 끝마다 습관적으로 부르지 않는다. " +
       "내용을 대신 저장하지는 않는다.",
     params: {},
     spec: { fields: {} },
-    running: "데모 문의사항을 여는 중",
+    running: "1:1 문의를 여는 중",
     orb: "shaping",
   },
   /* reset_demo는 여기 없다.

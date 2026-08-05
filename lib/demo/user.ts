@@ -55,6 +55,8 @@ export type UserState = {
   /** 지원한 공고 id — 채용 상세의 "지원 완료" 상태 유지 */
   applied: string[];
   answers: MyAnswer[];
+  /** 내가 접수한 1:1 문의 id — 답변이 달리면 알림으로 돌아온다 */
+  inquiries: string[];
 };
 
 const EMPTY: UserState = {
@@ -67,6 +69,7 @@ const EMPTY: UserState = {
   posts: [],
   applied: [],
   answers: [],
+  inquiries: [],
 };
 
 export function loadUser(): UserState {
@@ -89,6 +92,7 @@ export function loadUser(): UserState {
       posts: saved.posts ?? [],
       applied: saved.applied ?? [],
       answers: saved.answers ?? [],
+      inquiries: saved.inquiries ?? [],
     };
   } catch {
     window.localStorage.removeItem(KEY);

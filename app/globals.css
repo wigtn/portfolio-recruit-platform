@@ -11933,6 +11933,33 @@ select.in {
   border-radius: 10px;
   background: var(--bg);
 }
+/* 운영자 답변 — 문의 카드 안의 응답 블록. 운영자 공식 답변(글 상세)과 같은
+   위계 문법: 인디고 소프트 카드로 "운영 측 발화"임을 말한다 */
+.demo-inquiry-answer {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid color-mix(in oklab, var(--accent) 24%, transparent);
+  background: color-mix(in oklab, var(--accent-soft) 55%, var(--card));
+}
+.demo-inquiry-answer > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: var(--accent-ink);
+}
+.demo-inquiry-answer .ic {
+  width: 13px;
+  height: 13px;
+}
+.demo-inquiry-answer p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
 .demo-inquiry + .demo-inquiry {
   margin-top: 8px;
 }
@@ -14799,32 +14826,9 @@ select.in {
   min-width: 0;
 }
 
-/* ── 상담 페이지 두 칸 구조 ───────────────────────────────────────
-      왼쪽은 체험 기록 레일이다. 폼 옆에서만 잠깐 따라다니는 카드가 아니라
-      스크롤 처음부터 끝까지 붙어 있어야, 모듈을 훑는 내내 자기가 무엇을
-      해봤는지 옆에 떠 있고 마지막 폼에서 쓸 말이 생긴다.
-
-      레일 폭은 비워 두는 게 아니라 예약하는 것이다. 오른쪽 한 칸이 롱스크롤
-      본문 전체(모듈, 진행 과정, 폼)를 받는다. */
-.contact-shell {
-  display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
-  align-items: start;
-  gap: 32px;
-}
-.contact-rail {
-  position: sticky;
-  /* 헤더 높이만큼 내려 앉힌다 */
-  top: 84px;
-  /* 화면을 넘지 않게 막되, 안에서 스크롤하게 두지 않는다. 끝까지 따라오는
-     레일 안에 또 스크롤바가 생기면 스크롤이 두 겹이 된다. 그래서 카드 쪽을
-     compact로 눌러 애초에 넘치지 않게 만든다(SeenCard의 compact) */
-  max-height: calc(100vh - 104px);
-  overflow: hidden;
-}
-
-/* 레일용 압축 — 행 높이는 SeenCard의 ROW_H와 한 쌍이다. 여기를 바꾸면
-   스켈레톤 높이도 같이 바꾼다. 안 그러면 로딩이 끝날 때 화면이 밀린다 */
+/* ── 1:1 문의 페이지 한 열 구조 ───────────────────────────────────
+      "방금 보신 것들" 레일은 뺐다(리뷰 결정) — 체험 진행도의 정본은 우측
+      하단 가이드 위젯이다. 본문 한 열이 진행 과정과 폼을 받는다. */
 /* 아이콘은 첫 줄 글자와 눈높이를 맞춘다.
 
    align-items: flex-start라 아이콘 상자(20px)와 글자 블록이 각자 위에
@@ -14837,33 +14841,6 @@ select.in {
   place-items: center;
   flex-shrink: 0;
 }
-.seen-compact .titem {
-  padding-top: 6px;
-  padding-bottom: 6px;
-  gap: 9px;
-}
-.seen-compact .titem b {
-  font-size: 12.5px;
-}
-/* 설명 한 줄 클램프. .tic을 빼야 한다 — 아이콘 원도 같은 span이라, 여기에
-   걸리면 display: -webkit-box가 grid를 덮어 place-items가 죽고 아이콘이
-   원의 왼쪽 위로 밀린다(실기기 지적: 아이콘이 가운데 정렬이 안 됨) */
-.seen-compact .titem span:not(.tic) {
-  font-size: 11px;
-  line-height: 1.45;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.seen-compact .tic {
-  width: 20px;
-  height: 20px;
-}
-.seen-compact h4 {
-  margin-bottom: 6px;
-}
 .contact-main {
   min-width: 0;
   /* 모듈 행이 몇 칸으로 설지를 화면 폭이 아니라 이 칸의 폭으로 정한다 */
@@ -14873,14 +14850,8 @@ select.in {
   gap: 28px;
 }
 @media (max-width: 1000px) {
-  .contact-shell {
-    grid-template-columns: 1fr;
+  .contact-main {
     gap: 20px;
-  }
-  .contact-rail {
-    position: static;
-    max-height: none;
-    overflow: visible;
   }
 }
 

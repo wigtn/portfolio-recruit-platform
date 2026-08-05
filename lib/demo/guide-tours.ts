@@ -69,9 +69,8 @@ export const TOURS: Partial<Record<ScreenId, TourStep[]>> = {
     { selector: ".my-tabs", note: "쓴 글, 반응, 지원 내역을 탭으로 봐요" },
   ],
   contact: [
-    { selector: ".contact-rail", note: "체험 기록이에요. 무엇을 봤는지 따라와요" },
-    { selector: ".seen-compact", note: "방금 보신 기능 목록이에요" },
-    { selector: "#contact-form", note: "데모 문의사항이에요. 이 브라우저에만 저장돼요" },
+    { selector: ".ctimeline-row", note: "진행 과정이에요. 접수부터 답변 알림까지의 흐름이에요" },
+    { selector: "#contact-form", note: "1:1 문의 폼. 접수하면 운영자 문의 큐에 실제로 쌓여요" },
     { selector: ".msgtips", note: "누르면 문의 틀이 들어가요. 지우고 써도 돼요" },
     { selector: ".formsubmit-btn", note: "저장은 직접 눌러주세요" },
   ],
@@ -96,6 +95,7 @@ const ADMIN_TABLE_TOUR: TourStep[] = [
 const ADMIN_SUB: ScreenId[] = [
   "admin_reports",
   "admin_questions",
+  "admin_inquiries",
   "admin_members",
   "admin_companies",
   "admin_jobs",
