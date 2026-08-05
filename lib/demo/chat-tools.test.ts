@@ -57,3 +57,15 @@ describe("역할 정규화", () => {
     }
   });
 });
+
+describe("걸음별 체험 안내(guide_feature)", () => {
+  it("모델에게 주는 체험 목록이 실제 대본(GUIDE_TOURS)과 어긋나지 않는다", async () => {
+    // chat-tools는 서버가 읽는 모듈이라 "use client"인 feature-guide를
+    // 직접 임포트할 수 없다 — 사본이 생겼으니 동기화는 테스트가 잰다
+    const { GUIDE_TOURS } = await import("./feature-guide");
+    const { GUIDE_FEATURE_IDS } = await import("./chat-tools");
+    expect([...GUIDE_FEATURE_IDS].sort()).toEqual(
+      Object.keys(GUIDE_TOURS).sort(),
+    );
+  });
+});

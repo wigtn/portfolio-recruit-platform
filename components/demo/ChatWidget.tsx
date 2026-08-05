@@ -33,6 +33,7 @@ import {
 import {
   ADMIN_SCREENS,
   COMPANY_LABEL,
+  GUIDE_FEATURES,
   ROLE_LABEL_KO,
   withRo,
   SCREEN_LABEL,
@@ -45,6 +46,8 @@ import {
 } from "@/lib/demo/chat-tools";
 import { guard } from "@/lib/demo/chat-guard";
 import { tourOf } from "@/lib/demo/guide-tours";
+import { guideTourOf, startGuideTour } from "@/lib/demo/feature-guide";
+import type { DemoFeature } from "@/lib/demo/progress";
 import { findJob, findPost } from "@/lib/demo/chat-find";
 import { loadUser, saveUser, toggleIn } from "@/lib/demo/user";
 import { submitEvidence } from "@/lib/demo/submit";
@@ -1015,6 +1018,29 @@ export function ChatWidget() {
             (skipped
               ? ` ${skipped}곳은 지금 화면 상태에서는 보이지 않아 건너뛰었어요.`
               : ""),
+        };
+      }
+
+      /* 체험 하나를 걸음별 말풍선 안내(FeatureGuide)로 시작한다.
+         guide_screen(커서가 훑는 시연)과 달리 여기서는 방문자가 직접
+         누른다 — 대본과 진행은 feature-guide가 쥐고, 역할 게이트도 안내가
+         스스로 이끈다. 시작만 하고 손은 대지 않는다. */
+      case "guide_feature": {
+        const feature = str("feature") as DemoFeature;
+        const steps = guideTourOf(feature);
+        if (!steps.length) {
+          return fail("이 기능은 아직 걸음별 안내가 준비되지 않았어요.");
+        }
+        startGuideTour(feature, loadProgress().has(feature));
+        const first = steps[0];
+        if (!first.path.test(window.location.pathname)) {
+          router.push(first.at);
+          await settled(2500);
+        }
+        markProgress("chatbot");
+        return {
+          ok: true,
+          note: `${GUIDE_FEATURES[feature] ?? feature} 체험 안내를 시작했어요. 말풍선이 짚는 곳을 직접 눌러보세요.`,
         };
       }
 

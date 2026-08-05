@@ -106,6 +106,27 @@ export const ADMIN_SCREENS = new Set(
   SCREEN_ENUM.filter((id) => id.startsWith("admin")),
 );
 
+/**
+ * 걸음별 체험 안내(guide_feature)가 시작할 수 있는 체험 목록.
+ *
+ * 정본 대본은 lib/demo/feature-guide.ts의 GUIDE_TOURS다. 여기 사본을 두는
+ * 이유: 이 모듈은 서버(app/api/chat)가 도구 스키마로 읽는데, feature-guide는
+ * "use client" 모듈이라 서버로 끌고 올 수 없다. 두 목록이 어긋나면 모델이
+ * 없는 안내를 부르므로, 동기화는 chat-tools.test가 잰다.
+ */
+export const GUIDE_FEATURES: Record<string, string> = {
+  "ai-answer": "AI 참고 답변 — 생성부터 내 닉네임으로 게시까지",
+  "company-review": "회사 리뷰 작성 — 등록하면 평점 재계산 확인까지",
+  "content-safety": "글쓰기 콘텐츠 안전 — 위험한 붙여넣기 정화",
+  report: "신고 — 접수부터 운영자 큐 확인까지 왕복",
+  evidence: "실적 인증 — 제출, 운영자 승인, 등급 승급까지 왕복",
+  question: "질문에 공식 답변 달기 (운영자 큐)",
+  "step-up": "중요한 조치 전 본인 확인 (블라인드 실행)",
+  curation: "홈 큐레이션 배치 — 저장하면 홈 반영 확인까지 왕복",
+  policy: "역할별 권한 정책 — 토글, 저장, 본인 확인",
+};
+export const GUIDE_FEATURE_IDS = Object.keys(GUIDE_FEATURES);
+
 export const COMPANY_LABEL: Record<string, string> = {
   "diamond-tech": "◇◇테크",
   "block-trading": "▓▓상사",
@@ -327,6 +348,33 @@ const TOOLS: Tool[] = [
     required: ["screen"],
     spec: { fields: { screen: enumField(SCREEN_ENUM) } },
     running: "화면을 차례로 안내하는 중",
+    orb: "shaping",
+  },
+  {
+    name: "guide_feature",
+    description:
+      "핵심 기능 체험 하나를 걸음별 말풍선 안내로 시작한다. 방문자가 특정 " +
+      "기능을 '어떻게 하는지', '직접 해보고 싶다', '체험/실행 방법'을 " +
+      "물으면 말로 설명하는 대신 이 도구를 쓴다 — 그 화면으로 이동해 무엇을 " +
+      "눌러야 완료 체크가 켜지는지 말풍선이 순서대로 짚고, 여러 화면을 " +
+      "왕복하는 체험(신고, 실적 인증, 큐레이션)은 화면을 건너다니며 " +
+      "이어진다. 운영자 화면이 필요한 걸음은 안내가 역할 전환까지 " +
+      "이끌어주므로 switch_role을 먼저 부를 필요 없다. 시작한 뒤의 진행은 " +
+      "방문자의 손이 한다 — 대신 눌러주지 않는다.\n" +
+      "guide_screen이 '화면 훑어보기'라면 이건 '한 기능을 끝까지 해보게 " +
+      "하기'다.",
+    params: {
+      feature: {
+        type: "string",
+        enum: GUIDE_FEATURE_IDS,
+        description: `체험 이름과 그 뜻:\n${Object.entries(GUIDE_FEATURES)
+          .map(([id, label]) => `- ${id}: ${label}`)
+          .join("\n")}`,
+      },
+    },
+    required: ["feature"],
+    spec: { fields: { feature: enumField(GUIDE_FEATURE_IDS) } },
+    running: "체험 안내를 시작하는 중",
     orb: "shaping",
   },
   {
