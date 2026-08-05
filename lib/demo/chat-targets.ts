@@ -89,6 +89,12 @@ export const TARGETS: Target[] = [
     selector: "#contact-form",
   },
   {
+    id: "contact_history",
+    what: "내 문의 내역. 운영자 답변이 여기와 알림 벨로 돌아온다. 문의를 접수한 적이 있어야 보인다",
+    where: "/contact",
+    selector: ".demo-inquiries",
+  },
+  {
     id: "admin_sidebar",
     what: "백오피스 사이드바. 운영 메뉴 전체가 여기 있다",
     where: "/admin",

@@ -72,7 +72,13 @@ export const TOURS: Partial<Record<ScreenId, TourStep[]>> = {
     { selector: ".ctimeline-row", note: "진행 과정이에요. 접수부터 답변 알림까지의 흐름이에요" },
     { selector: "#contact-form", note: "1:1 문의 폼. 접수하면 운영자 문의 큐에 실제로 쌓여요" },
     { selector: ".msgtips", note: "누르면 문의 틀이 들어가요. 지우고 써도 돼요" },
-    { selector: ".formsubmit-btn", note: "저장은 직접 눌러주세요" },
+    { selector: ".formsubmit-btn", note: "접수는 직접 눌러주세요. 답변이 달리면 알림 벨로 돌아와요" },
+  ],
+  admin_inquiries: [
+    { selector: ".pnav", note: "운영 메뉴예요. 1:1 문의에 대기 건수가 붙어 있어요" },
+    { selector: ".tablecard", note: "문의 큐예요. 사용자 1:1 문의 접수가 실제로 쌓여요" },
+    { selector: ".reviewgrid > .card", note: "선택한 문의의 원문과 답변 폼이에요" },
+    { selector: ".evacts .btn.primary", note: "답변을 등록하면 문의자의 알림 벨로 즉시 돌아가요" },
   ],
   admin: [
     { selector: ".pnav", note: "운영 메뉴 전체예요. 화면마다 실데이터가 물려 있어요" },
