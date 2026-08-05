@@ -22,11 +22,9 @@ import {
   DEMO_PANEL_OPEN_EVENT,
   loadProgress,
   markProgress,
-  saveDemoTheme,
 } from "@/lib/demo/progress";
 import { useRouter } from "next/navigation";
 import { useRole } from "@/lib/demo/role";
-import { applyTheme, THEME_LABEL } from "@/lib/demo/theme";
 import {
   AGENT_DONE_EVENT,
   AGENT_EVENT,
@@ -58,7 +56,7 @@ import {
 } from "@/lib/demo/compose";
 
 /**
- * 상담 챗봇. 우측 하단 플로팅. **열면 대화가 스스로 흘러간다.**
+ * 데모 도우미. 우측 하단 플로팅. **열면 대화가 스스로 흘러간다.**
  *
  * 방문자에게 먼저 타이핑을 요구하면 대부분 그냥 닫는다. 무엇을 물어야 할지 모르기
  * 때문이다. 그래서 저희가 먼저 묻고 답하는 걸 재생으로 보여준다(DEMO_SCRIPT 순서).
@@ -663,7 +661,7 @@ export function ChatWidget() {
   // 언마운트 시 진행 중 재생 중단
   useEffect(() => () => void (runId.current += 1), []);
 
-  /* 체험 가이드·상담 화면에서 "상담 챗봇" 항목을 누르면 여기로 온다.
+  /* 체험 가이드·데모 문의 화면에서 "데모 도우미" 항목을 누르면 여기로 온다.
      openPanel을 그대로 태워서 첫 진입이면 재생까지 함께 시작한다. */
   useEffect(() => {
     const onOpen = () => openPanelRef.current?.();
@@ -1081,22 +1079,6 @@ export function ChatWidget() {
         break;
       }
 
-      case "set_theme": {
-        const theme = str("theme");
-        applyTheme(theme);
-        saveDemoTheme(theme);
-        note = `테마를 ${withRo(THEME_LABEL[theme])} 바꿨어요. 토큰 하나로 전 화면이 같이 바뀝니다.`;
-        break;
-      }
-
-      case "set_brand_color": {
-        const hex = str("hex");
-        applyTheme(`custom:${hex}`);
-        saveDemoTheme(`custom:${hex}`);
-        note = `${hex}로 입혀봤어요. 버튼, 배지, 강조색이 전부 이 색을 따라갑니다.`;
-        break;
-      }
-
       /* 글쓰기는 화면을 열고 **그 화면의 등록 절차를 그대로 태운다.**
          상태에 직접 써넣으면 빠르지만, 그러면 살균과 권한 확인을 건너뛴 길이
          하나 생긴다. 문이 둘이면 언젠가 한쪽은 안 잠긴다. */
@@ -1284,7 +1266,7 @@ export function ChatWidget() {
         const rest = DEMO_FEATURES.filter((f) => !done.has(f.id));
         note =
           rest.length === 0
-            ? `${DEMO_FEATURES.length}가지를 전부 보셨어요. 이제 상담에서 구성과 일정을 잡으면 됩니다.`
+            ? `${DEMO_FEATURES.length}가지를 전부 보셨어요. 내 활동에서 체험 기록을 다시 확인할 수 있어요.`
             : `지금까지 ${done.size}/${DEMO_FEATURES.length}를 보셨어요. ` +
               `다음으로는 "${rest[0].title}"가 좋아요. ${rest[0].description}`;
         break;
@@ -1296,7 +1278,7 @@ export function ChatWidget() {
          잠기지 않은 문이다. */
 
       case "open_contact": {
-        note = "상담 신청 폼으로 모셔갈게요. 연락처는 직접 적어주셔야 해요.";
+        note = "데모 문의사항 화면을 열었어요. 작성한 내용은 이 브라우저에만 저장돼요.";
         router.push("/contact#contact-form");
         close = true;
         break;
@@ -1635,11 +1617,11 @@ export function ChatWidget() {
         const answer = intent
           ? intent.answer
           : missed > 1
-            ? "이 질문도 상담 요청에 함께 남겨주시면 한 번에 회신드려요."
+            ? "이 내용은 데모 문의사항에 메모해 둘 수 있어요. 브라우저 밖으로 전송되지는 않아요."
             : FALLBACK;
         const links = intent
           ? intent.links
-          : [{ label: "상담 요청하기", href: "/contact" }];
+          : [{ label: "데모 문의사항 남기기", href: "/contact" }];
         const id =
           bubble ?? push({ role: "bot", text: "", streaming: true, reply: true });
         bubble = null; // 다음 질문은 제 말풍선을 새로 연다
@@ -1893,7 +1875,7 @@ export function ChatWidget() {
   const chipKey = chips.map((one) => one.id).join("|");
 
   return (
-    <aside className="chatwidget" aria-label="상담 챗봇">
+    <aside className="chatwidget" aria-label="데모 도우미">
       {open ? (
         /* 캡슐(is-pill)일 때 창이 물러난다. 안내 중에는 정작 봐야 할 것이
            뒤에서 일어나는 일이라, 앞을 불투명한 판이 가리고 있으면 무엇이
@@ -1929,7 +1911,7 @@ export function ChatWidget() {
                 동시에 도는 것으로 잡혔다) */}
             <AiAvatar size="sm" />
             <div className="ct">
-              <b>상담 챗봇</b>
+              <b>데모 도우미</b>
               <span>
                 {/* 캡슐일 땐 머리 줄이 유일한 문장이다. 커서가 지금 짚는
                     지점의 설명(현장 라벨과 같은 문장)을 우선 흘리고, 걸음
@@ -1978,7 +1960,7 @@ export function ChatWidget() {
             </button>
             <button
               className="cx"
-              aria-label="상담 챗봇 닫기"
+              aria-label="데모 도우미 닫기"
               onClick={() => {
                 stop();
                 setOpen(false);
@@ -2282,7 +2264,7 @@ export function ChatWidget() {
           </form>
 
           <div className="chatnote">
-            상담 챗봇은 실수를 할 수 있습니다.
+            데모 도우미는 실수를 할 수 있습니다.
           </div>
         </div>
       ) : null}
@@ -2291,7 +2273,7 @@ export function ChatWidget() {
         className={beckon && !open ? "chatfab is-beckon" : "chatfab"}
         type="button"
         aria-expanded={open}
-        aria-label={open ? "상담 챗봇 닫기" : "상담 챗봇 열기"}
+        aria-label={open ? "데모 도우미 닫기" : "데모 도우미 열기"}
         onClick={() => {
           if (open) {
             stop();

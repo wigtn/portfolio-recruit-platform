@@ -35,6 +35,8 @@ export type MyAnswer = {
   at: string;
   /** 대댓글 — 어느 댓글 밑에 달렸는지. 없으면 글에 단 답변 */
   parentId?: string;
+  /** AI 참고 답변 초안을 사용자가 확인하고 게시한 경우 */
+  source?: "ai";
 };
 
 export type UserState = {

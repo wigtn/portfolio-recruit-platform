@@ -16,6 +16,12 @@ export type Review = {
   years: number;
   writtenAt: string;
   helpful: number;
+  replies?: Array<{
+    id: string;
+    author: string;
+    text: string;
+    writtenAt: string;
+  }>;
 };
 
 /** 손으로 쓴 대표 리뷰 — 각 회사 목록의 첫 화면을 잡는다 */
@@ -79,6 +85,14 @@ const CURATED_REVIEWS: Review[] = [
     years: 2,
     writtenAt: "2026.06",
     helpful: 9,
+    replies: [
+      {
+        id: "rr-5-1",
+        author: "회사 담당자",
+        text: "조직 변경 과정에서 역할 안내가 부족했던 점을 확인했습니다. 의견을 운영팀에 전달했어요.",
+        writtenAt: "2026.07",
+      },
+    ],
   },
   // 아래 3개 회사는 표본 리뷰가 0장이라 상세가 "리뷰 94건" 헤더 아래 빈 화면이었다.
   // 각 회사의 axes 점수와 어긋나지 않게 쓴다 — 막대와 문장이 다른 말을 하면 안 된다.
@@ -165,6 +179,14 @@ const CURATED_REVIEWS: Review[] = [
     years: 4,
     writtenAt: "2026.07",
     helpful: 21,
+    replies: [
+      {
+        id: "rr-12-1",
+        author: "회사 담당자",
+        text: "목표 산정 기준을 더 투명하게 안내할 수 있도록 영업 조직과 검토하겠습니다.",
+        writtenAt: "2026.08",
+      },
+    ],
   },
   {
     id: "r-13",

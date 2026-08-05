@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import type { Company } from "@/lib/seed/companies";
 import type { Review } from "@/lib/seed/reviews";
-import { loadMyReviews, scoreWithMine } from "@/components/ReviewComposer";
+import {
+  loadMyReviews,
+  scoreWithMine,
+  subscribeMyReviews,
+} from "@/lib/demo/reviews";
 import { ReviewCard } from "@/components/ReviewCard";
 import { Icon } from "@/components/Icon";
 
@@ -17,7 +21,11 @@ import { Icon } from "@/components/Icon";
 export function MyReviews({ company }: { company: Company }) {
   const [mine, setMine] = useState<Review[]>([]);
 
-  useEffect(() => setMine(loadMyReviews(company.slug)), [company.slug]);
+  useEffect(() => {
+    const sync = () => setMine(loadMyReviews(company.slug));
+    sync();
+    return subscribeMyReviews(sync);
+  }, [company.slug]);
 
   // 리뷰를 안 썼으면 아무 자리도 차지하지 않는다 — 시드 목록이 그대로 첫 화면이다
   if (mine.length === 0) return null;

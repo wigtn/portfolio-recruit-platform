@@ -32,7 +32,7 @@ export function ReviewCard({
   }, [review.id]);
 
   return (
-    <div className="review">
+    <div className="review" id={`review-${review.id}`}>
       <div className="rtop">
         <div className="rt">“{review.headline}”</div>
         <span className="stars">
@@ -84,6 +84,20 @@ export function ReviewCard({
           {reported ? "신고함" : "신고"}
         </button>
       </div>
+
+      {review.replies?.length ? (
+        <div className="reviewreplies">
+          {review.replies.map((reply) => (
+            <div className="reviewreply" key={reply.id}>
+              <div className="reviewreply-head">
+                <span className="tag">{reply.author}</span>
+                <span>{reply.writtenAt}</span>
+              </div>
+              <p>{reply.text}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       {reporting ? (
         <ReportModal

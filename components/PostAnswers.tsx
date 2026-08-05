@@ -9,6 +9,8 @@ import { ReportModal } from "./ReportModal";
 import { RoleModal } from "./demo/RoleModal";
 import { useRole } from "@/lib/demo/role";
 import { loadUser, saveUser, type MyAnswer } from "@/lib/demo/user";
+import { DEMO_PROFILE } from "@/lib/demo/profile";
+import { Avatar } from "./Avatar";
 import {
   loadState,
   subscribeState,
@@ -38,8 +40,6 @@ export function PostAnswers({ post }: { post: Post }) {
   const [reporting, setReporting] = useState<number | null>(null);
   // 인라인 대댓글 — 어느 댓글 아래에 입력창이 열려 있나
   const [replyTo, setReplyTo] = useState<string | null>(null);
-  // AI 참고 답변이 게시됐는지 — 답변 카운트에 포함한다
-  const [aiPosted, setAiPosted] = useState(false);
   const [replyText, setReplyText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const timers = useRef<number[]>([]);
@@ -136,19 +136,38 @@ export function PostAnswers({ post }: { post: Post }) {
     setReplyTo(null);
   };
 
+  const publishAiAnswer = (text: string) => {
+    if (role === "guest") {
+      setGateNote(true);
+      setGateOpen(true);
+      return false;
+    }
+    const next: MyAnswer = {
+      id: `${post.id}-mine-${crypto.randomUUID()}`,
+      postId: post.id,
+      text,
+      at: new Date().toISOString(),
+      source: "ai",
+    };
+    const user = loadUser();
+    saveUser({ ...user, answers: [...user.answers, next] });
+    setMine((items) => [...items, next]);
+    setGateNote(false);
+    return true;
+  };
+
   return (
     <div className="cmts">
       <div className="cmts-head">
         <h4>
           답변
-          {/* 총수 = 시드 답변 + 내 답변 + 운영자 답변 + AI(게시 시) —
-              화면에 실제로 보이는 것과 같은 수만 센다 */}
+          {/* AI 초안도 사용자가 게시한 뒤 mine에 들어온다. 화면에 실제로
+              보이는 답변만 세기 위해 별도 AI 카운트는 두지 않는다. */}
           {(() => {
             const total =
               comments.length +
               mine.length +
-              official.length +
-              (aiPosted ? 1 : 0);
+              official.length;
             if (total === 0) return null;
             return (
               <span style={{ color: "var(--ink-4)", fontWeight: 600 }}>
@@ -281,8 +300,17 @@ export function PostAnswers({ post }: { post: Post }) {
             <div className="comment is-in" key={item.id}>
               <div className="cbody">
                 <div className="cwho">
-                  <AnonymousIdentity />
-                  <span>영업 4년차, 내가 쓴 답변</span>
+                  {item.source === "ai" ? (
+                    <>
+                      <Avatar name={DEMO_PROFILE.nick} chars={1} />
+                      <span>{DEMO_PROFILE.nick}, AI 초안으로 작성</span>
+                    </>
+                  ) : (
+                    <>
+                      <AnonymousIdentity />
+                      <span>영업 4년차, 내가 쓴 답변</span>
+                    </>
+                  )}
                 </div>
                 <div className="ctext">{item.text}</div>
                 <div className="cact">
@@ -297,7 +325,7 @@ export function PostAnswers({ post }: { post: Post }) {
                     답글
                   </button>
                   <button
-                    style={{ marginLeft: "auto", color: "var(--ink-5)" }}
+                    style={{ color: "var(--ink-5)" }}
                     onClick={() => removeMine(item.id)}
                   >
                     삭제
@@ -361,7 +389,7 @@ export function PostAnswers({ post }: { post: Post }) {
         postId={post.id}
         draft={post.aiDraft}
         guarded={post.guarded}
-        onPosted={() => setAiPosted(true)}
+        onPublish={publishAiAnswer}
       />
 
       {/* 모달에서 로그인하면 안내도 함께 걷는다 — 로그인했는데 남아 있으면 거짓말 */}

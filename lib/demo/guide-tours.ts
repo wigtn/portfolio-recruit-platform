@@ -28,7 +28,7 @@ export const TOURS: Partial<Record<ScreenId, TourStep[]>> = {
     { selector: ".home-feature-section", note: "채용공고 하이라이트. 실데이터로 돌아가요" },
     { selector: ".home-market", note: "연봉과 시장 지표를 모아 보여줘요" },
     { selector: ".home-community-section", note: "커뮤니티 인기 글이 홈까지 올라와요" },
-    { selector: ".closing-inner", note: "이 데모가 마음에 들면 여기서 상담으로 이어져요" },
+    { selector: ".closing-inner", note: "여기서 다른 회사 리뷰를 더 둘러볼 수 있어요" },
     { selector: ".demowidget .fab", note: "체험 가이드예요. 어디까지 봤는지 따라다녀요" },
   ],
   community: [
@@ -71,9 +71,9 @@ export const TOURS: Partial<Record<ScreenId, TourStep[]>> = {
   contact: [
     { selector: ".contact-rail", note: "체험 기록이에요. 무엇을 봤는지 따라와요" },
     { selector: ".seen-compact", note: "방금 보신 기능 목록이에요" },
-    { selector: "#contact-form", note: "상담 폼. 여기 적으면 실제로 접수돼요" },
+    { selector: "#contact-form", note: "데모 문의사항이에요. 이 브라우저에만 저장돼요" },
     { selector: ".msgtips", note: "누르면 문의 틀이 들어가요. 지우고 써도 돼요" },
-    { selector: ".formsubmit-btn", note: "보내기는 직접 눌러주세요" },
+    { selector: ".formsubmit-btn", note: "저장은 직접 눌러주세요" },
   ],
   admin: [
     { selector: ".pnav", note: "운영 메뉴 전체예요. 화면마다 실데이터가 물려 있어요" },

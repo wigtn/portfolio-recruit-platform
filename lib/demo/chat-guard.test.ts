@@ -77,21 +77,6 @@ describe("챗봇 도구 관문", () => {
     expect(verdict.ok).toBe(false);
   });
 
-  it("색은 16진수 형식만 받는다", () => {
-    expect(
-      guard("set_brand_color", { hex: "red" }, TOOL_SPECS.set_brand_color, ctx())
-        .ok,
-    ).toBe(false);
-    expect(
-      guard(
-        "set_brand_color",
-        { hex: "#0066ff" },
-        TOOL_SPECS.set_brand_color,
-        ctx(),
-      ).ok,
-    ).toBe(true);
-  });
-
   it("게스트는 글을 쓰지 못한다", () => {
     const verdict = guard(
       "write_post",

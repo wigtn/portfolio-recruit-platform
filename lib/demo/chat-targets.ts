@@ -90,7 +90,7 @@ export const TARGETS: Target[] = [
   },
   {
     id: "contact_form",
-    what: "상담 신청 폼",
+    what: "데모 문의사항 입력란",
     where: "/contact",
     selector: "#contact-form",
   },

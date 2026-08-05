@@ -1,7 +1,7 @@
 /**
  * 챗봇이 부를 수 있는 도구.
  *
- * 상담 챗봇이 말만 하면 "설명 잘하는 FAQ"에서 끝난다. 이 데모의 주장은
+ * 데모 도우미가 말만 하면 "설명 잘하는 FAQ"에서 끝난다. 이 데모의 주장은
  * "말한 게 실제로 돌아간다"이므로, 챗봇도 화면을 실제로 움직일 수 있어야 한다.
  * "백오피스 보여줘"라고 하면 설명 대신 백오피스를 열어주는 쪽이 강하다.
  *
@@ -16,7 +16,7 @@
  * 운영자 조치의 실행(글 가리기, 계정 정지, 삭제, 신고 처리)은 도구가 아니다.
  * 화면까지 안내하고 손은 사람이 댄다. 이 데모가 "위험한 작업 직전에 본인
  * 확인"을 자랑하는데 챗봇이 그걸 우회하면 자기 주장을 스스로 부순다.
- * 상담 폼도 열어주기만 한다. 이름과 연락처는 대신 적지 않는다.
+ * 데모 문의사항 화면은 열어주기만 한다. 내용 저장은 방문자가 직접 한다.
  * 자세한 경계와 그 이유는 lib/demo/chat-guard.ts에 있다.
  *
  * ## 글과 공고를 id로 받지 않는 이유
@@ -42,7 +42,6 @@ export const COMPANY_SLUGS = [
   "nabla-bio",
 ] as const;
 
-export const THEMES = ["indigo", "red", "amber", "ink"] as const;
 export const ROLES = ["guest", "member", "admin"] as const;
 
 /** 화면 id → 실제 경로. 데모가 가진 화면 전부 */
@@ -85,7 +84,7 @@ export const SCREEN_LABEL: Record<string, string> = {
   notices: "공지",
   badges: "배지",
   my: "내 정보",
-  contact: "상담 요청",
+  contact: "데모 문의사항",
   admin: "백오피스 대시보드",
   admin_reports: "신고 처리",
   admin_questions: "질문 관리",
@@ -347,41 +346,6 @@ const TOOLS: Tool[] = [
     orb: "solving",
   },
   {
-    name: "set_theme",
-    description:
-      "화면 테마 색을 바꾼다. 방문자가 '우리 브랜드 색으로 보면 어떠냐'고 " +
-      "물을 때 쓴다. 디자인 토큰 하나로 전 화면이 바뀐다는 것을 보여주는 도구다.",
-    params: {
-      theme: {
-        type: "string",
-        enum: THEMES,
-        description: "indigo=기본 보라, red=빨강, amber=주황, ink=먹색",
-      },
-    },
-    required: ["theme"],
-    spec: { fields: { theme: enumField(THEMES) } },
-    running: "테마를 입히는 중",
-    orb: "solving",
-  },
-  {
-    name: "set_brand_color",
-    description:
-      "고객사 브랜드 색을 그 자리에서 입혀본다. 정해진 네 가지 테마 밖의 " +
-      "색을 원할 때 쓴다.",
-    params: {
-      hex: {
-        type: "string",
-        description:
-          "적용할 색의 16진수 코드. '#' 포함 7자리(예: #0066ff). " +
-          "방문자가 색 이름만 말하면 그에 맞는 코드로 바꿔서 넣는다",
-      },
-    },
-    required: ["hex"],
-    spec: { fields: { hex: { kind: "color", required: true } } },
-    running: "브랜드 색을 입히는 중",
-    orb: "solving",
-  },
-  {
     name: "write_post",
     description:
       "글쓰기 화면을 열고 내용을 **채워 준다.** 방문자가 '글 한번 써봐', " +
@@ -536,12 +500,12 @@ const TOOLS: Tool[] = [
   {
     name: "open_contact",
     description:
-      "상담 신청 폼으로 이동한다. 방문자가 견적이나 일정을 요청하거나 " +
-      "상담을 원한다고 밝혔을 때만 쓴다. 대화 끝마다 습관적으로 부르지 않는다. " +
-      "폼을 대신 채우거나 보내지는 않는다.",
+      "데모 문의사항 화면으로 이동한다. 방문자가 포트폴리오에 대한 의견을 " +
+      "남기고 싶다고 할 때만 쓴다. 대화 끝마다 습관적으로 부르지 않는다. " +
+      "내용을 대신 저장하지는 않는다.",
     params: {},
     spec: { fields: {} },
-    running: "상담 화면을 여는 중",
+    running: "데모 문의사항을 여는 중",
     orb: "shaping",
   },
   /* reset_demo는 여기 없다.

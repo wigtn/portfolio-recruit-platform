@@ -21,7 +21,6 @@ export function announcePanel(owner: DemoPanelOwner) {
   );
 }
 const KEY = "wigtn-demo-progress-v1";
-const THEME_KEY = "wigtn-demo-theme-v1";
 
 export type DemoFeature =
   | "ai-answer"
@@ -95,7 +94,7 @@ export const DEMO_FEATURES: Array<{
   {
     id: "chatbot",
     group: "서비스",
-    title: "상담 챗봇",
+    title: "데모 도우미",
     description: "누르면 대화가 재생돼요. 직접 물어봐도 답해요",
     href: "",
     action: "chat",
@@ -151,16 +150,6 @@ export function markProgress(feature: DemoFeature) {
   next.add(feature);
   window.localStorage.setItem(KEY, JSON.stringify([...next]));
   window.dispatchEvent(new CustomEvent(DEMO_PROGRESS_EVENT));
-}
-
-export function saveDemoTheme(theme: string) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(THEME_KEY, theme);
-}
-
-export function loadDemoTheme() {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(THEME_KEY);
 }
 
 /** 모든 데모 입력·역할·코치·진행률을 한 번에 지운다. */

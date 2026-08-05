@@ -3,10 +3,10 @@ import { ContactHero } from "@/components/ContactHero";
 import { ContactSteps } from "@/components/ContactSteps";
 import { SeenCard } from "./SeenCard";
 
-export const metadata = { title: "상담 요청 | W 세일즈" };
+export const metadata = { title: "데모 문의사항 | W 세일즈" };
 
 /**
- * 시안 정본 09번(상담 요청) 구조 그대로 — .formgrid(신뢰 요약 카드 / .formcard)
+ * 시안 정본 09번 구조를 개인정보 없는 데모 문의 화면으로 전환했다.
  *
  * 왼쪽 "방금 보신 것들"은 체험 히스토리 기반 신뢰 요약이다 — 서버에서는
  * 진행도를 읽을 수 없어서 클라이언트 컴포넌트(SeenCard)로 분리했다.
@@ -34,7 +34,7 @@ export default function ContactPage() {
             <ContactSteps />
           </div>
 
-          {/* 스크롤 맨 아래가 상담 폼이다 */}
+          {/* 스크롤 맨 아래가 브라우저 전용 데모 문의 폼이다 */}
           <div id="contact-form">
             <ContactForm />
           </div>

@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { Crumb } from "./Crumb";
 
 /**
- * 상담 요청 히어로 — 홈 마무리 배너와 같은 무대(영상 screen 블렌드 + 딤 +
+ * 데모 문의 히어로 — 홈 마무리 배너와 같은 무대(영상 screen 블렌드 + 딤 +
  * 오로라)에 AE식 워드 리빌과 포인터 패럴럭스를 얹는다. 움직이는 건 배경
  * 레이어뿐이다(콘텐츠 크기·위치 불변 규율).
  */
-const TITLE_WORDS = ["이", "데모,", "우리", "서비스로", "만들어보세요."];
+const TITLE_WORDS = ["데모", "문의사항을", "남겨보세요."];
 
-const FACTS = ["화면 20종 인도", "업종 맞춤 재구성", "운영 도구 포함"];
+const FACTS = ["개인정보 미수집", "브라우저에만 저장", "초기화 가능"];
 
 export function ContactHero() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -63,12 +63,12 @@ export function ContactHero() {
         aria-hidden
       />
       <div className="closing-dim" aria-hidden />
-      <Crumb items={[{ label: "상담 요청" }]} />
+      <Crumb items={[{ label: "데모 문의사항" }]} />
       <div className="ttl">
         <div>
           <h1
             className="contact-title"
-            aria-label="이 데모, 우리 서비스로 만들어보세요."
+            aria-label="데모 문의사항을 남겨보세요."
           >
             {TITLE_WORDS.map((word, index) => (
               <span className="w" key={index} aria-hidden>
@@ -81,7 +81,7 @@ export function ContactHero() {
             ))}
           </h1>
           <div className="desc">
-            방금 체험한 것들을 우리 사업의 서비스로, 구성과 일정을 제안드려요
+            포트폴리오를 둘러보며 좋았던 점과 궁금한 점을 안전하게 기록해보세요
           </div>
           <div className="contact-facts">
             {FACTS.map((fact, index) => (

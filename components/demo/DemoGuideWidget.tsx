@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { applyTheme, THEMES } from "@/lib/demo/theme";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/Icon";
@@ -13,10 +12,8 @@ import {
   DEMO_OPEN_CHAT_EVENT,
   DEMO_PANEL_OPEN_EVENT,
   DEMO_PROGRESS_EVENT,
-  loadDemoTheme,
   loadProgress,
   markProgress,
-  saveDemoTheme,
   type DemoFeature,
 } from "@/lib/demo/progress";
 
@@ -69,19 +66,7 @@ export function DemoGuideWidget() {
   const [coach, setCoach] = useState(false);
   const [progress, setProgress] = useState<Set<DemoFeature>>(new Set());
   const [visited, setVisited] = useState<Set<DemoFeature>>(new Set());
-  const [theme, setTheme] = useState("indigo");
-  // 헥스 입력 초안 — 6자리가 완성될 때만 테마에 적용한다
-  const [hexDraft, setHexDraft] = useState("#4f46e5");
-
   useEffect(() => {
-    const savedTheme = loadDemoTheme() ?? "indigo";
-    setTheme(savedTheme);
-    applyTheme(savedTheme);
-    setHexDraft(
-      savedTheme.startsWith("custom:")
-        ? savedTheme.slice(7)
-        : (THEMES.find((item) => item.id === savedTheme)?.color ?? "#4f46e5"),
-    );
     setProgress(loadProgress());
     setVisited(loadVisited());
     setCoach(!window.localStorage.getItem("wigtn-demo-coach-guide"));
@@ -162,12 +147,12 @@ export function DemoGuideWidget() {
           {complete ? (
             <Link
               className="dwdone"
-              href="/contact"
+              href="/my"
               onClick={() => setOpen(false)}
             >
               <b>{FEATURES.length}가지를 전부 직접 확인하셨네요</b>
               <span>
-                여기까지 동작하는 상태로 만들어 드려요
+                내 활동에서 체험 결과를 확인해보세요
                 <Icon name="arrow" />
               </span>
             </Link>
@@ -227,76 +212,6 @@ export function DemoGuideWidget() {
                 </div>
               ),
             )}
-          </div>
-          <div className="dwdiv" />
-          <div className="dwrow">
-            <b>브랜드색</b>
-            {THEMES.map((item) => (
-              <button
-                key={item.id}
-                className={theme === item.id ? "sw on" : "sw"}
-                style={{ background: item.color }}
-                aria-label={`${item.id} 브랜드색 적용`}
-                onClick={() => {
-                  setTheme(item.id);
-                  applyTheme(item.id);
-                  saveDemoTheme(item.id);
-                  setHexDraft(item.color);
-                }}
-              />
-            ))}
-            {/* 고정 팔레트 밖 색 — 고객사 브랜드색을 그 자리에서 입혀본다 */}
-            <span
-              className={
-                theme.startsWith("custom:") ? "sw-custom on" : "sw-custom"
-              }
-              title="원하는 색 직접 고르기"
-            >
-              <input
-                type="color"
-                aria-label="브랜드색 직접 선택"
-                value={theme.startsWith("custom:") ? theme.slice(7) : "#4f46e5"}
-                onChange={(event) => {
-                  const id = `custom:${event.target.value}`;
-                  setTheme(id);
-                  applyTheme(id);
-                  saveDemoTheme(id);
-                  setHexDraft(event.target.value);
-                }}
-              />
-            </span>
-          </div>
-          {/* 헥스 직접 입력 — 스와치 아래 전용 줄. 브랜드 가이드 문서의
-              코드값을 그대로 붙여넣는다 */}
-          <div className="dwrow dwrow-hex">
-            <input
-              className="sw-hex"
-              value={hexDraft}
-              spellCheck={false}
-              maxLength={7}
-              aria-label="브랜드색 헥스 코드"
-              placeholder="#4F46E5"
-              onChange={(event) => {
-                const raw = event.target.value;
-                setHexDraft(raw);
-                const match = raw.trim().match(/^#?([0-9a-fA-F]{6})$/);
-                if (match) {
-                  const id = `custom:#${match[1].toLowerCase()}`;
-                  setTheme(id);
-                  applyTheme(id);
-                  saveDemoTheme(id);
-                }
-              }}
-              onBlur={() => {
-                // 미완성 입력은 현재 테마 값으로 되돌린다 — 필드가 거짓말하지 않게
-                setHexDraft(
-                  theme.startsWith("custom:")
-                    ? theme.slice(7)
-                    : (THEMES.find((item) => item.id === theme)?.color ??
-                        "#4f46e5"),
-                );
-              }}
-            />
           </div>
           <div className="dwdiv" />
           {/* 띠배너에서 내려온 자리 — 초기화는 데모 장치라 여기가 맞다 */}

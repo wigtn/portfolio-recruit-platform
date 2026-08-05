@@ -293,20 +293,19 @@ export default async function CommunityPage({
                 위젯이 오버레이를 읽어 제외된 키워드를 순위에서 뺀다 */}
             <LiveKeywords keywords={HOT_KEYWORDS} />
 
-            <span className="adlabel">AD</span>
-            <Link className="adcard" href="/contact">
+            <span className="adlabel">DEMO AD</span>
+            <Link className="adcard" href="/jobs">
               <div className="adimg c">
                 <span className="art" />
-                <div className="k">이직 준비</div>
+                <div className="k">채용 정보</div>
                 <div className="h">
-                  영업직 이력서
-                  <br />
-                  무료 첨삭
+                  영업직 공고를
+                  <br />한눈에 비교
                 </div>
               </div>
               <div className="adbody">
-                <span className="adt">현직 세일즈 리더가 직접</span>
-                <span className="adgo">신청</span>
+                <span className="adt">포트폴리오용 광고 슬롯 데모</span>
+                <span className="adgo">보기</span>
               </div>
             </Link>
           </div>

@@ -127,22 +127,20 @@ export default async function PostDetailPage({
             </div>
           </div>
 
-          <span className="adlabel">AD</span>
-          {/* 목록의 같은 카드와 동일하게 상담으로 잇는다 — 버튼 모양인데
-              눌리지 않는 카드는 죽은 링크로 읽힌다 */}
-          <Link className="adcard" href="/contact">
+          <span className="adlabel">DEMO AD</span>
+          {/* 목록의 같은 광고 슬롯과 동일하게 채용공고로 잇는다. */}
+          <Link className="adcard" href="/jobs">
             <div className="adimg c">
               <span className="art" />
-              <div className="k">이직 준비</div>
+              <div className="k">채용 정보</div>
               <div className="h">
-                영업직 이력서
-                <br />
-                무료 첨삭
+                영업직 공고를
+                <br />한눈에 비교
               </div>
             </div>
             <div className="adbody">
-              <span className="adt">현직 세일즈 리더가 직접</span>
-              <span className="adgo">신청</span>
+              <span className="adt">포트폴리오용 광고 슬롯 데모</span>
+              <span className="adgo">보기</span>
             </div>
           </Link>
         </div>
