@@ -1,9 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadUser, saveUser, toggleIn } from "@/lib/demo/user";
+import {
+  addReviewReply,
+  loadReviewReplies,
+  subscribeMyReviews,
+  type ReviewReply,
+} from "@/lib/demo/reviews";
+import { DEMO_PROFILE } from "@/lib/demo/profile";
+import { useRole } from "@/lib/demo/role";
 import type { Review } from "@/lib/seed/reviews";
 import { ReportModal } from "./ReportModal";
+import { RoleModal } from "./demo/RoleModal";
 import { Icon } from "./Icon";
 import { LikeIcon } from "./ReactIcons";
 
@@ -21,18 +30,50 @@ export function ReviewCard({
   review: Review;
   company: string;
 }) {
+  const { role } = useRole();
   const [helpful, setHelpful] = useState(false);
   const [reported, setReported] = useState(false);
   const [reporting, setReporting] = useState(false);
+  /* 체험 중 단 답글 — 시드 답글 뒤에 이어 붙는다 */
+  const [myReplies, setMyReplies] = useState<ReviewReply[]>([]);
+  const [replying, setReplying] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [gateOpen, setGateOpen] = useState(false);
+  const replyInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const user = loadUser();
     setHelpful(user.helpful.includes(review.id));
     setReported(user.reported.includes(review.id));
+    const sync = () => setMyReplies(loadReviewReplies()[review.id] ?? []);
+    sync();
+    return subscribeMyReviews(sync);
   }, [review.id]);
 
+  const submitReply = () => {
+    // 답글도 회원의 일이다 — 게스트는 로그인(역할 전환)으로 유도한다
+    if (role === "guest") {
+      setGateOpen(true);
+      return;
+    }
+    const text = replyText.trim();
+    if (!text) {
+      replyInput.current?.focus();
+      return;
+    }
+    const now = new Date();
+    addReviewReply(review.id, {
+      id: `${review.id}-reply-${crypto.randomUUID()}`,
+      author: DEMO_PROFILE.nick,
+      text,
+      writtenAt: `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}`,
+    });
+    setReplyText("");
+    setReplying(false);
+  };
+
   return (
-    <div className="review">
+    <div className="review" id={`review-${review.id}`}>
       <div className="rtop">
         <div className="rt">“{review.headline}”</div>
         <span className="stars">
@@ -77,6 +118,15 @@ export function ReviewCard({
           도움돼요 {review.helpful + (helpful ? 1 : 0)}
         </button>
         <button
+          style={{ color: "var(--ink-3)", cursor: "pointer" }}
+          onClick={() => {
+            setReplying((current) => !current);
+            setReplyText("");
+          }}
+        >
+          답글
+        </button>
+        <button
           style={{ color: "var(--ink-5)", cursor: "pointer" }}
           disabled={reported}
           onClick={() => setReporting(true)}
@@ -84,6 +134,43 @@ export function ReviewCard({
           {reported ? "신고함" : "신고"}
         </button>
       </div>
+
+      {review.replies?.length || myReplies.length ? (
+        <div className="reviewreplies">
+          {[...(review.replies ?? []), ...myReplies].map((reply) => (
+            <div className="reviewreply" key={reply.id}>
+              <div className="reviewreply-head">
+                <span className="tag">{reply.author}</span>
+                <span>{reply.writtenAt}</span>
+              </div>
+              <p>{reply.text}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {replying ? (
+        <div className="replybox" style={{ marginTop: 10 }}>
+          <input
+            ref={replyInput}
+            className="in"
+            autoFocus
+            value={replyText}
+            placeholder="이 리뷰에 답글을 남겨보세요"
+            onChange={(event) => setReplyText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.nativeEvent.isComposing)
+                submitReply();
+              if (event.key === "Escape") setReplying(false);
+            }}
+          />
+          <button className="btn primary sm" onClick={submitReply}>
+            등록
+          </button>
+        </div>
+      ) : null}
+
+      {gateOpen ? <RoleModal onClose={() => setGateOpen(false)} /> : null}
 
       {reporting ? (
         <ReportModal

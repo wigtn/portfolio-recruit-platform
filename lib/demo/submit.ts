@@ -119,6 +119,51 @@ export function submitEvidence(files: number) {
 }
 
 /**
+ * 1:1 문의 접수 — 운영자 문의 큐(백오피스 1:1 문의)에 실제로 쌓인다.
+ *
+ * 문의는 익명 커뮤니티와 달리 "내 계정의 일"이라 닉네임으로 남는다.
+ * 답변이 달리면 알림 벨과 /contact 내 문의 내역으로 돌아온다 — 신고·증빙과
+ * 같은 왕복이다. 외부(슬랙·메일)로는 보내지 않는다. 실서비스 모듈로 뗄 때
+ * 그 연동은 운영자 답변 지점(run.ts inquiry.answer)에 붙는다.
+ */
+export function submitInquiry(input: {
+  category: string;
+  message: string;
+  by: string;
+}) {
+  const state = loadState();
+  const id = `inq-me-${crypto.randomUUID().slice(0, 8)}`;
+  /* 내 기록을 먼저 남긴다 — saveState가 쏘는 오버레이 신호를 받은 화면이
+     myInquiries()를 다시 읽는데, 그 시점에 user.inquiries가 비어 있으면
+     방금 접수한 문의가 내역에서 빠진다(실측: 접수 직후 내역 미표시). */
+  const user = loadUser();
+  saveUser({ ...user, inquiries: [id, ...user.inquiries] });
+  saveState({
+    ...state,
+    inquiries: [
+      {
+        id,
+        category: input.category,
+        message: input.message,
+        by: input.by,
+        at: stamp(),
+        status: "대기",
+      },
+      ...state.inquiries,
+    ],
+  });
+  return id;
+}
+
+/** 내 문의 내역 — 운영자 답변까지 포함해 오버레이(정본)에서 읽는다 */
+export function myInquiries() {
+  const user = loadUser();
+  if (user.inquiries.length === 0) return [];
+  const mine = new Set(user.inquiries);
+  return loadState().inquiries.filter((row) => mine.has(row.id));
+}
+
+/**
  * 내 신청의 현재 상태 — 운영자가 승인·반려하면 여기로 돌아온다.
  * 관리자 오버레이가 정본이라 그쪽을 읽는다(방문자 오버레이는 신청 사실만 들고 있다).
  */

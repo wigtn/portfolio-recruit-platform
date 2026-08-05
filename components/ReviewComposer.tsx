@@ -14,6 +14,7 @@ import { RoleModal } from "./demo/RoleModal";
 import { Icon } from "./Icon";
 import { toast } from "./ds/Toaster";
 import { Coach } from "./Coach";
+import { saveMyReview, scoreWithMine } from "@/lib/demo/reviews";
 
 /**
  * 리뷰 작성 — 시안 정본 07번 `.formgrid`(.formcard / 사이드) 구조 그대로.
@@ -25,8 +26,6 @@ import { Coach } from "./Coach";
  * 리뷰 목록 맨 위에 내 리뷰가 나타나며 평균 별점도 다시 계산된다 — 코치마크가
  * 약속한 "회사 평균에 바로 반영"을 화면이 실제로 지킨다.
  */
-
-const KEY = "wigtn-demo-my-reviews-v1";
 
 /** 체험 중 쓴 리뷰 — 시드 Review와 같은 모양이라 ReviewCard를 그대로 쓴다 */
 
@@ -42,37 +41,6 @@ const TENURES = [
 const JOBS = ["영업", "영업관리", "기술영업", "해외영업", "영업기획"];
 
 const YEARS = ["1~3년차", "4~7년차", "8년차 이상"];
-export function loadMyReviews(companySlug?: string): Review[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(KEY) ?? "[]");
-    const rows = Array.isArray(parsed) ? (parsed as Review[]) : [];
-    return companySlug
-      ? rows.filter((row) => row.companySlug === companySlug)
-      : rows;
-  } catch {
-    window.localStorage.removeItem(KEY);
-    return [];
-  }
-}
-
-/** 권한 매트릭스 pl-3 조건("회사당 1건") — 같은 회사에 다시 쓰면 교체한다 */
-function saveMyReview(review: Review) {
-  if (typeof window === "undefined") return;
-  const rest = loadMyReviews().filter(
-    (row) => row.companySlug !== review.companySlug,
-  );
-  window.localStorage.setItem(KEY, JSON.stringify([review, ...rest]));
-}
-
-/** 내 리뷰를 얹은 재계산 평균 — 회사 상세 표시와 완료 화면이 같은 식을 쓴다 */
-export function scoreWithMine(company: Company, mine: Review[]) {
-  const total =
-    company.score * company.reviewCount +
-    mine.reduce((sum, review) => sum + review.score, 0);
-  return total / (company.reviewCount + mine.length);
-}
-
 export function ReviewComposer({ company }: { company: Company }) {
   const { role } = useRole();
   const [tenure, setTenure] = useState(TENURES[0]);
@@ -83,7 +51,10 @@ export function ReviewComposer({ company }: { company: Company }) {
   const [employment, setEmployment] = useState<"현직원" | "전직원">("현직원");
   const [job, setJob] = useState(JOBS[0]);
   const [years, setYears] = useState(YEARS[0]);
-  const [submitted, setSubmitted] = useState<Review | null>(null);
+  const [submitted, setSubmitted] = useState<{
+    review: Review;
+    companyReviews: Review[];
+  } | null>(null);
   const [gateOpen, setGateOpen] = useState(false);
 
   const missing = SALES_AXES.filter((axis) => !axes[axis.key]);
@@ -118,7 +89,7 @@ export function ReviewComposer({ company }: { company: Company }) {
           10,
       ) / 10;
     const review: Review = {
-      id: `myrev-${company.slug}`,
+      id: `myrev-${company.slug}-${crypto.randomUUID()}`,
       companySlug: company.slug,
       headline: headline.trim(),
       score,
@@ -130,13 +101,18 @@ export function ReviewComposer({ company }: { company: Company }) {
       writtenAt: `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}`,
       helpful: 0,
     };
-    saveMyReview(review);
+    const saved = saveMyReview(review);
     markProgress("company-review");
-    setSubmitted(review);
+    setSubmitted({
+      review,
+      companyReviews: saved.filter(
+        (item) => item.companySlug === company.slug,
+      ),
+    });
   }
 
   if (submitted) {
-    const average = scoreWithMine(company, [submitted]);
+    const average = scoreWithMine(company, submitted.companyReviews);
     return (
       <div className="formcard">
         <h2
@@ -156,7 +132,7 @@ export function ReviewComposer({ company }: { company: Company }) {
             marginBottom: 18,
           }}
         >
-          매긴 별점 <b>{submitted.score.toFixed(1)}</b>이 반영돼 {company.name}{" "}
+          매긴 별점 <b>{submitted.review.score.toFixed(1)}</b>이 반영돼 {company.name}{" "}
           평균이 <b>{average.toFixed(1)}</b>이 됐어요, 회사 상세 리뷰 맨 위에서
           내 리뷰를 볼 수 있어요.
           <br />

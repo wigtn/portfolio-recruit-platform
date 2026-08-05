@@ -13,6 +13,7 @@ import AuditSk from "@/app/admin/audit/loading";
 import BadgesSk from "@/app/admin/badges/loading";
 import CompaniesSk from "@/app/admin/companies/loading";
 import CurationSk from "@/app/admin/curation/loading";
+import InquiriesSk from "@/app/admin/inquiries/loading";
 import JobsSk from "@/app/admin/jobs/loading";
 import MembersSk from "@/app/admin/members/loading";
 import NoticesSk from "@/app/admin/notices/loading";
@@ -42,6 +43,7 @@ const ROUTE_SK: Array<[string, () => React.JSX.Element]> = [
   ["/admin/badges", BadgesSk],
   ["/admin/companies", CompaniesSk],
   ["/admin/curation", CurationSk],
+  ["/admin/inquiries", InquiriesSk],
   ["/admin/jobs", JobsSk],
   ["/admin/members", MembersSk],
   ["/admin/notices", NoticesSk],

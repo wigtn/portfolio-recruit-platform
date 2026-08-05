@@ -9,7 +9,7 @@ import { Icon } from "./Icon";
  * 스크롤로 들어오면 헤드라인이 단어 단위로 마스크를 뚫고 올라온다(AE식
  * 라인 마스크 리빌). 한 번만 재생하고, 모션 줄이기 설정이면 바로 최종 상태.
  */
-/* 마지막 자리에서는 한 가지만 말한다: 상담을 요청하세요.
+/* 마지막 자리에서는 포트폴리오 안의 다음 탐색 경로 하나만 말한다.
 
    여기까지 스크롤한 사람은 이미 화면을 둘러본 뒤다. 무엇을 봤는지 다시
    설명하거나 이 데모를 근거로 되짚는 문장은 CTA를 그만큼 뒤로 민다.
@@ -17,7 +17,7 @@ import { Icon } from "./Icon";
 
    기간, 금액 같은 약속도 넣지 않는다. 요구사항 없이 던진 숫자는 상담
    자리에서 뒤집힌다(챗봇 답변과 같은 기준). */
-const TITLE_WORDS = ["저희가", "만들어", "드립니다."];
+const TITLE_WORDS = ["다른", "회사도", "둘러보세요."];
 
 export function ClosingBanner() {
   const rootRef = useRef<HTMLElement>(null);
@@ -76,7 +76,7 @@ export function ClosingBanner() {
 
         <h2
           className="closing-title"
-          aria-label="저희가 만들어 드립니다."
+          aria-label="다른 회사도 둘러보세요."
         >
           {TITLE_WORDS.map((word, index) => (
             <span className="w" key={index} aria-hidden>
@@ -87,12 +87,12 @@ export function ClosingBanner() {
           ))}
         </h2>
         <p className="closing-sub">
-          어떤 걸 만들고 싶으신지 알려주세요.
+          회사별 리뷰와 영업 환경을 같은 기준으로 비교할 수 있어요.
         </p>
 
         <div className="closing-act">
-          <Link className="closing-cta" href="/contact">
-            상담 요청하기
+          <Link className="closing-cta" href="/companies">
+            회사 리뷰 보기
             <Icon name="arrow" />
           </Link>
         </div>

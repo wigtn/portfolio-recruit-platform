@@ -1,6 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { AXIS_AVERAGE, SALES_AXES, type Company } from "@/lib/seed/companies";
 import { Icon } from "./Icon";
+import {
+  loadMyReviews,
+  scoreWithMine,
+  subscribeMyReviews,
+} from "@/lib/demo/reviews";
 
 /**
  * 회사 카드 — 시안 정본 `.company` 구조 그대로.
@@ -17,6 +25,17 @@ export function CompanyCard({
   axisLimit?: number;
   href?: string;
 }) {
+  const [mine, setMine] = useState<ReturnType<typeof loadMyReviews>>([]);
+
+  useEffect(() => {
+    const sync = () => setMine(loadMyReviews(company.slug));
+    sync();
+    return subscribeMyReviews(sync);
+  }, [company.slug]);
+
+  const reviewCount = company.reviewCount + mine.length;
+  const score = mine.length ? scoreWithMine(company, mine) : company.score;
+
   return (
     <Link className="company" href={href ?? `/companies/${company.slug}`}>
       <div className="chead">
@@ -31,10 +50,10 @@ export function CompanyCard({
         </div>
         <span
           className="company-score"
-          aria-label={`평점 ${company.score.toFixed(1)}`}
+          aria-label={`평점 ${score.toFixed(1)}`}
         >
           <Icon name="star" filled />
-          <b>{company.score.toFixed(1)}</b>
+          <b>{score.toFixed(1)}</b>
         </span>
       </div>
 
@@ -48,7 +67,7 @@ export function CompanyCard({
           </strong>
         </div>
         <span className="company-review-count">
-          리뷰 <b>{company.reviewCount}</b>
+          리뷰 <b>{reviewCount}</b>
         </span>
       </div>
 
@@ -82,7 +101,7 @@ export function CompanyCard({
 
       {/* 카드가 링크라는 걸 문장으로도 알린다 — 태그만 있으면 끝난 카드로 보인다 */}
       <span className="company-go">
-        리뷰 {company.reviewCount}건 보기
+        리뷰 {reviewCount}건 보기
         <Icon name="arrow" />
       </span>
     </Link>

@@ -1,15 +1,18 @@
 import { ContactForm } from "@/components/ContactForm";
 import { ContactHero } from "@/components/ContactHero";
 import { ContactSteps } from "@/components/ContactSteps";
-import { SeenCard } from "./SeenCard";
 
-export const metadata = { title: "상담 요청 | W 세일즈" };
+export const metadata = { title: "1:1 문의 | W 세일즈" };
 
 /**
- * 시안 정본 09번(상담 요청) 구조 그대로 — .formgrid(신뢰 요약 카드 / .formcard)
+ * 1:1 문의 — W 세일즈 서비스의 고객센터.
  *
- * 왼쪽 "방금 보신 것들"은 체험 히스토리 기반 신뢰 요약이다 — 서버에서는
- * 진행도를 읽을 수 없어서 클라이언트 컴포넌트(SeenCard)로 분리했다.
+ * "데모 문의사항"이라는 픽션 밖 이름은 걷어냈다(리뷰 결정). 접수하면 백오피스
+ * 문의 큐(/admin/inquiries)에 실제로 쌓이고, 운영자 답변이 알림 벨과 내역으로
+ * 돌아온다 — 신고·증빙과 같은 왕복 문법의 세 번째 사례다.
+ *
+ * "방금 보신 것들" 레일도 뺐다(리뷰 결정) — 체험 진행도의 정본은 우측 하단
+ * 가이드 위젯이고, 고객센터 화면에 체험 요약이 떠 있을 이유가 없다.
  */
 export default function ContactPage() {
   return (
@@ -17,27 +20,16 @@ export default function ContactPage() {
       {/* 히어로 — 영상 무대 + 워드 리빌 + 포인터 패럴럭스(클라이언트) */}
       <ContactHero />
 
-      {/* 두 칸 구조. "방금 보신 것들"은 폼 옆에서만 따라다니는 카드가 아니라
-          스크롤 내내 붙어 있는 레일이다 — 무엇을 체험했는지 옆에 떠 있어야
-          마지막 폼에서 쓸 말이 생긴다. 오른쪽이 본문, 폼은 그 끝에 앉는다. */}
-      <div className="sec contact-shell">
-        <aside className="contact-rail">
-          {/* compact가 아니면 9개 항목이 화면 높이를 넘어 레일 안에 스크롤바가
-              생긴다. 끝까지 따라오는 레일 안에서 또 스크롤하게 두지 않는다 */}
-          <SeenCard compact />
-        </aside>
+      <div className="sec contact-main">
+        {/* 진행 과정 — 레일이 차오르는 플로우. 자동 순환·호버 정지는 그대로다 */}
+        <div className="card ctimeline-row">
+          <h4>진행 과정</h4>
+          <ContactSteps />
+        </div>
 
-        <div className="contact-main">
-          {/* 진행 과정 — 레일이 차오르는 플로우. 자동 순환·호버 정지는 그대로다 */}
-          <div className="card ctimeline-row">
-            <h4>진행 과정</h4>
-            <ContactSteps />
-          </div>
-
-          {/* 스크롤 맨 아래가 상담 폼이다 */}
-          <div id="contact-form">
-            <ContactForm />
-          </div>
+        {/* 스크롤 맨 아래가 1:1 문의 폼이다 — 접수는 운영자 큐로 간다 */}
+        <div id="contact-form">
+          <ContactForm />
         </div>
       </div>
     </>

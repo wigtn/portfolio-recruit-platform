@@ -10,7 +10,11 @@ import { tabOf } from "@/lib/admin/reports";
  * 오버레이에서 실제로 세고, 0이면 배지를 감춘다. 마운트 1회로 끝내지 않고
  * 구독한다 — 조치 즉시, 다른 탭의 제출도 이 배지가 따라와야 왕복이 보인다.
  */
-export function NavCount({ of }: { of: "reports" | "evidence" | "questions" }) {
+export function NavCount({
+  of,
+}: {
+  of: "reports" | "evidence" | "questions" | "inquiries";
+}) {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -21,7 +25,9 @@ export function NavCount({ of }: { of: "reports" | "evidence" | "questions" }) {
           ? state.reports.filter((row) => tabOf(row) === "open").length
           : of === "evidence"
             ? state.evidence.filter((row) => row.status === "대기").length
-            : openQuestions(state.answers).length,
+            : of === "inquiries"
+              ? state.inquiries.filter((row) => row.status === "대기").length
+              : openQuestions(state.answers).length,
       );
     };
     sync();

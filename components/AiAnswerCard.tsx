@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   SAFETY_DESC,
   SAFETY_LABEL,
-  SAFETY_STAT,
   type GuardedTerm,
   type SafetyLevel,
 } from "@/lib/seed/posts";
@@ -23,11 +22,18 @@ import { splitByGuarded } from "@/lib/demo/ai-parts";
  *
  * r4 재설계(변경 1번): "위험하게 썼다 순화"가 아니라 **생성 과정을 노출**하고
  * **관리자 설정(안전 강도)이 결과를 바꾸는 것**으로 통제를 보여준다.
- * 질문확인 → 스트리밍(원문) → 안전 재검사 → 제자리 교정 → 게시(스트림 착지).
- * 게시된 답변은 회원 답변이 달려도 접지 않는다(사용자 지시).
+ * 질문확인 → 스트리밍(원문) → 안전 재검사 → 제자리 교정 → 초안 확인.
+ * 생성만으로 게시하지 않고, 방문자가 버튼을 눌렀을 때 내 답변으로 저장한다.
  */
 
-type Stage = "idle" | "checking" | "streaming" | "rescan" | "fixing" | "posted";
+type Stage =
+  | "idle"
+  | "checking"
+  | "streaming"
+  | "rescan"
+  | "fixing"
+  | "ready"
+  | "published";
 
 /** 단계별 마이크로 작업 문구 — 파이프라인이 지금 뭘 하는지 구체적으로 */
 const SUBTASKS: Partial<Record<Stage, string[]>> = {
@@ -55,12 +61,12 @@ export function AiAnswerCard({
   postId,
   draft,
   guarded,
-  onPosted,
+  onPublish,
 }: {
   postId: string;
   draft: string;
   guarded: GuardedTerm[];
-  onPosted?: () => void;
+  onPublish?: (text: string) => boolean;
 }) {
   const [level, setLevel] = useState<SafetyLevel>("basic");
   const [stage, setStage] = useState<Stage>("idle");
@@ -107,20 +113,17 @@ export function AiAnswerCard({
     })
     .join("");
 
-  /* 게시 이후 공통 마무리 — 시드/실생성 경로가 같은 문으로 나간다 */
+  /* 생성 이후 공통 마무리 — 결과는 게시물이 아니라 검토 가능한 초안이다. */
   const finish = useCallback(
     (countsAgainstQuota: boolean) => {
-      setStage("posted");
-      // 자동으로 닫지 않는다(사용자 지시) — 결과를 읽고 ×로 직접 닫으면
-      // 그 자리에 답변 줄이 착지한다.
+      setStage("ready");
       if (countsAgainstQuota) {
         setQuota((left) => Math.max(0, left - 1));
         bumpAiRuns();
       }
       markProgress("ai-answer");
-      onPosted?.();
     },
-    [onPosted],
+    [],
   );
 
   /** 시드 초안 연출 — 키가 없거나 실호출이 막혔을 때의 경로(기존 규격 그대로) */
@@ -221,7 +224,7 @@ export function AiAnswerCard({
     playSeeded(countsAgainstQuota);
   }, [clearTimers, finish, guarded, playSeeded, postId, quota]);
 
-  const playing = stage !== "idle" && stage !== "posted";
+  const playing = !["idle", "ready", "published"].includes(stage);
 
   /* 실시간 작업 로그 — 단계마다 무엇을 하는지 문구가 굴러가고,
      생성 단계는 글자 수가 실제로 올라간다 */
@@ -278,40 +281,14 @@ export function AiAnswerCard({
     streaming: 2,
     rescan: 3,
     fixing: 4,
-    posted: 5,
+    ready: 5,
+    published: 5,
   };
   const step = stepOf[stage] ?? 0;
 
   return (
     <>
-      {/* ① AI 답변 — 게시되는 순간 회원 답변과 같은 한 줄로 즉시 목록에
-          선다(말풍선이 열려 있어도 동시에 보인다 — 말풍선은 과정·컨트롤,
-          이 줄이 실제 게시물이다). 사람이 답을 달아도 접지 않는다(사용자 지시). */}
-      {stage === "posted" ? (
-        <div className="comment is-in ai-comment ai-land">
-          {/* 착지 스파클 — 게시 순간 한 번 떠올랐다 사라진다 */}
-          <AiAvatar spark />
-          <div className="cbody">
-            <div className="cwho">
-              <span className="ainick">AI 참고 답변</span>
-              <span>참고용, 방금 생성</span>
-            </div>
-            <div className="ctext">
-              <PostedStream
-                parts={liveParts ?? parts}
-                guarded={guarded}
-                level={level}
-              />
-            </div>
-            <div className="aistat">
-              <Icon name="shield" />
-              {SAFETY_STAT[level]}, 회사 실명, 미확인 수치는 담지 않아요
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* ② 트리거 — 중앙의 필 버튼 하나로 존재감을 준다. 오른쪽 글래스
+      {/* ① 트리거 — 중앙의 필 버튼 하나로 존재감을 준다. 오른쪽 글래스
           말풍선이 "여기가 AI 시연"임을 유도한다(닫으면 기억). */}
       {!panelOpen ? (
         <div className="aitrigger">
@@ -320,13 +297,16 @@ export function AiAnswerCard({
             type="button"
             className="aicall"
             aria-label={
-              stage === "posted"
-                ? "AI 참고 답변 다시 생성"
+              stage === "ready"
+                ? "AI 참고 답변 초안 확인"
+                : stage === "published"
+                  ? "AI 참고 답변 다시 생성"
                 : "AI 참고 답변 생성"
             }
             onClick={() => {
               setPanelOpen(true);
               setCoachOpen(false);
+              if (stage === "ready") return;
               if (quota > 0) {
                 setBlocked(false);
                 void play();
@@ -339,12 +319,19 @@ export function AiAnswerCard({
               <Icon name="bot" />
             </span>
             <span className="aicall-t">
-              <b>AI 참고 답변 {stage === "posted" ? "다시 생성" : "생성"}</b>
+              <b>
+                AI 참고 답변{" "}
+                {stage === "ready"
+                  ? "초안 확인"
+                  : stage === "published"
+                    ? "다시 생성"
+                    : "생성"}
+              </b>
               <small>실시간 생성 → 안전 재검사까지 지켜보세요</small>
             </span>
           </button>
 
-          {coachOpen && stage !== "posted" ? (
+          {coachOpen && stage !== "ready" && stage !== "published" ? (
             <span className="aicoach" role="note">
               <span className="cb">데모</span>
               <span className="ctxt">
@@ -367,7 +354,7 @@ export function AiAnswerCard({
         </div>
       ) : null}
 
-      {/* ③ 생성 말풍선 — 답변이 달릴 바로 그 자리에서, AI가 실시간으로
+      {/* ② 생성 말풍선 — 답변이 달릴 바로 그 자리에서, AI가 실시간으로
           쓰고 재검사하는 과정이 보인다. 재생 중엔 보더 빔 + 오로라. */}
       {panelOpen ? (
         <div className="comment is-in aiwrap">
@@ -390,11 +377,13 @@ export function AiAnswerCard({
                     : stage === "streaming"
                       ? "답변을 쓰는 중"
                       : "안전 재검사 중"
-                  : stage === "posted"
-                    ? "답변을 게시했어요"
+                  : stage === "ready"
+                    ? "답변 초안이 준비됐어요"
+                    : stage === "published"
+                      ? "내 닉네임으로 게시했어요"
                     : "AI 참고 답변"}
               </b>
-              {stage === "posted" && !playing ? (
+              {(stage === "ready" || stage === "published") && !playing ? (
                 <span className="afdone">
                   <Icon name="check" />
                 </span>
@@ -493,12 +482,12 @@ export function AiAnswerCard({
                 { n: 1, icon: "search", label: "질문 확인" },
                 { n: 2, icon: "bot", label: "생성" },
                 { n: 3, icon: "shield", label: "안전 재검사" },
-                { n: 4, icon: "check", label: "게시" },
+                { n: 4, icon: "check", label: "초안" },
               ].map((node) => (
                 <span
                   key={node.n}
                   className={`aistep-item${
-                    stage === "posted" || step > node.n
+                    stage === "ready" || stage === "published" || step > node.n
                       ? " done"
                       : step === node.n
                         ? " on"
@@ -516,82 +505,98 @@ export function AiAnswerCard({
             {/* 컨트롤 — 전부 버튼형. 안전 강도도 여기(헤더에선 정렬이 떠 보였다) */}
             {!blocked ? (
               <div className="afctl">
-                <button
-                  type="button"
-                  className="afgo"
-                  disabled={playing}
-                  onClick={() => void play()}
-                >
-                  <Icon name="play" filled />
-                  {playing
-                    ? "생성 중…"
-                    : stage === "posted"
-                      ? "다시 생성"
-                      : "생성"}
-                </button>
+                {stage === "ready" || stage === "published" ? (
+                  <button
+                    type="button"
+                    className="afgo afpublish"
+                    disabled={stage === "published"}
+                    onClick={() => {
+                      const finalText = resolveFinalText(
+                        liveParts ?? parts,
+                        guarded,
+                        level,
+                      );
+                      if (onPublish?.(finalText)) setStage("published");
+                    }}
+                  >
+                    <Icon name={stage === "published" ? "check" : "comment"} />
+                    {stage === "published" ? "게시 완료" : "내 닉네임으로 게시"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="afgo"
+                    disabled={playing}
+                    onClick={() => void play()}
+                  >
+                    <Icon name="play" filled />
+                    {playing ? "생성 중…" : "생성"}
+                  </button>
+                )}
                 <span className="afchip">
                   남은 생성 <b>{Math.max(0, quota)}</b>회
                 </span>
-              {/* 안전 강도 — 이 화면에서만 적용되는 데모 설정. 역할 게이트
-                  없이 바로 바꿔본다(사용자 지시). 백오피스 정본은 안 건드린다. */}
-              <span className="demo-control">
-                <button
-                  className="demotrigger"
-                  type="button"
-                  aria-expanded={settingsOpen}
-                  onClick={() => setSettingsOpen((value) => !value)}
-                >
-                  <Icon name="gauge" />
-                  안전 강도 <b>{SAFETY_LABEL[level]}</b>
-                </button>
-                {settingsOpen ? (
-                  <div
-                    className="demotip"
-                    role="dialog"
-                    aria-label="AI 안전 강도 설정"
-                  >
-                    <div className="tiphd">
-                      <span className="demo">데모 전용</span>
-                      <span className="tt">안전 강도 설정</span>
-                      <button
-                        className="tipclose"
-                        type="button"
-                        aria-label="안전 강도 설정 닫기"
-                        onClick={() => setSettingsOpen(false)}
+                {/* 안전 강도 — 이 화면에서만 적용되는 데모 설정. 역할 게이트
+                    없이 바로 바꿔본다(사용자 지시). 백오피스 정본은 안 건드린다. */}
+                {stage !== "ready" && stage !== "published" ? (
+                  <span className="demo-control">
+                    <button
+                      className="demotrigger"
+                      type="button"
+                      aria-expanded={settingsOpen}
+                      onClick={() => setSettingsOpen((value) => !value)}
+                    >
+                      <Icon name="gauge" />
+                      안전 강도 <b>{SAFETY_LABEL[level]}</b>
+                    </button>
+                    {settingsOpen ? (
+                      <div
+                        className="demotip"
+                        role="dialog"
+                        aria-label="AI 안전 강도 설정"
                       >
-                        <Icon name="x" />
-                      </button>
-                    </div>
-                    <div className="note">
-                      원래는 <b>관리자 운영 화면</b> 설정이지만, 이 화면에서는
-                      역할 없이 바로 바꿔볼 수 있어요. 바꾼 뒤{" "}
-                      <b>다시 생성</b>을 누르면 재검사 결과가 달라져요.
-                    </div>
-                    <div className="dcseg">
-                      {(["loose", "basic", "strict"] as const).map((key) => (
-                        <button
-                          type="button"
-                          key={key}
-                          className={level === key ? "on" : undefined}
-                          onClick={() => setLevel(key)}
-                        >
-                          {SAFETY_LABEL[key]}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="dcr">
-                      현재 <b>{SAFETY_LABEL[level]}</b>, {SAFETY_DESC[level]}
-                    </div>
-                  </div>
+                        <div className="tiphd">
+                          <span className="demo">데모 전용</span>
+                          <span className="tt">안전 강도 설정</span>
+                          <button
+                            className="tipclose"
+                            type="button"
+                            aria-label="안전 강도 설정 닫기"
+                            onClick={() => setSettingsOpen(false)}
+                          >
+                            <Icon name="x" />
+                          </button>
+                        </div>
+                        <div className="note">
+                          원래는 <b>관리자 운영 화면</b> 설정이지만, 이 화면에서는
+                          역할 없이 바로 바꿔볼 수 있어요. 바꾼 뒤{" "}
+                          <b>다시 생성</b>을 누르면 재검사 결과가 달라져요.
+                        </div>
+                        <div className="dcseg">
+                          {(["loose", "basic", "strict"] as const).map((key) => (
+                            <button
+                              type="button"
+                              key={key}
+                              className={level === key ? "on" : undefined}
+                              onClick={() => setLevel(key)}
+                            >
+                              {SAFETY_LABEL[key]}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="dcr">
+                          현재 <b>{SAFETY_LABEL[level]}</b>, {SAFETY_DESC[level]}
+                        </div>
+                      </div>
+                    ) : null}
+                  </span>
                 ) : null}
-              </span>
-
-            </div>
+              </div>
             ) : (
-              /* 한도 소진 — 하단은 상담 요청 버튼 하나만(사용자 지시) */
+              /* 한도 소진 — 외부 상담 대신 포트폴리오 안의 다른 글로 잇는다. */
               <div className="afctl is-blocked">
-                <a className="afcta" href="/contact">
-                  이런 AI 기능이 필요하시면 상담 요청
+                <a className="afcta" href="/community">
+                  다른 현장 질문 둘러보기
                   <Icon name="arrow" />
                 </a>
               </div>
@@ -604,55 +609,17 @@ export function AiAnswerCard({
   );
 }
 
-/** 게시 답변 렌더 — 단어가 순서대로 블러에서 맺히며 보라빛 → 잉크로
-    정착한다(AI SaaS식 텍스트 스트림). 레이아웃은 처음부터 최종 크기 —
-    페인트(투명도·블러·색)만 시차로 움직여 주변을 밀지 않는다. */
-function PostedStream({
-  parts,
-  guarded,
-  level,
-}: {
-  parts: string[];
-  guarded: GuardedTerm[];
-  level: SafetyLevel;
-}) {
-  let word = 0;
-  const delayOf = () => {
-    const delay = `${word * 42}ms`;
-    word += 1;
-    return delay;
-  };
-  return (
-    <>
-      {parts.map((part, index) => {
-        const match = /^\{(\d)\}$/.exec(part);
-        if (match) {
-          return (
-            <span
-              className="guarded masked aiw"
-              key={index}
-              style={{ "--d": delayOf() } as React.CSSProperties}
-            >
-              {guarded[Number(match[1])][level]}
-            </span>
-          );
-        }
-        return part.split(/(\s+)/).map((chunk, chunkIndex) =>
-          !chunk ? null : /^\s+$/.test(chunk) ? (
-            <span key={`${index}-${chunkIndex}`}>{chunk}</span>
-          ) : (
-            <i
-              className="aiw"
-              key={`${index}-${chunkIndex}`}
-              style={{ "--d": delayOf() } as React.CSSProperties}
-            >
-              {chunk}
-            </i>
-          ),
-        );
-      })}
-    </>
-  );
+function resolveFinalText(
+  parts: string[],
+  guarded: GuardedTerm[],
+  level: SafetyLevel,
+) {
+  return parts
+    .map((part) => {
+      const match = /^\{(\d)\}$/.exec(part);
+      return match ? guarded[Number(match[1])][level] : part;
+    })
+    .join("");
 }
 
 /** 초안 렌더 — 위험 표현만 단계에 따라 다르게 그린다(감지→취소선→치환) */
@@ -725,7 +692,7 @@ function Answer({
         const order = guardOrder;
 
         // 최종 상태 — 전부 치환 완료
-        if (fixed || stage === "posted") {
+        if (fixed || stage === "ready" || stage === "published") {
           return (
             <span className="guarded masked" key={index}>
               {term[level]}

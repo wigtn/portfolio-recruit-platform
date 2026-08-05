@@ -348,7 +348,7 @@ test("모바일 비교표와 관리자 카드가 세로 흐름으로 재배치�
      React가 아직 안 붙어 있는 순간이 있다. 그때 누르면 아무 일도 일어나지
      않고 "패널이 없다"로만 남는다 — 무엇이 문제인지 안 보인다. */
   await expect(async () => {
-    await page.getByRole("button", { name: "상담 챗봇 열기" }).click();
+    await page.getByRole("button", { name: "데모 도우미 열기" }).click();
     await expect(page.locator(".chatpanel")).toBeVisible({ timeout: 2_000 });
   }).toPass();
   const chatPanel = await page.locator(".chatpanel").boundingBox();

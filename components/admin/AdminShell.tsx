@@ -32,7 +32,7 @@ export type AdminNavGroup = {
     href: string;
     icon: string;
     label: string;
-    count?: "reports" | "evidence" | "questions";
+    count?: "reports" | "evidence" | "questions" | "inquiries";
   }>;
 };
 

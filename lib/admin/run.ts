@@ -476,6 +476,32 @@ Object.assign(TOOLS, {
   // 운영자 답변 등록 — 시드 글은 손대지 않고 오버레이 answers에 쌓는다.
   // 사용자 글 상세가 즉시 병합해 보여주므로 발행 권한(content.publish)을 요구하되,
   // 언제든 데모 초기화로 되돌릴 수 있어 저위험으로 둔다(재인증 없이 왕복이 이어진다).
+  /* 답변은 문의자 화면(알림 벨·/contact 내역)으로 그대로 돌아간다.
+     실서비스 모듈로 뗄 때 슬랙·메일 발송 연동이 붙는 자리가 여기다. */
+  "inquiry.answer": {
+    title: "1:1 문의 답변",
+    permissions: ["content.publish"],
+    risk: "low",
+    apply: (state, id, _reason, payload) => ({
+      ...state,
+      inquiries: state.inquiries.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              status: "답변완료" as const,
+              answer: String(payload?.text ?? ""),
+              answeredAt: new Date().toISOString(),
+            }
+          : row,
+      ),
+    }),
+    // 감사 기록에는 분류와 문의자가 남아야 한다 — id만으로는 못 찾는다
+    target: (state, id) => {
+      const row = state.inquiries.find((item) => item.id === id);
+      return row ? `${row.category} 문의 (${row.by})` : id;
+    },
+  },
+
   "question.answer": {
     title: "운영자 답변 등록",
     permissions: ["content.publish"],

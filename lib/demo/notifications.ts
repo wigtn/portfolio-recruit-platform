@@ -1,7 +1,7 @@
 "use client";
 
 import { loadState } from "@/lib/admin/overlay";
-import { myEvidenceStatus } from "./submit";
+import { myEvidenceStatus, myInquiries } from "./submit";
 import { loadUser } from "./user";
 
 /**
@@ -34,7 +34,7 @@ export function announceMenuOpen(source: string) {
 export type DemoNotification = {
   /** 상태 파생 id — 같은 대상·같은 상태면 같은 id(읽음이 유지된다) */
   id: string;
-  kind: "report" | "evidence" | "notice";
+  kind: "report" | "evidence" | "notice" | "inquiry";
   title: string;
   body?: string;
   href: string;
@@ -127,7 +127,19 @@ export function deriveNotifications(): DemoNotification[] {
     }
   }
 
-  // 3) 고정 공지 — 운영자가 상단 고정한 공지는 전 회원 대상 알림이다
+  // 3) 내 1:1 문의의 답변 — 운영자가 답하면 문의 화면으로 데려간다
+  for (const row of myInquiries()) {
+    if (row.status !== "답변완료") continue; // 대기는 아직 알릴 게 없다
+    items.push({
+      id: `inquiry:${row.id}:답변완료`,
+      kind: "inquiry",
+      title: "1:1 문의에 답변이 도착했어요",
+      body: `${row.category} 문의, 운영자가 직접 답했어요`,
+      href: `/contact#inquiry-${row.id}`,
+    });
+  }
+
+  // 4) 고정 공지 — 운영자가 상단 고정한 공지는 전 회원 대상 알림이다
   for (const row of state.notices) {
     if (row.kind !== "notice" || !row.pinned || row.status !== "노출중")
       continue;
