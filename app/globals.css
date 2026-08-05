@@ -17896,3 +17896,269 @@ body:has(.pdrawer) {
   border-radius: 99px;
   background: #9b51e0;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   체험 안내 말풍선(FeatureGuide) — 가이드 목록에서 항목을 누르면 그 화면의
+   실제 버튼을 걸음걸음 짚는다. 에이전트 커서와 달리 방문자가 직접 누르는
+   안내라 커서 없이 테두리 + 말풍선만 둔다.
+   ═══════════════════════════════════════════════════════════════════════ */
+.ftg {
+  position: fixed;
+  inset: 0;
+  /* 짚는 대상이 모달(.modalwrap 85)·본인 확인(.stepup-ov 95) 안에도 있다 —
+     안내는 그 위에 선다. 판은 통과시키고 말풍선만 만질 수 있다 */
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* 대상 테두리 — 에이전트 커서의 링과 같은 문법. 어둠막은 씌우지 않는다,
+   안내가 조작을 막으면 안내가 아니다 */
+.ftg-ring {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 0 6px color-mix(in srgb, var(--accent) 18%, transparent),
+    0 0 26px 2px color-mix(in srgb, var(--accent) 40%, transparent);
+  animation: agc-ring-in 0.44s var(--ease-spring);
+  transition:
+    top 0.2s ease,
+    left 0.2s ease,
+    width 0.2s ease,
+    height 0.2s ease;
+}
+
+/* 말풍선 판 — 챗봇 안내(agc-note)와 같은 흰 카드 + 진한 분리 그림자.
+   출처는 색으로 말한다: AI의 보라 그라데이션 대신 브랜드색 링 한 겹 */
+.ftg-note {
+  position: fixed;
+  pointer-events: auto;
+  width: min(324px, calc(100vw - 24px));
+  padding: 11px 14px 12px;
+  border-radius: 15px;
+  corner-shape: squircle;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 18px 40px -14px rgba(14, 16, 24, 0.5),
+    0 3px 10px rgba(14, 16, 24, 0.14);
+  animation: agc-note-in 0.34s var(--ease-spring) backwards;
+}
+.ftg-note.is-up {
+  transform: translateY(-100%);
+  animation-name: agc-note-up;
+}
+/* 짚을 곳이 없을 때(길잡이·완료·대상 소실)는 가이드 버튼 위에 정박한다 */
+.ftg-note.is-dock {
+  top: auto;
+  left: auto;
+  right: max(18px, var(--safe-r));
+  bottom: calc(var(--dock-b) + 64px);
+}
+
+.ftg-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.ftg-head .cb {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: var(--star);
+  color: #161922;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.ftg-head b {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ftg-count {
+  flex-shrink: 0;
+  font-size: 10.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  padding: 2px 7px;
+  border-radius: 99px;
+}
+.ftg-x {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--ink-4);
+  cursor: pointer;
+}
+.ftg-x:hover {
+  background: var(--bg);
+  color: var(--ink-2);
+}
+.ftg-x .ic {
+  width: 13px;
+  height: 13px;
+}
+
+.ftg-note p {
+  margin: 7px 0 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.ftg-acts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ftg-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 7px 13px;
+  border: 0;
+  border-radius: 9px;
+  corner-shape: squircle;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.ftg-next:hover {
+  filter: brightness(1.06);
+}
+.ftg-next .ic {
+  width: 13px;
+  height: 13px;
+}
+/* 기다리는 걸음의 힌트 — 점이 숨쉬어 "지금 지켜보는 중"을 말한다 */
+.ftg-hint {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.ftg-hint::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  background: var(--accent);
+  animation: ftg-breathe 1.6s ease-in-out infinite;
+}
+@keyframes ftg-breathe {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.72);
+  }
+}
+.ftg-skip {
+  flex-shrink: 0;
+  border: 0;
+  background: none;
+  padding: 4px 2px;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--ink-4);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.ftg-skip:hover {
+  color: var(--ink-2);
+}
+
+/* 완료 말풍선 — 버튼 하나가 판 전체. 누르면 걷힌다 */
+.ftg-finale {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  border: 0;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.ftg-finale b {
+  color: var(--ink);
+}
+.ftg-fic {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 99px;
+  background: var(--bg);
+  color: var(--ink-3);
+  margin-top: 1px;
+}
+.ftg-fic.is-done {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.ftg-fic .ic {
+  width: 13px;
+  height: 13px;
+}
+
+/* 가이드 목록의 완료 배지 — 아이콘은 기능의 성격을 지키고, 완료는 모서리
+   체크가 말한다 */
+.demowidget .titem .tic {
+  position: relative;
+}
+.demowidget .titem .ticb {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 99px;
+  background: var(--accent);
+  color: #fff;
+  /* 원판과 겹치는 자리라 카드색 테두리로 한 겹 띄운다 */
+  box-shadow: 0 0 0 2px var(--card);
+}
+.demowidget .titem .ticb .ic {
+  width: 8px;
+  height: 8px;
+  stroke-width: 3.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ftg-ring,
+  .ftg-note {
+    animation: none;
+  }
+  .ftg-hint::before {
+    animation: none;
+  }
+}
