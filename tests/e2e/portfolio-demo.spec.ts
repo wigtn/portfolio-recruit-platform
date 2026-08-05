@@ -244,6 +244,35 @@ test("관리자 큐레이션 저장 순서가 실제 홈 추천 회사에 반영
   ).toHaveText(secondCompany!);
 });
 
+test("큐레이션 상단 배너 순서 저장이 상단 띠에 반영되고, 클로징은 체험을 권한다", async ({
+  page,
+}) => {
+  await page.goto("/");
+  // 시드 첫 배너가 이벤트 띠로 떠 있다
+  await expect(page.locator(".promobar .promo-wide")).toContainText(
+    "8월 연봉 리포트",
+  );
+  // 클로징 배너 — 아직 체험 전이라 시작을 권한다(진행도 기반 내용)
+  await expect(page.locator(".closing-cta")).toContainText("체험 시작하기");
+
+  // 운영자가 배너 순서를 바꿔 저장하면
+  await switchRole(page, "admin");
+  await page.goto("/admin/curation");
+  const bannerCard = page.locator(".curcard", { hasText: "상단 이벤트 배너" });
+  await bannerCard.locator(".slot .ds-draghandle").first().focus();
+  await page.keyboard.press("ArrowDown");
+  await page.getByRole("button", { name: "변경 저장" }).click();
+  await expect(
+    page.getByText("홈 화면 배치를 저장했어요", { exact: false }),
+  ).toBeVisible();
+
+  // 사용자 화면 상단 띠가 새 첫 배너로 갈린다 — 네 번째 왕복
+  await page.goto("/");
+  await expect(page.locator(".promobar .promo-wide")).toContainText(
+    "가입하면 현직자 리뷰 전체 열람",
+  );
+});
+
 test("신고 → 블라인드 → 사용자 화면 가림 → 복원 왕복이 실제로 돈다", async ({
   page,
 }) => {

@@ -6402,19 +6402,40 @@ a.adcard:hover,
 /* 띠배너 — 제안 문구와 운영 배너는 성격이 달라 선으로 나눈다 */
 .promo-line {
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
 }
-.promobar .curated-promo {
-  padding-left: 12px;
-  border-left: 1px solid rgba(255, 255, 255, 0.28);
-  color: rgba(255, 255, 255, 0.78);
-  font-weight: 600;
+/* 클로징 CTA가 버튼일 때(체험 이어가기)도 링크와 같은 손맛 */
+button.closing-cta {
+  cursor: pointer;
+}
+/* 이벤트 표식 — 띠의 그라데이션 위라 흰 판에 진한 글자로 세운다 */
+.promo-tag {
+  flex-shrink: 0;
+  font-style: normal;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--accent);
 }
 @media (max-width: 760px) {
-  .promobar .curated-promo {
-    display: none;
-  }
+  /* justify-self: start라 폭이 fit-content로 풀린다 — 그리드 영역에
+     max-width로 못 박아야 긴 문구가 문서를 가로로 밀지 않는다(320px 실측) */
   .promo-line {
-    white-space: normal;
+    overflow: hidden;
+    max-width: 100%;
+  }
+  /* 좁은 화면에서 문구가 길면 말줄임 — 띠 높이가 출렁이면 안 된다.
+     flex 아이템은 min-width: 0을 줘야 내용보다 좁게 줄어든다 */
+  .promo-mobile {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

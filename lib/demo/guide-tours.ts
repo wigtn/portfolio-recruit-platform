@@ -28,7 +28,7 @@ export const TOURS: Partial<Record<ScreenId, TourStep[]>> = {
     { selector: ".home-feature-section", note: "채용공고 하이라이트. 실데이터로 돌아가요" },
     { selector: ".home-market", note: "연봉과 시장 지표를 모아 보여줘요" },
     { selector: ".home-community-section", note: "커뮤니티 인기 글이 홈까지 올라와요" },
-    { selector: ".closing-inner", note: "여기서 다른 회사 리뷰를 더 둘러볼 수 있어요" },
+    { selector: ".closing-inner", note: "체험 진행도에 맞춰 다음 걸음을 권해요. 남은 체험을 여기서 이어가요" },
     { selector: ".demowidget .fab", note: "체험 가이드예요. 어디까지 봤는지 따라다녀요" },
   ],
   community: [

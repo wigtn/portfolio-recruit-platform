@@ -37,14 +37,14 @@ const BOARD_LABEL = Object.fromEntries(
 const LIMIT: Record<Key, number> = { companies: 5, posts: 3, banners: 3 };
 
 /**
- * 스켈레톤 슬롯 수 — 시드 기본값(추천 3 · 인기글 2 · 배너 1)과 같게 맞춰
+ * 스켈레톤 슬롯 수 — 시드 기본값(추천 3 · 인기글 2 · 배너 2)과 같게 맞춰
  * 스켈레톤→데이터 전환에서 카드 높이가 밀리지 않는다. 슬롯 높이 36px는
  * 표 행 밀도로 압축한 뒤의 실측값(app/admin/curation/loading.tsx와 동일).
  */
 const SK_CARDS: Array<{ title: string; slots: number }> = [
   { title: "추천 회사 (홈 상단)", slots: 3 },
   { title: "인기글 고정", slots: 2 },
-  { title: "메인 공지, 배너", slots: 1 },
+  { title: "상단 이벤트 배너", slots: 2 },
 ];
 
 export function CurationBoard() {
@@ -206,7 +206,8 @@ export function CurationBoard() {
         />
 
         <SlotCard
-          title="메인 공지, 배너"
+          title="상단 이벤트 배너"
+          mini="첫 번째가 모든 화면 상단 띠에 노출돼요"
           slots={draft.banners}
           addLabel="배너 추가"
           full={draft.banners.length >= LIMIT.banners}
@@ -337,7 +338,13 @@ export function CurationBoard() {
               required: true,
             },
             ...(adding === "banners"
-              ? [{ key: "meta", label: "메모", placeholder: "노출중" }]
+              ? [
+                  {
+                    key: "meta",
+                    label: "연결 주소",
+                    placeholder: "/companies",
+                  },
+                ]
               : []),
           ]}
           submitLabel="추가"

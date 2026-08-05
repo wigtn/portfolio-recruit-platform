@@ -9,7 +9,7 @@ import { RouteSk } from "@/components/admin/RouteSkeleton";
 const CARDS: Array<{ title: string; slots: number }> = [
   { title: "추천 회사 (홈 상단)", slots: 3 },
   { title: "인기글 고정", slots: 2 },
-  { title: "메인 공지, 배너", slots: 1 },
+  { title: "상단 이벤트 배너", slots: 2 },
 ];
 
 export default function CurationLoading() {
