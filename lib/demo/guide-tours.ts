@@ -69,8 +69,7 @@ export const TOURS: Partial<Record<ScreenId, TourStep[]>> = {
     { selector: ".my-tabs", note: "쓴 글, 반응, 지원 내역을 탭으로 봐요" },
   ],
   contact: [
-    { selector: ".contact-rail", note: "체험 기록이에요. 무엇을 봤는지 따라와요" },
-    { selector: ".seen-compact", note: "방금 보신 기능 목록이에요" },
+    { selector: ".ctimeline-row", note: "진행 과정이에요. 상담이 어떤 순서로 흐르는지 보여줘요" },
     { selector: "#contact-form", note: "상담 폼. 여기 적으면 실제로 접수돼요" },
     { selector: ".msgtips", note: "누르면 문의 틀이 들어가요. 지우고 써도 돼요" },
     { selector: ".formsubmit-btn", note: "보내기는 직접 눌러주세요" },

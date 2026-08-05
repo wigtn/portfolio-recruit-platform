@@ -83,12 +83,6 @@ export const TARGETS: Target[] = [
     selector: ".review",
   },
   {
-    id: "contact_rail",
-    what: "왼쪽 체험 기록 레일. 무엇을 해봤는지 따라다닌다",
-    where: "/contact",
-    selector: ".contact-rail",
-  },
-  {
     id: "contact_form",
     what: "상담 신청 폼",
     where: "/contact",

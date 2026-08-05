@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { useRole } from "@/lib/demo/role";
 import { resetDemoExperience } from "@/lib/demo/progress";
+import { startGuideTour } from "@/lib/demo/feature-guide";
 import {
   announcePanel,
   DEMO_FEATURES,
@@ -173,7 +174,8 @@ export function DemoGuideWidget() {
             </Link>
           ) : (
             <div className="dwsub">
-              누르면 그 화면으로 가요, 실행까지 마치면 체크가 켜져요
+              누르면 그 화면으로 가서 말풍선이 순서대로 안내해요, 실행까지
+              마치면 체크가 켜져요
             </div>
           )}
           <div className="dwlist">
@@ -192,14 +194,20 @@ export function DemoGuideWidget() {
                         : "titem";
                     const inner = (
                       <>
+                        {/* 아이콘은 기능의 성격을 말한다. 진행 상태(완료)는
+                            아이콘을 갈아끼우는 대신 모서리 체크 배지로 —
+                            상태 때문에 "무슨 기능인지"가 지워지면 안 된다 */}
                         <span className="tic">
-                          <Icon
-                            name={done ? "check" : seen ? "view" : "arrow"}
-                          />
+                          <Icon name={feature.icon} />
+                          {done ? (
+                            <i className="ticb" aria-label="체험 완료">
+                              <Icon name="check" />
+                            </i>
+                          ) : null}
                         </span>
                         <span>
                           <b>{feature.title}</b>
-                          {/* 설명은 항상 차분한 톤 — 상태는 아이콘이 말한다 */}
+                          {/* 설명은 항상 차분한 톤 — 상태는 배지가 말한다 */}
                           <span className="tdesc">{feature.description}</span>
                         </span>
                       </>
@@ -219,7 +227,19 @@ export function DemoGuideWidget() {
                         {inner}
                       </button>
                     ) : (
-                      <Link className={cls} href={feature.href} key={feature.id}>
+                      <Link
+                        className={cls}
+                        href={feature.href}
+                        key={feature.id}
+                        onClick={() => {
+                          /* 이동만 시키고 끝내지 않는다 — 도착한 화면에서
+                             무엇을 눌러야 체크가 켜지는지 말풍선이 걸음대로
+                             안내한다(FeatureGuide). 상태는 이동 전에 저장돼
+                             전체 리로드도 견딘다 */
+                          startGuideTour(feature.id, done);
+                          setOpen(false);
+                        }}
+                      >
                         {inner}
                       </Link>
                     );

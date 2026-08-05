@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ds/Toaster";
 import { DemoGuideWidget } from "@/components/demo/DemoGuideWidget";
 import { ChatWidget } from "@/components/demo/ChatWidget";
 import { AgentCursor } from "@/components/demo/AgentCursor";
+import { FeatureGuide } from "@/components/demo/FeatureGuide";
 import { MotionState } from "@/components/demo/MotionState";
 import { RoleProvider } from "@/lib/demo/role";
 import "./globals.css";
@@ -42,6 +43,8 @@ export default function RootLayout({
           {/* 챗봇이 화면을 짚고 누를 때 쓰는 커서. 전역이라 어느 화면에서나 뜬다 */}
           <MotionState />
           <AgentCursor />
+          {/* 체험 안내 말풍선 — 화면을 건너다니는 대본이라 전역에 산다 */}
+          <FeatureGuide />
         </RoleProvider>
       </body>
     </html>

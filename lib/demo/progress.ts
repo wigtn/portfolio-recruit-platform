@@ -51,6 +51,10 @@ export const DEMO_FEATURES: Array<{
   title: string;
   description: string;
   href: string;
+  /** 기능의 성격을 말하는 아이콘(IconSprite 심벌 이름). 진행 상태는 아이콘이
+      아니라 배지·색이 말한다 — 상태 아이콘(화살표/눈/체크)로 갈아끼우면
+      "이 항목이 무엇인지"가 목록에서 사라진다 */
+  icon: string;
   /** 라우트가 아니라 화면 위 장치를 여는 항목. href 대신 이 값으로 분기한다 */
   action?: "chat";
 }> = [
@@ -59,6 +63,7 @@ export const DEMO_FEATURES: Array<{
      전환)는 뺐다 — 실행을 마쳐야 체크가 켜진다는 약속과 맞아야 한다. */
   {
     id: "ai-answer",
+    icon: "bot",
     group: "서비스",
     title: "AI 참고 답변",
     description: "생성 버튼을 누르면 스트리밍 → 안전 재검사까지",
@@ -66,6 +71,7 @@ export const DEMO_FEATURES: Array<{
   },
   {
     id: "company-review",
+    icon: "star",
     group: "서비스",
     title: "회사 리뷰, 항목별 평점",
     description: "리뷰를 쓰면 평점이 바로 재계산돼요",
@@ -73,6 +79,7 @@ export const DEMO_FEATURES: Array<{
   },
   {
     id: "content-safety",
+    icon: "shield",
     group: "서비스",
     title: "글쓰기 콘텐츠 안전",
     description: "위험한 코드, 연락처만 골라 제거돼요",
@@ -80,6 +87,7 @@ export const DEMO_FEATURES: Array<{
   },
   {
     id: "report",
+    icon: "flag",
     group: "서비스",
     title: "신고 → 블라인드 왕복",
     description: "신고하면 운영자 큐에 실제로 쌓여요",
@@ -87,6 +95,7 @@ export const DEMO_FEATURES: Array<{
   },
   {
     id: "evidence",
+    icon: "award",
     group: "서비스",
     title: "실적 인증 신청",
     description: "제출 → 운영자 승인 → 등급 승급까지",
@@ -94,6 +103,7 @@ export const DEMO_FEATURES: Array<{
   },
   {
     id: "chatbot",
+    icon: "comment",
     group: "서비스",
     title: "상담 챗봇",
     description: "누르면 대화가 재생돼요. 직접 물어봐도 답해요",
@@ -102,6 +112,7 @@ export const DEMO_FEATURES: Array<{
   },
   {
     id: "question",
+    icon: "notice",
     group: "운영 왕복",
     title: "질문에 공식 답변 달기",
     description: "등록하면 글 상세에 운영자 배지로 붙어요",
@@ -109,6 +120,7 @@ export const DEMO_FEATURES: Array<{
   },
   {
     id: "step-up",
+    icon: "lock",
     group: "운영 왕복",
     // 원래 "고위험 조치 재인증 (step-up)"이었다. step-up은 인증 업계 용어라
     // 고객이 보는 목록에 그대로 두면 읽히지 않는다. 문구는 실제 모달이 쓰는
@@ -119,6 +131,7 @@ export const DEMO_FEATURES: Array<{
   },
   {
     id: "curation",
+    icon: "layout",
     group: "운영 왕복",
     title: "홈 큐레이션 배치 관리",
     description: "드래그로 노출 순서를 바꿔 저장하면 홈에 반영돼요",
@@ -126,6 +139,7 @@ export const DEMO_FEATURES: Array<{
   },
   {
     id: "policy",
+    icon: "key",
     group: "운영 왕복",
     title: "역할별 권한 정책",
     description: "토글이 실제 화면 게이트를 바꿔요",
@@ -176,7 +190,11 @@ export function resetDemoExperience() {
   }
   for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
     const key = window.sessionStorage.key(index);
-    if (key?.startsWith("admin-") && key.endsWith("-visited")) {
+    if (
+      (key?.startsWith("admin-") && key.endsWith("-visited")) ||
+      // 진행 중이던 체험 안내(말풍선 투어)도 처음으로 돌아간다
+      key?.startsWith("wigtn-demo-")
+    ) {
       window.sessionStorage.removeItem(key);
     }
   }
