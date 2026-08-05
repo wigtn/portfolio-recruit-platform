@@ -1,5 +1,9 @@
 import { FEED } from "@/lib/seed/feed";
 import { POSTS } from "@/lib/seed/posts";
+import { REVIEWS } from "@/lib/seed/reviews";
+
+/** 공개 리뷰와 작성자를 연결하지 않고, 마이페이지에서만 소유권을 복원하는 id. */
+export const MY_REVIEW_IDS: readonly string[] = ["r-5", "r-9", "r-12"];
 
 /**
  * 데모 사용자 프로필 — 헤더 계정 메뉴·마이·실적 인증이 같은 값을 읽는다.
@@ -22,10 +26,10 @@ export const DEMO_PROFILE = {
   /** 받은 도움 — Lv.4 조건(1,000+)을 채운 서사 값 */
   helpReceived: 1280,
   /**
-   * 내 리뷰 수 — 익명 정책상 목록은 안 보여주지만, 프로필 카드와 탭 카운트가
-   * 같은 값을 써야 화면 안에서 수치가 어긋나지 않는다.
+   * 내 리뷰 수 — 공개 리뷰에는 작성자를 노출하지 않되, 내 활동에서는 소유권을
+   * 복원해 목록과 답글 상태를 확인한다.
    */
-  reviewCount: 3,
+  reviewCount: MY_REVIEW_IDS.length,
 } as const;
 
 /** 시드 피드에서 "내 글"로 치는 항목 — 마이 탭과 프로필 카드가 같이 센다 */
@@ -54,5 +58,6 @@ export function seedActivity() {
         .filter((comment) => comment.author === DEMO_PROFILE.nick)
         .map((comment) => ({ post, comment })),
     ),
+    reviews: REVIEWS.filter((review) => MY_REVIEW_IDS.includes(review.id)),
   };
 }

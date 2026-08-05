@@ -67,8 +67,15 @@ export const GUIDE_TOURS: Partial<Record<DemoFeature, GuideStep[]>> = {
       path: /^\/community\/p-4821\/?$/,
       at: "/community/p-4821",
       selector: ".aiwrap",
-      note: "초안이 스트리밍으로 흐르고, 끝나면 안전 재검사까지 자동으로 돌아요. 게시되는 순간 체험이 체크돼요.",
+      note: "초안이 스트리밍으로 흐르고, 끝나면 안전 재검사까지 자동으로 돌아요. 초안이 완성되면 체험이 체크돼요.",
       advance: "done",
+    },
+    {
+      path: /^\/community\/p-4821\/?$/,
+      at: "/community/p-4821",
+      selector: ".afpublish",
+      note: "생성만으로는 게시되지 않아요. 내 닉네임으로 게시를 눌러야 답변 목록에 실제로 실려요.",
+      advance: "act",
     },
   ],
 

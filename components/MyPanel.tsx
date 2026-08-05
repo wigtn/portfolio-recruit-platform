@@ -14,6 +14,15 @@ import { Coach } from "./Coach";
 import { Icon } from "./Icon";
 import { Sk, SkRegion, useMockLoading } from "./Skeleton";
 import { SmoothHeight } from "./ds/SmoothHeight";
+import type { Review } from "@/lib/seed/reviews";
+import {
+  loadMyReviews,
+  loadReadReviewReplies,
+  loadReviewReplies,
+  markReviewRepliesRead,
+  subscribeMyReviews,
+  type ReviewReply,
+} from "@/lib/demo/reviews";
 
 /**
  * 마이페이지 본문 — 프로필 카드·탭·증빙 신청이 전부 실데이터로 동작한다.
@@ -40,6 +49,13 @@ export function MyPanel() {
   const [evidence, setEvidence] = useState<ReturnType<
     typeof myEvidenceStatus
   > | null>(null);
+  const [storedReviews, setStoredReviews] = useState<Review[]>([]);
+  /* 체험 중 단 답글(리뷰 id → 답글들) — 시드 답글에 얹어 세야 카드의
+     "답글 n"과 리뷰 화면에 실제로 보이는 개수가 같다 */
+  const [replyMap, setReplyMap] = useState<Record<string, ReviewReply[]>>({});
+  const [readReviewReplies, setReadReviewReplies] = useState<Set<string>>(
+    new Set(),
+  );
 
   // 홈과 같은 강제 지연 — localStorage는 즉시 오지만, 스켈레톤이 한 프레임만
   // 스치면 로딩 처리를 했는지 안 했는지 보이지 않는다(Skeleton.tsx의 명분)
@@ -49,11 +65,25 @@ export function MyPanel() {
   useEffect(() => {
     setUser(loadUser());
     setEvidence(myEvidenceStatus());
+    const syncReviews = () => {
+      setStoredReviews(loadMyReviews());
+      setReplyMap(loadReviewReplies());
+    };
+    syncReviews();
+    setReadReviewReplies(loadReadReviewReplies());
+    return subscribeMyReviews(syncReviews);
   }, []);
 
   const seed = seedActivity();
   const written = user?.posts ?? [];
   const answers = user?.answers ?? [];
+  const storedCompanies = new Set(storedReviews.map((review) => review.companySlug));
+  const reviews = [
+    ...storedReviews,
+    ...seed.reviews.filter(
+      (review) => !storedCompanies.has(review.companySlug),
+    ),
+  ];
 
   const postCount = seed.posts.length + written.length;
   const commentCount = seed.comments.length + answers.length;
@@ -76,13 +106,13 @@ export function MyPanel() {
     { key: "likes", label: "도움돼요한 글", count: liked.length },
     { key: "scraps", label: "스크랩", count: scrapped.length },
     { key: "follows", label: "팔로우한 회사", count: followed.length },
-    { key: "reviews", label: "내 리뷰", count: DEMO_PROFILE.reviewCount },
+    { key: "reviews", label: "내 리뷰", count: reviews.length },
   ];
 
   // 프로필 카드 수치 — 탭 카운트와 같은 파생값을 쓴다
   const STATS: Array<{ value: string; label: string }> = [
     { value: String(postCount), label: "작성글" },
-    { value: String(DEMO_PROFILE.reviewCount), label: "내 리뷰" },
+    { value: String(reviews.length), label: "내 리뷰" },
     { value: DEMO_PROFILE.helpReceived.toLocaleString(), label: "받은 도움" },
   ];
 
@@ -305,10 +335,64 @@ export function MyPanel() {
                 ) : null}
 
                 {tab === "reviews" ? (
-                  <Empty
-                    title="내 리뷰는 익명이라 목록으로 보여주지 않아요"
-                    sub="작성자와 리뷰를 이어붙이면 익명이 깨져요, 수정은 회사 화면에서 해요"
-                  />
+                  reviews.length ? (
+                    <div className="feed">
+                      {reviews.map((review) => {
+                        const company = COMPANIES.find(
+                          (item) => item.slug === review.companySlug,
+                        );
+                        const replyCount =
+                          (review.replies?.length ?? 0) +
+                          (replyMap[review.id]?.length ?? 0);
+                        const unread =
+                          replyCount > 0 && !readReviewReplies.has(review.id);
+                        return (
+                          <Link
+                            className="post my-review-row"
+                            key={review.id}
+                            href={`/companies/${review.companySlug}#review-${review.id}`}
+                            onClick={() => {
+                              if (!replyCount) return;
+                              markReviewRepliesRead(review.id);
+                              setReadReviewReplies((current) => {
+                                const next = new Set(current);
+                                next.add(review.id);
+                                return next;
+                              });
+                            }}
+                          >
+                            <div>
+                              <div className="badges">
+                                <span className="cat">{company?.name ?? "회사 리뷰"}</span>
+                                {unread ? (
+                                  <span className="tag hot">새 답글</span>
+                                ) : replyCount ? (
+                                  <span className="tag neu">답글 확인</span>
+                                ) : null}
+                              </div>
+                              <div className="t">{review.headline}</div>
+                              <div className="m">
+                                <span className="who">{review.writtenAt}, 익명으로 공개</span>
+                                <span className="met">
+                                  <span>
+                                    <Icon name="star" /> {review.score.toFixed(1)}
+                                  </span>
+                                  <span>
+                                    <Icon name="comment" /> 답글 {replyCount}
+                                  </span>
+                                </span>
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <Empty
+                      title="아직 작성한 리뷰가 없어요"
+                      sub="회사 상세에서 리뷰를 남기면 여기에 모여요"
+                    />
+                  )
                 ) : null}
               </div>
             </SmoothHeight>

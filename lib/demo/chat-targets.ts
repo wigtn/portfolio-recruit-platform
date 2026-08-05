@@ -84,7 +84,7 @@ export const TARGETS: Target[] = [
   },
   {
     id: "contact_form",
-    what: "상담 신청 폼",
+    what: "1:1 문의 폼. 접수하면 운영자 문의 큐로 들어간다",
     where: "/contact",
     selector: "#contact-form",
   },

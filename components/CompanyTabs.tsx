@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import type { Company } from "@/lib/seed/companies";
+import { CompanyReviewCount } from "./CompanyReviewSummary";
 
 /**
  * 기업 상세 리뷰/연봉 탭 — 서버 내비게이션 없이 즉시 전환.
@@ -17,7 +19,7 @@ import { useSearchParams } from "next/navigation";
 export function CompanyTabs({
   slug,
   initial,
-  reviewCount,
+  company,
   salaryCount,
   header,
   scorebox,
@@ -26,7 +28,7 @@ export function CompanyTabs({
 }: {
   slug: string;
   initial: "reviews" | "salary";
-  reviewCount: number;
+  company: Pick<Company, "slug" | "reviewCount">;
   salaryCount: number;
   header: React.ReactNode;
   scorebox: React.ReactNode;
@@ -65,7 +67,10 @@ export function CompanyTabs({
             className={tab === "reviews" ? "on" : undefined}
             onClick={() => pick("reviews")}
           >
-            리뷰 <span className="ct">{reviewCount}</span>
+            리뷰{" "}
+            <span className="ct">
+              <CompanyReviewCount company={company} />
+            </span>
           </button>
           <button
             type="button"

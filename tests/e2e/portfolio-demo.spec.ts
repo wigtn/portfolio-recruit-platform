@@ -127,20 +127,50 @@ test("AI 안전 강도는 이 화면에서 역할 없이 바뀌고, 파이프라
   const popupBox = await popup.boundingBox();
   expect(triggerBox).not.toBeNull();
   expect(popupBox).not.toBeNull();
-  // 안전 강도는 컨트롤 줄(말풍선 하단). 팝업은 위로 열린다
-  expect(popupBox!.y + popupBox!.height).toBeLessThanOrEqual(triggerBox!.y + 1);
+  // 안전 강도는 컨트롤 줄(말풍선 하단). 본체는 위로 열리고 아래쪽 13px은
+  // 트리거를 가리키는 꼬리 영역이다. 병렬 렌더에서 꼬리까지 bounding box에
+  // 포함되기도 하므로 그 실제 크기만 허용한다.
+  expect(popupBox!.y + popupBox!.height).toBeLessThanOrEqual(
+    triggerBox!.y + 16,
+  );
 
   // 권한 게이트 없음(사용자 지시). 게스트 상태에서도 바로 바뀐다
   await popup.getByRole("button", { name: "엄격" }).click();
   await expect(trigger).toContainText("엄격");
 
   await popup.getByRole("button", { name: "안전 강도 설정 닫기" }).click();
-  // 말풍선은 자동으로 닫히지 않는다. 게시를 확인하고 직접 닫는다
+  // 생성 완료만으로 답변이 게시되면 안 된다. 준비된 초안을 사용자가 확인한다.
   await expect(page.locator(".aifloat .afdone")).toBeVisible({
     timeout: 30_000,
   });
+  await expect(page.getByText("김영업, AI 초안으로 작성")).toHaveCount(0);
+  await page.getByRole("button", { name: "내 닉네임으로 게시" }).click();
+  const aiAuthor = page.getByText("김영업, AI 초안으로 작성");
+  await expect(aiAuthor).toBeVisible();
+  const aiAvatar = page.locator("#myAnswers .cwho .av");
+  await expect(aiAvatar).toHaveCount(1);
+  const avatarBox = await aiAvatar.boundingBox();
+  const authorBox = await aiAuthor.boundingBox();
+  expect(avatarBox).not.toBeNull();
+  expect(authorBox).not.toBeNull();
+  expect(
+    Math.abs(
+      avatarBox!.y +
+        avatarBox!.height / 2 -
+        (authorBox!.y + authorBox!.height / 2),
+    ),
+  ).toBeLessThanOrEqual(2);
+  const myActions = page.locator("#myAnswers .cact");
+  await expect(myActions).toHaveCount(1);
+  const replyButton = myActions.getByRole("button", { name: "답글" });
+  const deleteButton = myActions.getByRole("button", { name: "삭제" });
+  const replyBox = await replyButton.boundingBox();
+  const deleteBox = await deleteButton.boundingBox();
+  expect(replyBox).not.toBeNull();
+  expect(deleteBox).not.toBeNull();
+  expect(deleteBox!.x - (replyBox!.x + replyBox!.width)).toBeLessThanOrEqual(16);
+  await expect(page.getByRole("button", { name: "게시 완료" })).toBeDisabled();
   await page.locator(".afclose").click();
-  await expect(page.locator(".ai-comment")).toBeVisible();
   // 다시 생성. 파이프라인(아이콘 스텝)이 재생된다
   await page.locator(".aicall").click();
   await expect(page.locator(".aistep")).toHaveClass(/is-live/);

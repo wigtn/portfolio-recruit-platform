@@ -1,18 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  COMPANIES,
-  SALES_AXES,
-  getCompany,
-  type Company,
-} from "@/lib/seed/companies";
+import { COMPANIES, getCompany, type Company } from "@/lib/seed/companies";
 import { reviewsOf } from "@/lib/seed/reviews";
 import { MyReviews } from "./MyReviews";
 import { ReviewList } from "./ReviewList";
 import { FollowButton } from "@/components/FollowButton";
 import { Coach } from "@/components/Coach";
-import { CompanyTabs } from "@/components/CompanyTabs";
 import { Icon } from "@/components/Icon";
+import { CompanyTabs } from "@/components/CompanyTabs";
+import {
+  CompanyReviewCount,
+  CompanyReviewSummary,
+} from "@/components/CompanyReviewSummary";
 
 export function generateStaticParams() {
   return COMPANIES.map((company) => ({ slug: company.slug }));
@@ -55,7 +54,7 @@ export default async function CompanyDetailPage({
     <CompanyTabs
       slug={slug}
       initial={tab === "salary" ? "salary" : "reviews"}
-      reviewCount={company.reviewCount}
+      company={company}
       salaryCount={salaryCount}
       header={
         <div className="top">
@@ -83,39 +82,7 @@ export default async function CompanyDetailPage({
           </div>
         </div>
       }
-      scorebox={
-        <div className="scorebox">
-          <div className="big">{company.score.toFixed(1)}</div>
-          <div className="stars">
-            <StarBar score={company.score} />
-          </div>
-          <div className="cnt">
-            전, 현직 영업직 리뷰 <b>{company.reviewCount}</b>건
-          </div>
-          <div
-            className="ratings"
-            style={{
-              marginTop: 16,
-              paddingTop: 16,
-              borderTop: "1px solid var(--line)",
-            }}
-          >
-            {SALES_AXES.map((axis) => (
-              <div className="rate" key={axis.key}>
-                <span className="k">{axis.label}</span>
-                <span className="bar">
-                  <span
-                    style={{
-                      width: `${(company.axes[axis.key] / 5) * 100}%`,
-                    }}
-                  />
-                </span>
-                <span className="v">{company.axes[axis.key].toFixed(1)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      }
+      scorebox={<CompanyReviewSummary company={company} />}
       salary={<SalaryPanel company={company} salaryCount={salaryCount} />}
       reviews={
         <>
@@ -129,7 +96,9 @@ export default async function CompanyDetailPage({
               gap: 10,
             }}
           >
-            <h4 style={{ margin: 0 }}>영업직 리뷰 {company.reviewCount}건</h4>
+            <h4 style={{ margin: 0 }}>
+              영업직 리뷰 <CompanyReviewCount company={company} />건
+            </h4>
             <div className="seg">
               {SORTS.map((option) => (
                 <Link
@@ -157,25 +126,6 @@ export default async function CompanyDetailPage({
         </>
       }
     />
-  );
-}
-
-/** 부분 채움 별 — 시안 `.starbar`(배경 5개 위에 fill 레이어를 % 만큼 덮는다) */
-function StarBar({ score }: { score: number }) {
-  const stars = Array.from({ length: 5 });
-  return (
-    <span className="starbar">
-      <span className="base">
-        {stars.map((_, index) => (
-          <Icon key={index} name="star" filled />
-        ))}
-      </span>
-      <span className="fill" style={{ width: `${(score / 5) * 100}%` }}>
-        {stars.map((_, index) => (
-          <Icon key={index} name="star" filled />
-        ))}
-      </span>
-    </span>
   );
 }
 

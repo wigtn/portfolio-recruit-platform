@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Crumb } from "@/components/Crumb";
+import { DemoAdCard } from "@/components/DemoAdCard";
 import type { CSSProperties } from "react";
 import {
   BOARDS,
@@ -293,22 +294,9 @@ export default async function CommunityPage({
                 위젯이 오버레이를 읽어 제외된 키워드를 순위에서 뺀다 */}
             <LiveKeywords keywords={HOT_KEYWORDS} />
 
-            <span className="adlabel">AD</span>
-            <Link className="adcard" href="/contact">
-              <div className="adimg c">
-                <span className="art" />
-                <div className="k">이직 준비</div>
-                <div className="h">
-                  영업직 이력서
-                  <br />
-                  무료 첨삭
-                </div>
-              </div>
-              <div className="adbody">
-                <span className="adt">현직 세일즈 리더가 직접</span>
-                <span className="adgo">신청</span>
-              </div>
-            </Link>
+            <span className="adlabel">DEMO AD</span>
+            {/* 어디로도 잇지 않는다 — 누르면 데모용 배너라고 밝힌다(리뷰 반영) */}
+            <DemoAdCard />
           </div>
         </div>
       </div>

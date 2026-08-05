@@ -8,6 +8,7 @@ import {
   type Company,
   type Curation,
   type Evidence,
+  type InquiryRow,
   type Member,
   type Notice,
   type PolicyRow,
@@ -101,6 +102,8 @@ export type AdminState = {
   jobs: JobRow[];
   ai: AiSettings;
   answers: OperatorAnswer[];
+  /** 1:1 문의 큐 — 사용자 /contact 접수가 여기로 들어온다 */
+  inquiries: InquiryRow[];
 };
 
 function clone(): AdminState {
@@ -145,6 +148,8 @@ export function loadState(): AdminState {
       },
       // 필드가 없던 시절의 저장분은 빈 배열로 — 스키마를 올리지 않고 흡수한다
       answers: Array.isArray(saved.answers) ? saved.answers : base.answers,
+      // 필드가 없던 시절의 저장분은 시드로 — 위 admins와 같은 흡수 방식
+      inquiries: mergeById(base.inquiries, saved.inquiries),
     };
   } catch {
     window.localStorage.removeItem(KEY);

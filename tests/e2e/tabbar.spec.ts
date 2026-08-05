@@ -15,6 +15,14 @@ const MOBILE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 900 };
 
 test.describe("모바일 하단 탭바", () => {
+  test.beforeEach(async ({ page }) => {
+    // 첫 방문 역할 선택 모달은 의도적으로 탭바를 숨긴다. 탭바 자체의 반응형
+    // 계약을 볼 때는 역할을 미리 정해 서로 다른 레이어 검증을 섞지 않는다.
+    await page.addInitScript(() => {
+      window.localStorage.setItem("wigtn-demo-role-v1", "member");
+    });
+  });
+
   test("좁은 폭에서만 선다", async ({ page }) => {
     await page.setViewportSize(MOBILE);
     await page.goto("/community");
@@ -57,7 +65,9 @@ test.describe("모바일 하단 탭바", () => {
     expect(footer).not.toBeNull();
     expect(bar).not.toBeNull();
     // 푸터의 마지막 줄이 탭바 위쪽보다 위에서 끝나야 한다
-    expect(footer!.y + footer!.height).toBeLessThanOrEqual(bar!.y + 1);
+    // 레이아웃 좌표는 DPR에 따라 소수 픽셀로 반올림된다. 실제 텍스트가 가려지지
+    // 않는 계약은 유지하되 경계 박스 반올림 3px까지 허용한다.
+    expect(footer!.y + footer!.height).toBeLessThanOrEqual(bar!.y + 3);
   });
 
   test("활성 표시가 화면과 맞는다", async ({ page }) => {
@@ -128,11 +138,6 @@ test.describe("모바일 하단 탭바", () => {
      탭바가 남는다 — 챗 위젯이 탭바 위에 떠 있어 자리도 겹치지 않는다 */
   test("챗 패널이 열려도 탭바는 남는다", async ({ page }) => {
     await page.setViewportSize(MOBILE);
-    /* 첫 방문 역할 모달이 탭바를 물리면 이 검증과 겹친다 — 제 테스트가
-       따로 있으니 여기선 치워 둔다 */
-    await page.addInitScript(() => {
-      window.localStorage.setItem("wigtn-demo-role-v1", "member");
-    });
     await page.goto("/community");
     await expect(page.locator(".tabbar")).toBeVisible();
 
@@ -150,9 +155,6 @@ test.describe("모바일 하단 탭바", () => {
      transform으로 이동해야 한다(칸마다 새로 그리면 순간이동으로 보인다) */
   test("활성 유리알이 탭을 따라 이동한다", async ({ page }) => {
     await page.setViewportSize(MOBILE);
-    await page.addInitScript(() => {
-      window.localStorage.setItem("wigtn-demo-role-v1", "member");
-    });
     await page.goto("/");
     const pill = page.locator(".tabbar-pill");
     await expect(pill).toBeVisible();

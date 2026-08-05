@@ -76,14 +76,6 @@ small,
   margin-right: auto;
   font-size: 12px;
 }
-.demowidget .dwrow .sw {
-  border: 0;
-}
-.demowidget .dwrow .sw.on {
-  box-shadow:
-    0 0 0 2px var(--card),
-    0 0 0 3px var(--accent);
-}
 .demowidget .titem {
   text-decoration: none;
 }
@@ -2328,6 +2320,27 @@ a.adcard:active,
 .dashboard-queue .queue-item a:active {
   transform: translateY(0) scale(0.995);
   box-shadow: var(--lift-sm);
+}
+/* 광고 카드는 <a>였다가 <button>이 됐다(누르면 데모 배너라고 밝히는 모달).
+   리프트 반응이 a.adcard에 묶여 있어 버튼에도 같은 반응을 잇는다 */
+button.adcard {
+  width: 100%;
+  padding: 0;
+  cursor: pointer;
+}
+button.adcard:hover {
+  border-color: var(--accent);
+  box-shadow: var(--lift);
+  transform: translateY(-2px);
+}
+button.adcard:active {
+  transform: translateY(0) scale(0.995);
+  box-shadow: var(--lift-sm);
+}
+@media (prefers-reduced-motion: reduce) {
+  button.adcard:hover {
+    transform: none;
+  }
 }
 /* 드릴다운 가능한 대시보드 카드 */
 .mcard[data-drill],
@@ -9946,55 +9959,6 @@ select.in {
   background: transparent;
 }
 
-/* 브랜드색 커스텀 피커 — 스와치 옆 무지개 링 버튼 */
-.sw-custom {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  background: conic-gradient(
-    #f43f5e,
-    #f59e0b,
-    #10b981,
-    #3b82f6,
-    #8b5cf6,
-    #f43f5e
-  );
-  overflow: hidden;
-}
-.sw-custom.on {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-.sw-custom input {
-  position: absolute;
-  inset: -6px;
-  opacity: 0;
-  cursor: pointer;
-}
-
-/* 브랜드색 헥스 입력 — 스와치 줄 끝의 코드 필드 */
-.sw-hex {
-  width: 78px;
-  height: 24px;
-  padding: 0 8px;
-  border: 1px solid var(--line-2);
-  border-radius: 7px;
-  background: var(--bg);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  color: var(--ink-2);
-  outline: none;
-  transition: border-color var(--duration-fast) var(--ease-out-soft);
-}
-.sw-hex:focus {
-  border-color: var(--accent);
-  background: var(--card);
-}
-
 /* ═══════════════════════════════════════════════════════════════════════
    커스텀 셀렉트 (P1 문법) — 트리거 + 포털 드롭다운
    ═══════════════════════════════════════════════════════════════════════ */
@@ -10607,18 +10571,6 @@ select.in {
   }
 }
 
-/* 헥스 입력 줄 — 스와치 무리와 같은 오른쪽 열에 맞춘다 */
-.dwrow-hex {
-  justify-content: flex-end;
-  margin-top: 6px;
-}
-.dwrow-hex .sw-hex {
-  flex: none;
-  width: 150px;
-  margin-left: 0;
-  text-align: center;
-}
-
 /* 업종 필터 드롭다운 — filterbar 안에서 pill들과 같은 높이감 */
 .filterbar .ds-select.industry-select {
   min-width: 148px;
@@ -10873,9 +10825,8 @@ select.in {
   align-items: center;
 }
 
-/* ── 브랜드색 파생 그라데이션 — 테마를 바꾸면 프로모바(그라데이션 띠)·
-      차트 채움까지 사이트 전체가 같이 물든다. 정본 토큰을 accent 파생으로
-      재정의한다(applyTheme는 --accent만 바꾸면 된다). ── */
+/* ── 강조색 파생 그라데이션 — 고정 디자인 토큰을 기준으로 프로모바와
+      차트 채움의 색 관계를 일관되게 유지한다. ── */
 :root {
   --grad-blue: linear-gradient(
     135deg,
@@ -11942,6 +11893,91 @@ select.in {
   align-items: center;
 }
 
+.reviewreplies {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.reviewreply {
+  padding: 12px 14px;
+  border-radius: 9px;
+  background: var(--bg);
+}
+.reviewreply-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+  color: var(--ink-4);
+  font-size: 12px;
+}
+.reviewreply p {
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.demo-inquiries {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.demo-inquiries h3 {
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 800;
+}
+.demo-inquiry {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+}
+/* 운영자 답변 — 문의 카드 안의 응답 블록. 운영자 공식 답변(글 상세)과 같은
+   위계 문법: 인디고 소프트 카드로 "운영 측 발화"임을 말한다 */
+.demo-inquiry-answer {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid color-mix(in oklab, var(--accent) 24%, transparent);
+  background: color-mix(in oklab, var(--accent-soft) 55%, var(--card));
+}
+.demo-inquiry-answer > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: var(--accent-ink);
+}
+.demo-inquiry-answer .ic {
+  width: 13px;
+  height: 13px;
+}
+.demo-inquiry-answer p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.demo-inquiry + .demo-inquiry {
+  margin-top: 8px;
+}
+.demo-inquiry > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-4);
+  font-size: 12px;
+}
+.demo-inquiry p {
+  margin-top: 8px;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
 /* ── 연봉 탭 — 두 카드 구성(범위·급여 구성 / 연차별 구간) ─────────── */
 .salgrid {
   display: grid;
@@ -12462,6 +12498,23 @@ select.in {
 }
 
 /* 답변 작성자 줄 — 익명 라벨은 본문 위계(볼드), 여백 0 */
+.comment .cwho {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 34px;
+  margin-bottom: 8px;
+}
+.comment .cwho > span {
+  margin-left: 0;
+}
+.comment .cwho > .av + span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .comment .cwho .anonymous-identity {
   font-weight: 750;
   color: var(--ink);
@@ -13430,6 +13483,14 @@ select.in {
   border-color: color-mix(in srgb, var(--accent) 45%, var(--line-2));
   background: var(--accent-soft);
 }
+.afgo.afpublish {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.afgo.afpublish:hover {
+  background: var(--accent-ink);
+}
 .afgo:disabled {
   opacity: 0.6;
   cursor: default;
@@ -13506,7 +13567,7 @@ select.in {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* ── 상담 요청 타이틀 밴드 — 홈 마무리 배너와 같은 무대(영상+딤+오로라) ── */
+/* ── 데모 문의사항 타이틀 밴드 — 홈 마무리 배너와 같은 무대(영상+딤+오로라) ── */
 .pagehead.contact-hero {
   position: relative;
   overflow: hidden;
@@ -13774,7 +13835,7 @@ select.in {
   color: var(--ink-4);
 }
 
-/* ═══ 상담 요청 v2 — 히어로 리빌·지표 칩·타임라인·CTA ═══ */
+/* ═══ 데모 문의사항 v2 — 히어로 리빌·지표 칩·타임라인·CTA ═══ */
 .contact-hero {
   overflow: hidden;
 }
@@ -14765,10 +14826,9 @@ select.in {
   min-width: 0;
 }
 
-/* ── 상담 페이지 두 칸 구조 ───────────────────────────────────────
-      왼쪽은 체험 기록 레일이다. 폼 옆에서만 잠깐 따라다니는 카드가 아니라
-      "방금 보신 것들" 레일은 뺐다 — 체험 진행도의 정본은 우측 하단 가이드
-      위젯이다. 본문 한 열이 진행 과정과 폼을 받는다. */
+/* ── 1:1 문의 페이지 한 열 구조 ───────────────────────────────────
+      "방금 보신 것들" 레일은 뺐다(리뷰 결정) — 체험 진행도의 정본은 우측
+      하단 가이드 위젯이다. 본문 한 열이 진행 과정과 폼을 받는다. */
 /* 아이콘은 첫 줄 글자와 눈높이를 맞춘다.
 
    align-items: flex-start라 아이콘 상자(20px)와 글자 블록이 각자 위에
@@ -15042,7 +15102,7 @@ select.in {
 
 
 /* ═══════════════════════════════════════════════════════════════════════
-   상담 챗봇 — 시안에 없는 화면이라 여기 둔다(정본은 시안 대조가 가능해야 한다).
+   데모 도우미 — 시안에 없는 화면이라 여기 둔다(정본은 시안 대조가 가능해야 한다).
    체험 가이드(.demowidget)가 우측 하단을 이미 쓰고 있어 그 왼쪽에 나란히 선다.
    가이드 위치는 사용자 지시로 정해진 자리라 옮기지 않는다.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -15282,6 +15342,7 @@ select.in {
 .chatpanel.is-pill .chathead {
   border-bottom-color: transparent;
   padding-right: 9px;
+  height: 100%;
 }
 .chatpanel.is-pill .cskip {
   width: 0;
@@ -15298,13 +15359,16 @@ select.in {
 .chatpanel.is-pill .cexpand {
   margin-left: auto;
 }
+.chatpanel.is-pill .chathead > .cx:not(.cexpand) {
+  margin-left: 0;
+}
 /* 진행 문구에 두 줄을 준다.
 
    한 줄 말줄임이었는데, 안내 문구가 "채용공고 하이라이트. 실데이터로
    돌아가요"처럼 20자를 넘어 대부분 …로 잘렸다(사용자 지적). 캡슐에서
    읽어야 할 것은 제목이 아니라 이 문장이다.
 
-   캡슐을 키우지 않고 자리를 만든다 — 제목("상담 챗봇")을 접는다.
+   캡슐을 키우지 않고 자리를 만든다 — 제목("데모 도우미")을 접는다.
    말하는 주체는 왼쪽 아바타가 이미 말하고 있어서 캡슐에서는 한 번 더
    적을 이유가 없다. 그 한 줄을 문구가 물려받아 두 줄이 된다.
 
@@ -15312,6 +15376,8 @@ select.in {
 .chatpanel.is-pill .ct b {
   display: none;
 }
+/* 문구는 좌측 정렬 그대로 둔다(리뷰 결정) — 채팅을 읽는 시선은 왼쪽에서
+   시작하고, 두 줄로 꺾일 때도 첫 글자 축이 서 있어야 읽는 자리가 안 흔들린다 */
 .chatpanel.is-pill .ct span {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -16940,7 +17006,7 @@ select.in {
   }
 }
 
-/* 라우트가 없는 체험 항목(상담 챗봇)은 링크 대신 버튼이다.
+/* 라우트가 없는 체험 항목(데모 도우미)은 링크 대신 버튼이다.
    .titem은 링크 기준으로 짜여 있어 폭·정렬만 맞춰준다. */
 button.titem {
   width: 100%;

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Crumb } from "@/components/Crumb";
+import { DemoAdCard } from "@/components/DemoAdCard";
 import { notFound } from "next/navigation";
 import { ALL_POSTS, getPost } from "@/lib/seed/posts";
 import { FEED, POPULAR_WEEK } from "@/lib/seed/feed";
@@ -127,24 +128,9 @@ export default async function PostDetailPage({
             </div>
           </div>
 
-          <span className="adlabel">AD</span>
-          {/* 목록의 같은 카드와 동일하게 상담으로 잇는다 — 버튼 모양인데
-              눌리지 않는 카드는 죽은 링크로 읽힌다 */}
-          <Link className="adcard" href="/contact">
-            <div className="adimg c">
-              <span className="art" />
-              <div className="k">이직 준비</div>
-              <div className="h">
-                영업직 이력서
-                <br />
-                무료 첨삭
-              </div>
-            </div>
-            <div className="adbody">
-              <span className="adt">현직 세일즈 리더가 직접</span>
-              <span className="adgo">신청</span>
-            </div>
-          </Link>
+          <span className="adlabel">DEMO AD</span>
+          {/* 어디로도 잇지 않는다 — 누르면 데모용 배너라고 밝힌다(리뷰 반영) */}
+          <DemoAdCard />
         </div>
       </div>
     </div>

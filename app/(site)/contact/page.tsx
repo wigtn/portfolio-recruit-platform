@@ -2,14 +2,17 @@ import { ContactForm } from "@/components/ContactForm";
 import { ContactHero } from "@/components/ContactHero";
 import { ContactSteps } from "@/components/ContactSteps";
 
-export const metadata = { title: "상담 요청 | W 세일즈" };
+export const metadata = { title: "1:1 문의 | W 세일즈" };
 
 /**
- * 시안 정본 09번(상담 요청) 구조 — 진행 과정 / .formcard 한 열.
+ * 1:1 문의 — W 세일즈 서비스의 고객센터.
  *
- * "방금 보신 것들" 레일은 뺐다 — 체험 진행도는 우측 하단 가이드 위젯이
- * 정본이고, 같은 목록이 두 곳에 떠 있으면 어느 쪽을 보고 채워야 하는지만
- * 흐려진다. 여기서는 상담 폼이 주인공이다.
+ * "데모 문의사항"이라는 픽션 밖 이름은 걷어냈다(리뷰 결정). 접수하면 백오피스
+ * 문의 큐(/admin/inquiries)에 실제로 쌓이고, 운영자 답변이 알림 벨과 내역으로
+ * 돌아온다 — 신고·증빙과 같은 왕복 문법의 세 번째 사례다.
+ *
+ * "방금 보신 것들" 레일도 뺐다(리뷰 결정) — 체험 진행도의 정본은 우측 하단
+ * 가이드 위젯이고, 고객센터 화면에 체험 요약이 떠 있을 이유가 없다.
  */
 export default function ContactPage() {
   return (
@@ -24,7 +27,7 @@ export default function ContactPage() {
           <ContactSteps />
         </div>
 
-        {/* 스크롤 맨 아래가 상담 폼이다 */}
+        {/* 스크롤 맨 아래가 1:1 문의 폼이다 — 접수는 운영자 큐로 간다 */}
         <div id="contact-form">
           <ContactForm />
         </div>
